@@ -1,0 +1,32 @@
+import { describe, it, expect } from 'vitest'
+import { buildDeloadWeek, needsDeload } from './deload.js'
+
+const ctx = { e1rm: { squat: 200, bench: 140, deadlift: 240 } }
+const workingWeek = {
+  index: 3, isDeload: false,
+  sessions: [{ day: 1, exercises: [
+    { lift: 'squat', sets: 5, reps: 3, rpeTarget: 9, pct: undefined, weight: 180, velocity: null },
+  ] }],
+}
+
+describe('buildDeloadWeek', () => {
+  it('halves sets, drops RPE to 6, and flags deload', () => {
+    const wk = buildDeloadWeek(workingWeek, ctx)
+    expect(wk.isDeload).toBe(true)
+    const ex = wk.sessions[0].exercises[0]
+    expect(ex.sets).toBe(3) // ceil(5/2)
+    expect(ex.rpeTarget).toBe(6)
+    expect(ex.reps).toBe(3)
+    expect(ex.weight).toBeLessThan(180)
+  })
+})
+
+describe('needsDeload', () => {
+  it('always deloads at week 4', () => {
+    expect(needsDeload(4, 1)).toBe(true)
+  })
+  it('deloads early (week 3) under maximal fatigue', () => {
+    expect(needsDeload(3, 5)).toBe(true)
+    expect(needsDeload(3, 2)).toBe(false)
+  })
+})
