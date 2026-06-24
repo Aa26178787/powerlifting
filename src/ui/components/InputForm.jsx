@@ -36,7 +36,7 @@ export default function InputForm({ onGenerate }) {
         ))}
       </fieldset>
 
-      <label>운동 연차
+      <label>운동 경력 (년)
         <input type="number" step="0.5" value={profile.years}
           onChange={(e) => setField('years', numberOrNull(e.target.value))} />
       </label>
@@ -56,7 +56,7 @@ export default function InputForm({ onGenerate }) {
         </select>
       </label>
 
-      <label>생활 피로도 (1 쌩쌩 – 5 녹초)
+      <label>컨디션 (1: 쌩쌩함 ~ 5: 매우 지침)
         <input type="range" min="1" max="5" value={profile.fatigue}
           onChange={(e) => setField('fatigue', Number(e.target.value))} />
         <span>{profile.fatigue}</span>
@@ -78,7 +78,7 @@ export default function InputForm({ onGenerate }) {
         <input type="number" value={profile.age ?? ''}
           onChange={(e) => setField('age', numberOrNull(e.target.value))} />
       </label>
-      <label>체중
+      <label>체중 (kg)
         <input type="number" value={profile.bodyweight ?? ''}
           onChange={(e) => setField('bodyweight', numberOrNull(e.target.value))} />
       </label>
@@ -87,7 +87,7 @@ export default function InputForm({ onGenerate }) {
           <option value="">—</option><option value="M">남</option><option value="F">여</option>
         </select>
       </label>
-      <label>우선 보강할 약점 종목
+      <label>집중 보강할 약점 종목
         <select value={profile.weakLift} onChange={(e) => setField('weakLift', e.target.value)}>
           <option value="">없음</option>
           <option value="squat">{liftLabel('squat')}</option>
@@ -95,13 +95,13 @@ export default function InputForm({ onGenerate }) {
           <option value="deadlift">{liftLabel('deadlift')}</option>
         </select>
       </label>
-      <label>세션 시간 제한 (분)
+      <label>1회 운동 시간 제한 (분)
         <input type="number" value={profile.sessionTimeLimit ?? ''}
           onChange={(e) => setField('sessionTimeLimit', numberOrNull(e.target.value))} />
       </label>
 
       <fieldset>
-        <legend>부상</legend>
+        <legend>부상 부위</legend>
         {INJURIES.map((inj) => (
           <label key={inj}>
             <input type="checkbox" checked={profile.injuries.includes(inj)}
