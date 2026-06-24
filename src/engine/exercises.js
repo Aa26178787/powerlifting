@@ -1,4 +1,4 @@
-import db from '../data/exercises.json' assert { type: 'json' }
+import db from '../data/exercises.json' with { type: 'json' }
 
 export const MAIN_LIFTS = ['squat', 'bench', 'deadlift']
 
