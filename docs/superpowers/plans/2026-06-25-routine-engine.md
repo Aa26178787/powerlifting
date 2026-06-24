@@ -549,7 +549,7 @@ git commit -m "feat(engine): exercise DB with substitution and equipment filter"
 - Consumes: nothing.
 - Produces:
   - `ROLE: Record<'heavy'|'volume'|'light'|'hyper', {reps:number, rpeStart:number}>`
-  - `TEMPLATES: Record<string, {key, name, goals: string[], builderKey: string, layouts: Record<number, DaySlot[][]>}>` where a `DaySlot` is `{lift: string, role: string}` and `layouts[daysPerWeek]` is an array of days, each day an array of slots.
+  - `TEMPLATES: Record<string, {key, name, goals: string[], layouts: Record<number, DaySlot[][]>}>` where a `DaySlot` is `{lift: string, role: string}` and `layouts[daysPerWeek]` is an array of days, each day an array of slots.
   - `getTemplate(key: string): Template` — throws if unknown.
 
   Template keys: `linearLP`, `fiveThreeOne`, `dup`, `highFreqPct`, `hypertrophyBlock`.
