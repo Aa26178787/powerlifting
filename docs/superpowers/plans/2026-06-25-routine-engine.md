@@ -580,6 +580,19 @@ describe('TEMPLATES', () => {
     expect(layout[0][0]).toHaveProperty('lift')
     expect(layout[0][0]).toHaveProperty('role')
   })
+  it('linearLP and hypertrophyBlock cover all of days 3-6 (no selector gap)', () => {
+    for (const days of [3, 4, 5, 6]) {
+      expect(TEMPLATES.linearLP.layouts[days]).toBeDefined()
+      expect(TEMPLATES.linearLP.layouts[days]).toHaveLength(days)
+      expect(TEMPLATES.hypertrophyBlock.layouts[days]).toBeDefined()
+      expect(TEMPLATES.hypertrophyBlock.layouts[days]).toHaveLength(days)
+    }
+  })
+  it('dup covers all of days 3-6', () => {
+    for (const days of [3, 4, 5, 6]) {
+      expect(TEMPLATES.dup.layouts[days]).toHaveLength(days)
+    }
+  })
 })
 
 describe('getTemplate', () => {
@@ -640,6 +653,27 @@ const linearLayouts = {
     [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'heavy' }],
     [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
   ],
+  4: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'heavy' }],
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'volume' }],
+  ],
+  5: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'heavy' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'volume' }],
+    [{ lift: 'bench', role: 'heavy' }],
+  ],
+  6: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'heavy' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'volume' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }],
+  ],
 }
 
 const fiveThreeOneLayouts = {
@@ -668,6 +702,21 @@ const hyperLayouts = {
     [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
   ],
   4: [
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+  ],
+  5: [
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+  ],
+  6: [
+    [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
+    [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
     [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
     [{ lift: 'deadlift', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
     [{ lift: 'squat', role: 'hyper' }, { lift: 'bench', role: 'hyper' }],
