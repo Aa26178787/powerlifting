@@ -5,6 +5,15 @@ describe('ROLE', () => {
   it('defines heavy as a low-rep, RPE-8 start', () => {
     expect(ROLE.heavy).toEqual({ reps: 3, rpeStart: 8 })
   })
+  it('defines volume as a mid-rep, RPE-7.5 start', () => {
+    expect(ROLE.volume).toEqual({ reps: 6, rpeStart: 7.5 })
+  })
+  it('defines light as a mid-rep, RPE-7 start', () => {
+    expect(ROLE.light).toEqual({ reps: 5, rpeStart: 7 })
+  })
+  it('defines hyper as a high-rep, RPE-7.5 start', () => {
+    expect(ROLE.hyper).toEqual({ reps: 10, rpeStart: 7.5 })
+  })
 })
 
 describe('TEMPLATES', () => {
