@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useProfileStore, DEFAULT_PROFILE, selectIsValid } from './profileStore.js'
 

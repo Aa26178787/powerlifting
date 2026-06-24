@@ -25,6 +25,8 @@
 - Goal values: `'strength' | 'hypertrophy' | 'balanced'`. daysPerWeek ∈ `{3,4,5,6}`.
 - ES modules, `.jsx` for components, `.js` for pure logic. JSON imports use `with { type: 'json' }`.
 - UI source lives under `src/ui/`; pure adapters under `src/ui/lib/`. Component tests are colocated `*.test.jsx`; pure-logic tests `*.test.js`.
+- **jsdom pragma:** every test file that renders the DOM (component tests) MUST begin with the literal first line `// @vitest-environment jsdom`. Vitest's `environmentMatchGlobs` does NOT reliably apply when a test is invoked by direct path (`npx vitest run <file>`), so relying on the glob alone makes focused runs fail under node. The pragma forces jsdom per-file regardless of invocation. Pure-logic UI tests (planAdapter, exportCsv) stay in node and omit the pragma.
+- **localStorage polyfill (already in place):** `src/test/setup.js` installs a complete in-memory `MemoryStorage` on `globalThis.localStorage`. This is REQUIRED because Node 26 ships an experimental global `localStorage` that is broken without `--localstorage-file` and shadows jsdom's, breaking zustand's `persist` middleware. The polyfill is a real implementation (its `clear()`/`removeItem()` mutate, so per-test isolation holds) and is harmless for node-env engine tests. Do NOT add ad-hoc/no-op localStorage shims anywhere else.
 - Vite `base: './'` stays (GitHub Pages). Do not change it.
 - Do not introduce a backend, network calls, or any non-determinism into the adapter layer.
 
@@ -124,6 +126,7 @@ git commit -m "chore(ui): add React testing toolchain (jsdom, testing-library)"
 
 `src/ui/store/profileStore.test.js`:
 ```js
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useProfileStore, DEFAULT_PROFILE, selectIsValid } from './profileStore.js'
 
@@ -509,6 +512,7 @@ git commit -m "feat(ui): CSV export of a generated plan"
 
 `src/ui/components/InputForm.test.jsx`:
 ```jsx
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -715,6 +719,7 @@ git commit -m "feat(ui): profile input form"
 
 `src/ui/components/RoutineView.test.jsx`:
 ```jsx
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import RoutineView from './RoutineView.jsx'
@@ -825,6 +830,7 @@ git commit -m "feat(ui): routine view (mesocycle/week/session render)"
 
 `src/ui/components/RpeLogger.test.jsx`:
 ```jsx
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -919,6 +925,7 @@ git commit -m "feat(ui): RPE logger with autoregulated next-load suggestion"
 
 `src/App.test.jsx`:
 ```jsx
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
