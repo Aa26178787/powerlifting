@@ -14,7 +14,7 @@ export default function RpeLogger({ exercise }) {
   return (
     <span className="rpe-logger">
       <label>
-        actual RPE
+        실제 RPE
         <select value={actual} onChange={(e) => setActual(e.target.value)}>
           <option value="">—</option>
           {RPE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -22,7 +22,7 @@ export default function RpeLogger({ exercise }) {
       </label>
       {hasValue && (
         <span className="suggestion">
-          next: {nextWeight} (e1RM {newE1rm.toFixed(1)})
+          다음: {nextWeight} (e1RM {newE1rm.toFixed(1)})
         </span>
       )}
     </span>

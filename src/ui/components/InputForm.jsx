@@ -1,5 +1,6 @@
 import React from 'react'
 import { useProfileStore, selectIsValid } from '../store/profileStore.js'
+import { liftLabel, goalLabel, injuryLabel, equipmentLabel } from '../i18n.js'
 
 const INJURIES = ['knee', 'shoulder', 'back']
 const EQUIPMENT = ['barbell', 'rack', 'bench', 'box', 'trap bar', 'dumbbells', 'leg press machine']
@@ -22,10 +23,10 @@ export default function InputForm({ onGenerate }) {
   return (
     <form className="input-form" onSubmit={(e) => e.preventDefault()}>
       <fieldset>
-        <legend>Current 1RM</legend>
+        <legend>현재 1RM</legend>
         {['squat', 'bench', 'deadlift'].map((lift) => (
           <label key={lift}>
-            {lift} 1RM
+            {liftLabel(lift)} 1RM
             <input
               type="number"
               value={profile.lifts[lift]?.oneRM ?? ''}
@@ -35,27 +36,27 @@ export default function InputForm({ onGenerate }) {
         ))}
       </fieldset>
 
-      <label>Training years
+      <label>운동 연차
         <input type="number" step="0.5" value={profile.years}
           onChange={(e) => setField('years', numberOrNull(e.target.value))} />
       </label>
 
-      <label>Days per week
+      <label>주당 훈련일
         <select value={profile.daysPerWeek}
           onChange={(e) => setField('daysPerWeek', Number(e.target.value))}>
           {[3, 4, 5, 6].map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
       </label>
 
-      <label>Goal
+      <label>목표
         <select value={profile.goal} onChange={(e) => setField('goal', e.target.value)}>
-          <option value="strength">strength</option>
-          <option value="hypertrophy">hypertrophy</option>
-          <option value="balanced">balanced</option>
+          <option value="strength">{goalLabel('strength')}</option>
+          <option value="hypertrophy">{goalLabel('hypertrophy')}</option>
+          <option value="balanced">{goalLabel('balanced')}</option>
         </select>
       </label>
 
-      <label>Life fatigue (1 fresh – 5 wrecked)
+      <label>생활 피로도 (1 쌩쌩 – 5 녹초)
         <input type="range" min="1" max="5" value={profile.fatigue}
           onChange={(e) => setField('fatigue', Number(e.target.value))} />
         <span>{profile.fatigue}</span>
@@ -64,64 +65,64 @@ export default function InputForm({ onGenerate }) {
       <label>
         <input type="checkbox" checked={profile.competition.on}
           onChange={(e) => setField('competition', { ...profile.competition, on: e.target.checked })} />
-        Competition mode
+        대회 모드
       </label>
       {profile.competition.on && (
-        <label>Meet date
+        <label>대회 날짜
           <input type="date" value={profile.competition.date}
             onChange={(e) => setField('competition', { ...profile.competition, date: e.target.value })} />
         </label>
       )}
 
-      <label>Age
+      <label>나이
         <input type="number" value={profile.age ?? ''}
           onChange={(e) => setField('age', numberOrNull(e.target.value))} />
       </label>
-      <label>Bodyweight
+      <label>체중
         <input type="number" value={profile.bodyweight ?? ''}
           onChange={(e) => setField('bodyweight', numberOrNull(e.target.value))} />
       </label>
-      <label>Sex
+      <label>성별
         <select value={profile.sex} onChange={(e) => setField('sex', e.target.value)}>
-          <option value="">—</option><option value="M">M</option><option value="F">F</option>
+          <option value="">—</option><option value="M">남</option><option value="F">여</option>
         </select>
       </label>
-      <label>Weak lift to prioritize
+      <label>우선 보강할 약점 종목
         <select value={profile.weakLift} onChange={(e) => setField('weakLift', e.target.value)}>
-          <option value="">none</option>
-          <option value="squat">squat</option>
-          <option value="bench">bench</option>
-          <option value="deadlift">deadlift</option>
+          <option value="">없음</option>
+          <option value="squat">{liftLabel('squat')}</option>
+          <option value="bench">{liftLabel('bench')}</option>
+          <option value="deadlift">{liftLabel('deadlift')}</option>
         </select>
       </label>
-      <label>Session time limit (min)
+      <label>세션 시간 제한 (분)
         <input type="number" value={profile.sessionTimeLimit ?? ''}
           onChange={(e) => setField('sessionTimeLimit', numberOrNull(e.target.value))} />
       </label>
 
       <fieldset>
-        <legend>Injuries</legend>
+        <legend>부상</legend>
         {INJURIES.map((inj) => (
           <label key={inj}>
             <input type="checkbox" checked={profile.injuries.includes(inj)}
               onChange={() => toggleInjury(inj)} />
-            {inj}
+            {injuryLabel(inj)}
           </label>
         ))}
       </fieldset>
 
       <fieldset>
-        <legend>Equipment</legend>
+        <legend>보유 장비</legend>
         {EQUIPMENT.map((eq) => (
           <label key={eq}>
             <input type="checkbox" checked={profile.equipment.includes(eq)}
               onChange={() => toggleEquipment(eq)} />
-            {eq}
+            {equipmentLabel(eq)}
           </label>
         ))}
       </fieldset>
 
-      <button type="button" disabled={!valid} onClick={onGenerate}>Generate routine</button>
+      <button type="button" disabled={!valid} onClick={onGenerate}>루틴 생성</button>
     </form>
   )
 }

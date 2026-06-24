@@ -25,14 +25,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <h1>Powerlifting Routine Generator</h1>
+      <h1>파워리프팅 루틴 생성기</h1>
       <LimitsPanel />
       <div className="layout">
         <InputForm onGenerate={onGenerate} />
         <div>
           <div className="toolbar">
-            <button type="button" disabled={!plan} onClick={downloadCsv}>Download CSV</button>
-            <button type="button" disabled={!plan} onClick={() => window.print()}>Print</button>
+            <button type="button" disabled={!plan} onClick={downloadCsv}>CSV 내려받기</button>
+            <button type="button" disabled={!plan} onClick={() => window.print()}>인쇄</button>
           </div>
           <RoutineView plan={plan} />
         </div>
