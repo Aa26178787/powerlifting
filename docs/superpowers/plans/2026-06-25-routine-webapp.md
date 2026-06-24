@@ -370,11 +370,14 @@ export function enrichExercise(ex) {
 }
 
 export function accessoriesForSession(session, equipment, injuries, sessionTimeLimit) {
-  const mainLifts = session.exercises
-    .map((e) => e.lift)
-    .filter((l) => MAIN_LIFTS.includes(l))
+  // Map each exercise's (possibly injury-substituted) lift back to its base main
+  // lift, so accessories are still found when e.g. a knee injury renamed
+  // squat -> box squat (generate() substitutes lift names before buildPlan runs).
+  const baseLifts = session.exercises
+    .map((e) => MAIN_LIFTS.find((base) => base === e.lift || substitute(base, injuries) === e.lift))
+    .filter(Boolean)
   const names = []
-  for (const lift of mainLifts) {
+  for (const lift of baseLifts) {
     for (const acc of accessoriesFor(lift)) names.push(acc)
   }
   const available = filterByEquipment(names, equipment)
