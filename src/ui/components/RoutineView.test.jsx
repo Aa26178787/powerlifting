@@ -23,16 +23,16 @@ const plan = {
 describe('RoutineView', () => {
   it('shows a placeholder when no plan', () => {
     render(<RoutineView plan={null} />)
-    expect(screen.getByText(/no routine yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/아직 루틴이 없습니다/)).toBeInTheDocument()
   })
   it('renders the template name and a deload badge', () => {
     render(<RoutineView plan={plan} />)
-    expect(screen.getByText(/dup/i)).toBeInTheDocument()
-    expect(screen.getByText(/deload/i)).toBeInTheDocument()
+    expect(screen.getByText(/DUP/)).toBeInTheDocument()
+    expect(screen.getByText(/디로드/)).toBeInTheDocument()
   })
   it('renders an exercise prescription line with weight', () => {
     render(<RoutineView plan={plan} />)
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
-    expect(screen.getByText(/leg press/i)).toBeInTheDocument()
+    expect(screen.getByText(/레그 프레스/)).toBeInTheDocument()
   })
 })

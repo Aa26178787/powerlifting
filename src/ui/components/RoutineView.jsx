@@ -1,10 +1,11 @@
 import React from 'react'
+import { liftLabel, templateLabel } from '../i18n.js'
 
 function ExerciseRow({ ex }) {
   const pct = ex.pct == null ? '—' : `${ex.pct}%`
   return (
     <li className="exercise-row">
-      <span className="ex-lift">{ex.lift}</span>{' '}
+      <span className="ex-lift">{liftLabel(ex.lift)}</span>{' '}
       <span className="ex-scheme">{ex.sets}×{ex.reps}</span>{' '}
       <span className="ex-load">@ {pct} / RPE {ex.rpeTarget}</span>{' '}
       <span className="ex-weight">= {ex.weight}</span>
@@ -13,19 +14,19 @@ function ExerciseRow({ ex }) {
 }
 
 export default function RoutineView({ plan }) {
-  if (!plan) return <p className="placeholder">No routine yet — fill the form and generate.</p>
+  if (!plan) return <p className="placeholder">아직 루틴이 없습니다 — 폼을 채우고 생성하세요.</p>
   return (
     <section className="routine-view">
-      <h2>Template: {plan.template}</h2>
+      <h2>프로그램: {templateLabel(plan.template)}</h2>
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
-          <h3>Week {wk.index}{wk.isDeload ? ' (DELOAD)' : ''}</h3>
+          <h3>{wk.index}주차{wk.isDeload ? ' (디로드)' : ''}</h3>
           {wk.sessions.map((s) => (
             <div key={s.day} className="session">
-              <h4>Day {s.day}</h4>
+              <h4>{s.day}일차</h4>
               <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
               {s.accessories.length > 0 && (
-                <p className="accessories">Accessories: {s.accessories.join(', ')}</p>
+                <p className="accessories">보조운동: {s.accessories.map(liftLabel).join(', ')}</p>
               )}
             </div>
           ))}

@@ -10,14 +10,14 @@ describe('RpeLogger', () => {
 
   it('suggests a heavier next weight when the set was easier than target', async () => {
     render(<RpeLogger exercise={exercise} />)
-    await userEvent.setup().selectOptions(screen.getByLabelText(/actual rpe/i), '7')
+    await userEvent.setup().selectOptions(screen.getByLabelText(/실제 RPE/), '7')
     // target 8, actual 7 -> +4% -> 104 -> round 2.5 -> 105
-    expect(screen.getByText(/next:\s*105/i)).toBeInTheDocument()
+    expect(screen.getByText(/다음:\s*105/)).toBeInTheDocument()
   })
 
   it('suggests a lighter next weight when the set was harder than target', async () => {
     render(<RpeLogger exercise={exercise} />)
-    await userEvent.setup().selectOptions(screen.getByLabelText(/actual rpe/i), '9')
-    expect(screen.getByText(/next:\s*95/i)).toBeInTheDocument()
+    await userEvent.setup().selectOptions(screen.getByLabelText(/실제 RPE/), '9')
+    expect(screen.getByText(/다음:\s*95/)).toBeInTheDocument()
   })
 })

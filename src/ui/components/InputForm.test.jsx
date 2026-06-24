@@ -14,13 +14,13 @@ beforeEach(() => {
 describe('InputForm', () => {
   it('disables Generate until all three lifts are entered', async () => {
     render(<InputForm onGenerate={() => {}} />)
-    const btn = screen.getByRole('button', { name: /generate/i })
+    const btn = screen.getByRole('button', { name: /루틴 생성/ })
     expect(btn).toBeDisabled()
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText(/squat 1rm/i), '200')
-    await user.type(screen.getByLabelText(/bench 1rm/i), '140')
-    await user.type(screen.getByLabelText(/deadlift 1rm/i), '240')
+    await user.type(screen.getByLabelText(/스쿼트 1RM/), '200')
+    await user.type(screen.getByLabelText(/벤치프레스 1RM/), '140')
+    await user.type(screen.getByLabelText(/데드리프트 1RM/), '240')
     expect(btn).toBeEnabled()
   })
 
@@ -30,13 +30,13 @@ describe('InputForm', () => {
     useProfileStore.getState().setLift('bench', { oneRM: 140 })
     useProfileStore.getState().setLift('deadlift', { oneRM: 240 })
     render(<InputForm onGenerate={() => { called = true }} />)
-    await userEvent.setup().click(screen.getByRole('button', { name: /generate/i }))
+    await userEvent.setup().click(screen.getByRole('button', { name: /루틴 생성/ }))
     expect(called).toBe(true)
   })
 
   it('updates days per week in the store', async () => {
     render(<InputForm onGenerate={() => {}} />)
-    await userEvent.setup().selectOptions(screen.getByLabelText(/days per week/i), '5')
+    await userEvent.setup().selectOptions(screen.getByLabelText(/주당 훈련일/), '5')
     expect(useProfileStore.getState().profile.daysPerWeek).toBe(5)
   })
 })
