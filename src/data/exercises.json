@@ -1,0 +1,24 @@
+{
+  "exercises": {
+    "squat":        {"equipment": ["barbell","rack"], "muscle": "quads"},
+    "box squat":    {"equipment": ["barbell","rack","box"], "muscle": "quads"},
+    "front squat":  {"equipment": ["barbell","rack"], "muscle": "quads"},
+    "bench":        {"equipment": ["barbell","bench"], "muscle": "chest"},
+    "floor press":  {"equipment": ["barbell"], "muscle": "chest"},
+    "deadlift":     {"equipment": ["barbell"], "muscle": "back"},
+    "trap bar deadlift": {"equipment": ["trap bar"], "muscle": "back"},
+    "leg press":    {"equipment": ["leg press machine"], "muscle": "quads"},
+    "dumbbell bench": {"equipment": ["dumbbells","bench"], "muscle": "chest"},
+    "romanian deadlift": {"equipment": ["barbell"], "muscle": "hamstrings"}
+  },
+  "substitutions": {
+    "knee": {"squat": "box squat"},
+    "shoulder": {"bench": "floor press"},
+    "back": {"deadlift": "trap bar deadlift"}
+  },
+  "accessories": {
+    "squat": ["leg press","front squat"],
+    "bench": ["dumbbell bench","floor press"],
+    "deadlift": ["romanian deadlift"]
+  }
+}
