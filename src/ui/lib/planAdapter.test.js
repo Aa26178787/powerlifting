@@ -50,3 +50,11 @@ describe('buildPlan', () => {
     expect(plan.weeks[0].sessions[0]).toHaveProperty('accessories')
   })
 })
+
+describe('accessoriesForSession with injury substitution', () => {
+  it('still finds accessories when an injury renamed the main lift', () => {
+    const session = { day: 1, exercises: [{ lift: 'box squat' }] } // knee-substituted squat
+    const acc = accessoriesForSession(session, ['barbell', 'rack'], ['knee'], null)
+    expect(acc).toContain('front squat')
+  })
+})
