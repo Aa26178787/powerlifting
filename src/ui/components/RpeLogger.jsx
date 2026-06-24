@@ -22,7 +22,7 @@ export default function RpeLogger({ exercise }) {
       </label>
       {hasValue && (
         <span className="suggestion">
-          다음: {nextWeight} (e1RM {newE1rm.toFixed(1)})
+          추천 중량: {nextWeight} (추정 1RM {newE1rm.toFixed(1)})
         </span>
       )}
     </span>

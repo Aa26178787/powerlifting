@@ -14,7 +14,7 @@ function ExerciseRow({ ex }) {
 }
 
 export default function RoutineView({ plan }) {
-  if (!plan) return <p className="placeholder">아직 루틴이 없습니다 — 폼을 채우고 생성하세요.</p>
+  if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 ‘루틴 생성’ 버튼을 눌러주세요.</p>
   return (
     <section className="routine-view">
       <h2>프로그램: {templateLabel(plan.template)}</h2>

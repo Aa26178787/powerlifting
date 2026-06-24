@@ -21,8 +21,8 @@ describe('planToCsv', () => {
   it('emits a header and one row per exercise', () => {
     const csv = planToCsv(plan)
     const lines = csv.trim().split('\n')
-    expect(lines[0]).toBe('week,deload,day,lift,sets,reps,pct,rpe,weight')
-    expect(lines[1]).toBe('1,no,1,squat,5,5,81.1,8,162.5')
-    expect(lines[2]).toBe('4,yes,1,squat,3,5,,6,120')
+    expect(lines[0]).toBe('주차,디로드,일차,종목,세트,반복,%1RM,RPE,중량')
+    expect(lines[1]).toBe('1,아니오,1,스쿼트,5,5,81.1,8,162.5')
+    expect(lines[2]).toBe('4,예,1,스쿼트,3,5,,6,120')
   })
 })
