@@ -1,3 +1,42 @@
+import React from 'react'
+import { useProfileStore } from './ui/store/profileStore.js'
+import { buildPlan } from './ui/lib/planAdapter.js'
+import { planToCsv } from './ui/lib/exportCsv.js'
+import InputForm from './ui/components/InputForm.jsx'
+import RoutineView from './ui/components/RoutineView.jsx'
+import LimitsPanel from './ui/components/LimitsPanel.jsx'
+
 export default function App() {
-  return <h1>Routine Generator</h1>
+  const profile = useProfileStore((s) => s.profile)
+  const plan = useProfileStore((s) => s.plan)
+  const setPlan = useProfileStore.setState
+
+  const onGenerate = () => setPlan({ plan: buildPlan(profile) })
+
+  const downloadCsv = () => {
+    const blob = new Blob([planToCsv(plan)], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'routine.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="app">
+      <h1>Powerlifting Routine Generator</h1>
+      <LimitsPanel />
+      <div className="layout">
+        <InputForm onGenerate={onGenerate} />
+        <div>
+          <div className="toolbar">
+            <button type="button" disabled={!plan} onClick={downloadCsv}>Download CSV</button>
+            <button type="button" disabled={!plan} onClick={() => window.print()}>Print</button>
+          </div>
+          <RoutineView plan={plan} />
+        </div>
+      </div>
+    </div>
+  )
 }
