@@ -14,7 +14,6 @@ describe('DEFAULT_PROFILE', () => {
     expect(DEFAULT_PROFILE.lifts).toHaveProperty('deadlift')
     expect(DEFAULT_PROFILE).toHaveProperty('years')
     expect(DEFAULT_PROFILE).toHaveProperty('daysPerWeek')
-    expect(DEFAULT_PROFILE).toHaveProperty('goal')
     expect(DEFAULT_PROFILE).toHaveProperty('fatigue')
   })
 })
@@ -95,5 +94,24 @@ describe('rehydration of a pre-v2 persisted profile', () => {
     // persisted user data preserved
     expect(p.lifts.squat.oneRM).toBe(100)
     expect(p.years).toBe(3)
+  })
+})
+
+describe('v3 quality fields', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+  it('defaults include qualities + auto model, no goal', () => {
+    const p = useProfileStore.getState().profile
+    expect(p.qualities.strength).toBe(0.5)
+    expect(p.periodizationModel).toBe('auto')
+    expect(p).not.toHaveProperty('goal')
+  })
+  it('setQuality / applyPreset / setPeriodizationModel', () => {
+    const s = useProfileStore.getState()
+    s.setQuality('power', 0.3)
+    expect(useProfileStore.getState().profile.qualities.power).toBe(0.3)
+    s.applyPreset('powerbuilding')
+    expect(useProfileStore.getState().profile.qualities.hypertrophy).toBe(0.45)
+    s.setPeriodizationModel('block')
+    expect(useProfileStore.getState().profile.periodizationModel).toBe('block')
   })
 })

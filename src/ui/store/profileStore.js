@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { presetBlend } from '../../engine/quality.js'
 
 export const DEFAULT_PROFILE = {
   lifts: {
@@ -9,7 +10,6 @@ export const DEFAULT_PROFILE = {
   },
   years: 1,
   daysPerWeek: 4,
-  goal: 'strength',
   fatigue: 2,
   competition: { on: false, date: '' },
   age: null,
@@ -21,6 +21,8 @@ export const DEFAULT_PROFILE = {
   style: { squat: { bar: 'low', stance: 'medium' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } },
   stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
   regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
+  qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
+  periodizationModel: 'auto',
 }
 
 function hasUsableLift(liftInput) {
@@ -36,7 +38,7 @@ function hasUsableLift(liftInput) {
 export function selectIsValid(profile) {
   const lifts = profile.lifts
   const liftsOk = ['squat', 'bench', 'deadlift'].every((l) => hasUsableLift(lifts[l]))
-  return liftsOk && typeof profile.daysPerWeek === 'number' && !!profile.goal && typeof profile.years === 'number'
+  return liftsOk && typeof profile.daysPerWeek === 'number' && typeof profile.years === 'number'
 }
 
 export const useProfileStore = create(
@@ -54,6 +56,12 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, stickingPoint: { ...s.profile.stickingPoint, [lift]: value } } })),
       setRegionStatus: (region, value) =>
         set((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, [region]: value } } })),
+      setQuality: (q, value) =>
+        set((s) => ({ profile: { ...s.profile, qualities: { ...s.profile.qualities, [q]: value } } })),
+      applyPreset: (key) =>
+        set((s) => { const b = presetBlend(key); return b ? { profile: { ...s.profile, qualities: b } } : {} }),
+      setPeriodizationModel: (value) =>
+        set((s) => ({ profile: { ...s.profile, periodizationModel: value } })),
       toggleEquipment: (name) =>
         set((s) => {
           const has = s.profile.equipment.includes(name)
@@ -83,6 +91,8 @@ export const useProfileStore = create(
             style: { ...current.profile.style, ...(p.style || {}) },
             stickingPoint: { ...current.profile.stickingPoint, ...(p.stickingPoint || {}) },
             regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
+            qualities: { ...current.profile.qualities, ...(p.qualities || {}) },
+            periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
           },
         }
       },
