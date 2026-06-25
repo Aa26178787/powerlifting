@@ -7,7 +7,7 @@ export function buildDeloadWeek(workingWeek, ctx) {
       ...ex,
       sets: Math.ceil(ex.sets / 2),
       rpeTarget: 6,
-      weight: workingWeight(ctx.e1rm[ex.baseLift ?? ex.lift], ex.reps, 6),
+      weight: workingWeight(ctx.e1rm[ex.baseLift ?? ex.lift], ex.repAnchor ?? 5, 6),
       velocity: null,
     })),
   }))
