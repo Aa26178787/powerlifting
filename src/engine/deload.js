@@ -1,4 +1,5 @@
 import { workingWeight } from './e1rm.js'
+import { byName } from './exercises.js'
 
 export function buildDeloadWeek(workingWeek, ctx) {
   const sessions = workingWeek.sessions.map((session) => ({
@@ -7,7 +8,7 @@ export function buildDeloadWeek(workingWeek, ctx) {
       ...ex,
       sets: Math.ceil(ex.sets / 2),
       rpeTarget: 6,
-      weight: workingWeight(ctx.e1rm[ex.baseLift ?? ex.lift], Math.min(12, ex.repAnchor ?? 5), 6),
+      weight: workingWeight(ctx.e1rm[ex.baseLift ?? ex.lift] * (byName(ex.lift)?.e1rmModifier ?? 1), Math.min(12, ex.repAnchor ?? 5), 6),
       velocity: null,
     })),
   }))

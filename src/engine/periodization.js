@@ -29,7 +29,7 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
     repAnchor: z.repAnchor,
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
     rpeTarget,
-    weight: weightFor(quality, ctx.e1rm[slot.lift]),
+    weight: weightFor(quality, ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)),
     velocity: null,
     autoregulate: true,
   }

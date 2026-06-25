@@ -29,4 +29,11 @@ describe('buildPlan v3', () => {
     expect(ex).toHaveProperty('quality')
     expect(Array.isArray(ex.reps)).toBe(true)
   })
+
+  it('carries priorityLift through to the engine (the bump itself is covered in generate.test.js)', () => {
+    // Regression: the adapter previously dropped priorityLift, silently disabling
+    // the wizard 우선 보강 feature even though generate.js reads it.
+    expect(toEngineProfile({ ...form, priorityLift: 'bench' }).priorityLift).toBe('bench')
+    expect(toEngineProfile(form).priorityLift).toBeUndefined()
+  })
 })

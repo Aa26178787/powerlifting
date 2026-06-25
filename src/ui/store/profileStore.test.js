@@ -115,3 +115,12 @@ describe('v3 quality fields', () => {
     expect(useProfileStore.getState().profile.periodizationModel).toBe('block')
   })
 })
+
+describe('priorityLift', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+  it('defaults to null and is settable', () => {
+    expect(useProfileStore.getState().profile.priorityLift).toBeNull()
+    useProfileStore.getState().setPriorityLift('bench')
+    expect(useProfileStore.getState().profile.priorityLift).toBe('bench')
+  })
+})

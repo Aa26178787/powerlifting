@@ -14,6 +14,7 @@ export function toEngineProfile(form) {
     equipment: form.equipment,
     sessionTimeLimit: form.sessionTimeLimit,
     competition: form.competition,
+    priorityLift: form.priorityLift,
   }
 }
 

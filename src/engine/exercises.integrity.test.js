@@ -41,3 +41,18 @@ describe('exercise DB integrity', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 })
+
+describe('e1rmModifier', () => {
+  it('every modifier present is a number in [0.75, 1.10]', () => {
+    for (const ex of db.exercises) {
+      if ('e1rmModifier' in ex) {
+        expect(typeof ex.e1rmModifier).toBe('number')
+        expect(ex.e1rmModifier).toBeGreaterThanOrEqual(0.75)
+        expect(ex.e1rmModifier).toBeLessThanOrEqual(1.10)
+      }
+    }
+  })
+  it('at least 20 variations carry a modifier', () => {
+    expect(db.exercises.filter((e) => 'e1rmModifier' in e).length).toBeGreaterThanOrEqual(20)
+  })
+})
