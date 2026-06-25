@@ -34,6 +34,30 @@ function ExerciseRow({ ex }) {
   )
 }
 
+function AccessoryRow({ acc }) {
+  const scheme = acc.scheme
+  return (
+    <li className="accessory-row">
+      <div className="acc-header">
+        <span className="acc-name">{liftLabel(acc.name)}</span>{' '}
+        {acc.quality && <span className="acc-q">[{qualityLabel(acc.quality)}]</span>}{' '}
+        {scheme && <span className="acc-scheme-type">{schemeLabel(scheme.type)}</span>}
+      </div>
+      {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
+      {scheme && scheme.sets && scheme.sets.length > 0 && (
+        <ol className="acc-sets">
+          {scheme.sets.map((s, i) => (
+            <li key={i}>
+              {i + 1}세트: {s.reps}회{s.rpe != null ? ` @RPE ${s.rpe}` : ''} (체감)
+              {s.note ? ` · ${s.note}` : ''}
+            </li>
+          ))}
+        </ol>
+      )}
+    </li>
+  )
+}
+
 export default function RoutineView({ plan }) {
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
   return (
@@ -47,7 +71,10 @@ export default function RoutineView({ plan }) {
               <h4>{s.day}일차</h4>
               <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
               {s.accessories.length > 0 && (
-                <p className="accessories">보조운동: {s.accessories.map((a) => liftLabel(a.name)).join(', ')}</p>
+                <div className="accessories">
+                  <h5>보조운동</h5>
+                  <ul>{s.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>
+                </div>
               )}
               {s.notes && s.notes.length > 0 && (
                 <p className="notes">⚠️ {s.notes.join(' · ')}</p>

@@ -21,7 +21,12 @@ const plan = {
             ],
           },
         },
-      ], accessories: [{ name: 'leg press' }] },
+      ], accessories: [
+        {
+          name: 'leg press', quality: 'hypertrophy',
+          scheme: { type: 'restPause', evidenceTier: 'rct', sets: [{ reps: '10+4+3', rpe: 9, note: '15-20s 후 재개' }] },
+        },
+      ] },
     ] },
     { index: 4, isDeload: true, sessions: [
       { day: 1, exercises: [
@@ -68,6 +73,11 @@ describe('RoutineView', () => {
   it('renders quality tag', () => {
     render(<RoutineView plan={plan} />)
     expect(screen.getAllByText(/근력/).length).toBeGreaterThan(0)
+  })
+  it('renders accessory with its scheme + 체감 per-set line', () => {
+    render(<RoutineView plan={plan} />)
+    expect(screen.getByText(/레스트포즈/)).toBeInTheDocument()
+    expect(screen.getByText(/체감/)).toBeInTheDocument()
   })
   it('renders set reps in the per-set list', () => {
     render(<RoutineView plan={plan} />)

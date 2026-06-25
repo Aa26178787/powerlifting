@@ -10,6 +10,28 @@ import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
 import { bandForBlend, BANDS } from './volume.js'
 import { getTemplate } from './templates.js'
+import { phaseFor } from './periodizationModel.js'
+import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
+
+// Accessories support hypertrophy by default; core/ab work trends to endurance.
+function accessoryQuality(ex) {
+  return /core|ab|oblique/i.test(ex.primaryMuscle ?? '') ? 'endurance' : 'hypertrophy'
+}
+
+function withAccessoryScheme(accessories, { weekIndex, advanced, phase, isDeload }) {
+  return accessories.map((a, i) => {
+    const quality = accessoryQuality(a)
+    const key = isDeload
+      ? 'straight'
+      : pickScheme({ quality, role: 'accessory', phase, advanced, weekIndex: weekIndex + i })
+    const expanded = expandAccessory(key, { quality, baseSets: isDeload ? 2 : 3 })
+    return {
+      ...a,
+      quality,
+      scheme: { type: key, evidenceTier: SCHEMES[key].evidenceTier, sets: expanded.sets, note: expanded.note },
+    }
+  })
+}
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
 const DEFAULT_STICK = { squat: 'none', bench: 'none', deadlift: 'none' }
@@ -90,7 +112,13 @@ export function generate(profile) {
         return false
       })
       const primary = kept[0]?.baseLift ?? 'squat'
-      const accessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus })
+      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus })
+      const accessories = withAccessoryScheme(rawAccessories, {
+        weekIndex: wk.index - 1,
+        advanced,
+        phase: phaseFor(wk.index - 1, mesoWeeks, peaking),
+        isDeload: wk.isDeload,
+      })
       return { ...s, exercises: kept, accessories, notes }
     }),
   }))

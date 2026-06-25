@@ -21,6 +21,23 @@ export function planToCsv(plan) {
           ].join(','))
         })
       }
+      for (const acc of s.accessories ?? []) {
+        if (!acc.scheme || !acc.scheme.sets || acc.scheme.sets.length === 0) continue
+        acc.scheme.sets.forEach((set, i) => {
+          rows.push([
+            wk.index,
+            wk.isDeload ? '예' : '아니오',
+            s.day,
+            liftLabel(acc.name),
+            qualityLabel(acc.quality),
+            i + 1,
+            '체감', // accessories have no tracked 1RM → load by feel
+            set.reps,
+            set.rpe ?? '',
+            set.note ?? '',
+          ].join(','))
+        })
+      }
     }
   }
   return rows.join('\n') + '\n'
