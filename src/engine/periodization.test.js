@@ -13,6 +13,8 @@ const ctx = {
   model: 'undulating',
   blend: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
   competition: { on: false, date: '' },
+  variationOverride: {},
+  peaking: false,
 }
 
 describe('buildWorkingWeeks v3', () => {
@@ -57,3 +59,22 @@ describe('e1rmModifier applied to weight', () => {
   })
 }
 )
+
+describe('set schemes + overrides in working weeks', () => {
+  it('every exercise carries a scheme with concrete sets', () => {
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, advanced: true, totalWeeks: 3 }, 3)
+    const ex = weeks[0].sessions[0].exercises[0]
+    expect(ex.scheme).toBeTruthy()
+    expect(ex.scheme.sets.length).toBeGreaterThan(0)
+    expect(ex.sets).toBe(ex.scheme.sets.length)
+  })
+  it('respects a totalWeeks of 5', () => {
+    expect(buildWorkingWeeks('dup', 3, { ...ctx, totalWeeks: 5 }, 5)).toHaveLength(5)
+  })
+  it('variationOverride forces the chosen variation name on its lift slots', () => {
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'box squat', bench: null, deadlift: null } }, 3)
+    const squatVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+      .find((e) => e.baseLift === 'squat' && e.lift === 'box squat')
+    expect(squatVar).toBeTruthy()
+  })
+})
