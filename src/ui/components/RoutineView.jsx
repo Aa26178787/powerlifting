@@ -1,20 +1,23 @@
 import React from 'react'
-import { liftLabel, templateLabel } from '../i18n.js'
+import { liftLabel, templateLabel, qualityLabel } from '../i18n.js'
 
 function ExerciseRow({ ex }) {
   const pct = ex.pct == null ? '—' : `${ex.pct}%`
+  const reps = Array.isArray(ex.reps) ? `${ex.reps[0]}–${ex.reps[1]}` : ex.reps
+  const rpe = ex.rpeTarget == null ? '' : ` / RPE ${ex.rpeTarget}`
   return (
     <li className="exercise-row">
+      <span className="ex-q">[{qualityLabel(ex.quality)}]</span>{' '}
       <span className="ex-lift">{liftLabel(ex.lift)}</span>{' '}
-      <span className="ex-scheme">{ex.sets}×{ex.reps}</span>{' '}
-      <span className="ex-load">@ {pct} / RPE {ex.rpeTarget}</span>{' '}
-      <span className="ex-weight">= {ex.weight}</span>
+      <span className="ex-scheme">{ex.sets}×{reps}</span>{' '}
+      <span className="ex-load">@ {pct}{rpe}</span>{' '}
+      <span className="ex-weight">≈ {ex.weight} (자동조절)</span>
     </li>
   )
 }
 
 export default function RoutineView({ plan }) {
-  if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 ‘루틴 생성’ 버튼을 눌러주세요.</p>
+  if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
   return (
     <section className="routine-view">
       <h2>프로그램: {templateLabel(plan.template)}</h2>
