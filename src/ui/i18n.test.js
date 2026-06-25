@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel } from './i18n.js'
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, toolGroupLabel, evidenceLabel, phaseLabel } from './i18n.js'
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
@@ -34,4 +34,24 @@ describe('i18n v3', () => {
 describe('i18n sp2', () => {
   it('step labels', () => { expect(stepLabel(2)).toBe('현재 1RM'); expect(stepLabel(8)).toBe('요약') })
   it('assess labels', () => { expect(assessLabel('weakLift')).toBe('약점 종목'); expect(assessLabel('gl')).toBe('GL 점수') })
+})
+
+describe('i18n Task 10: scheme/tool/phase/evidence labels', () => {
+  it('schemeLabel', () => {
+    expect(schemeLabel('topSetBackoff')).toBe('탑세트+백오프')
+    expect(schemeLabel('unknown')).toBe('unknown')
+  })
+  it('toolGroupLabel', () => {
+    expect(toolGroupLabel('band')).toBe('밴드')
+    expect(toolGroupLabel('unknown')).toBe('unknown')
+  })
+  it('evidenceLabel', () => {
+    expect(evidenceLabel('rct')).toBe('검증')
+    expect(evidenceLabel('consensus')).toBe('근거 약함')
+    expect(evidenceLabel('unknown')).toBe('unknown')
+  })
+  it('phaseLabel', () => {
+    expect(phaseLabel('peak')).toBe('피킹')
+    expect(phaseLabel('unknown')).toBe('unknown')
+  })
 })
