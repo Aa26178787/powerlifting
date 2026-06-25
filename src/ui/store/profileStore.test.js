@@ -183,3 +183,44 @@ describe('v3 mesocycle + variation-control fields', () => {
     expect(p.years).toBe(3)
   })
 })
+
+describe('checkinLog', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+  it('defaults to empty array', () => {
+    expect(useProfileStore.getState().checkinLog).toEqual([])
+  })
+  it('logCheckin appends an entry', () => {
+    const entry = { week: 1, day: 1, readiness: 0.5 }
+    useProfileStore.getState().logCheckin(entry)
+    const state = useProfileStore.getState()
+    expect(state.checkinLog).toHaveLength(1)
+    expect(state.checkinLog[0]).toEqual(entry)
+  })
+  it('clearCheckinLog empties the array', () => {
+    useProfileStore.getState().logCheckin({ week: 1, day: 1, readiness: 0.5 })
+    expect(useProfileStore.getState().checkinLog).toHaveLength(1)
+    useProfileStore.getState().clearCheckinLog()
+    expect(useProfileStore.getState().checkinLog).toEqual([])
+  })
+  it('reset clears checkinLog', () => {
+    useProfileStore.getState().logCheckin({ week: 1, day: 1, readiness: 0.5 })
+    useProfileStore.getState().reset()
+    expect(useProfileStore.getState().checkinLog).toEqual([])
+  })
+  it('rehydrates missing checkinLog from old persisted state', async () => {
+    localStorage.clear()
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    expect(useProfileStore.getState().checkinLog).toEqual([])
+  })
+})

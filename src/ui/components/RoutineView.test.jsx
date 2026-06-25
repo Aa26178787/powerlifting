@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import RoutineView from './RoutineView.jsx'
+import { useProfileStore } from '../store/profileStore.js'
 
 const plan = {
   template: 'dup',
@@ -48,6 +49,10 @@ const plan = {
 }
 
 describe('RoutineView', () => {
+  beforeEach(() => {
+    useProfileStore.setState({ checkinLog: [] })
+  })
+
   it('shows a placeholder when no plan', () => {
     render(<RoutineView plan={null} />)
     expect(screen.getByText(/아직 루틴이 없습니다/)).toBeInTheDocument()
@@ -89,5 +94,14 @@ describe('RoutineView', () => {
     render(<RoutineView plan={plan} />)
     // Multiple "1세트:" lines appear (one per exercise), use getAllByText
     expect(screen.getAllByText(/1세트:/).length).toBeGreaterThan(0)
+  })
+  it('renders a CheckinPanel control (컨디션 반영 button) per session', () => {
+    render(<RoutineView plan={plan} />)
+    expect(screen.getAllByText(/컨디션 반영/).length).toBeGreaterThan(0)
+  })
+  it('shows overreaching banner when checkinLog triggers detectOverreaching', () => {
+    useProfileStore.setState({ checkinLog: [{ readiness: 0.49 }, { readiness: 0.4 }, { readiness: 0.3 }] })
+    render(<RoutineView plan={plan} />)
+    expect(screen.getAllByText(/과피로|디로드/).length).toBeGreaterThan(0)
   })
 })

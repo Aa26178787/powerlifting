@@ -1,5 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel } from '../i18n.js'
+import { useProfileStore } from '../store/profileStore.js'
+import { detectOverreaching } from '../../engine/overreaching.js'
+import CheckinPanel from './CheckinPanel.jsx'
 
 function ExerciseRow({ ex }) {
   const scheme = ex.scheme
@@ -64,28 +67,56 @@ function AccessoryRow({ acc }) {
 }
 
 export default function RoutineView({ plan }) {
+  const checkinLog = useProfileStore((s) => s.checkinLog)
+  const logCheckin = useProfileStore((s) => s.logCheckin)
+  const [adjusted, setAdjusted] = useState({})
+
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
+
+  const over = detectOverreaching(checkinLog)
+
   return (
     <section className="routine-view">
       <h2>프로그램: {templateLabel(plan.template)}</h2>
+      {over.flag && (
+        <div className="overreaching-banner">⚠️ {over.reason} · 디로드를 고려하세요</div>
+      )}
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
           <h3>{wk.index}주차{wk.isDeload ? ' (디로드)' : ''}</h3>
-          {wk.sessions.map((s) => (
-            <div key={s.day} className="session">
-              <h4>{s.day}일차</h4>
-              <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
-              {(s.accessories ?? []).length > 0 && (
-                <div className="accessories">
-                  <h5>보조운동</h5>
-                  <ul>{s.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>
-                </div>
-              )}
-              {s.notes && s.notes.length > 0 && (
-                <p className="notes">⚠️ {s.notes.join(' · ')}</p>
-              )}
-            </div>
-          ))}
+          {wk.sessions.map((s) => {
+            const key = `${wk.index}-${s.day}`
+            const view = adjusted[key]?.session ?? s
+            return (
+              <div key={s.day} className="session">
+                <h4>{s.day}일차</h4>
+                <CheckinPanel
+                  session={s}
+                  weekIndex={wk.index}
+                  onApply={(r) => {
+                    setAdjusted((m) => ({
+                      ...m,
+                      [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
+                    }))
+                    logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
+                  }}
+                />
+                {adjusted[key] && (
+                  <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
+                )}
+                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
+                {(view.accessories ?? []).length > 0 && (
+                  <div className="accessories">
+                    <h5>보조운동</h5>
+                    <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>
+                  </div>
+                )}
+                {view.notes && view.notes.length > 0 && (
+                  <p className="notes">⚠️ {view.notes.join(' · ')}</p>
+                )}
+              </div>
+            )
+          })}
         </div>
       ))}
     </section>
