@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MODELS, recommendModel, weekPlan } from './periodizationModel.js'
+import { MODELS, recommendModel, weekPlan, phaseFor, weekOffset } from './periodizationModel.js'
 
 describe('recommendModel', () => {
   it('a meet date recommends block', () => {
@@ -65,5 +65,27 @@ describe('adaptive hybrid', () => {
   it('keeps the weekly intensity wave', () => {
     expect(weekPlan('adaptive', 0, even, { on: false }).rpeOffset).toBe(0)
     expect(weekPlan('adaptive', 2, even, { on: false }).rpeOffset).toBe(1.0)
+  })
+})
+
+describe('phaseFor', () => {
+  it('maps mesocycle position to phase', () => {
+    expect(phaseFor(0, 4, true)).toBe('accumulation')
+    expect(phaseFor(3, 4, true)).toBe('peak')
+    expect(phaseFor(3, 4, false)).toBe('intensification')
+  })
+})
+
+describe('week-count scaling', () => {
+  const blend = { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 }
+  it('weekOffset ramps 0..1 over N weeks', () => {
+    expect(weekOffset(0, 3)).toBe(0)
+    expect(weekOffset(2, 3)).toBe(1)
+    expect(weekOffset(0, 6)).toBe(0)
+    expect(weekOffset(5, 6)).toBe(1)
+  })
+  it('weekPlan with totalWeeks=5 scales the wave', () => {
+    expect(weekPlan('linear', 4, blend, { on: false }, 5).rpeOffset).toBe(1)
+    expect(weekPlan('linear', 0, blend, { on: false }, 5).rpeOffset).toBe(0)
   })
 })

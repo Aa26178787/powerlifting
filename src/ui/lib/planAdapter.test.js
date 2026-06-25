@@ -22,9 +22,9 @@ describe('toEngineProfile v3', () => {
 })
 
 describe('buildPlan v3', () => {
-  it('4 weeks; exercises keep engine quality + reps range', () => {
+  it('default mesocycle = 4 working + 1 deload = 5 weeks; exercises keep engine quality + reps range', () => {
     const plan = buildPlan(form)
-    expect(plan.weeks).toHaveLength(4)
+    expect(plan.weeks).toHaveLength(5)
     const ex = plan.weeks[0].sessions[0].exercises[0]
     expect(ex).toHaveProperty('quality')
     expect(Array.isArray(ex.reps)).toBe(true)
@@ -35,5 +35,38 @@ describe('buildPlan v3', () => {
     // the wizard 우선 보강 feature even though generate.js reads it.
     expect(toEngineProfile({ ...form, priorityLift: 'bench' }).priorityLift).toBe('bench')
     expect(toEngineProfile(form).priorityLift).toBeUndefined()
+  })
+
+  it('carries mesoWeeks to engine profile', () => {
+    const ep = toEngineProfile({ ...form, mesoWeeks: 6 })
+    expect(ep.mesoWeeks).toBe(6)
+  })
+
+  it('excludes tool tags from equipment based on excludedTools', () => {
+    const epExcludeBand = toEngineProfile({ ...form, excludedTools: ['band'] })
+    // band group includes: 'band', 'bands', 'cables/band'
+    expect(epExcludeBand.equipment).not.toContain('band')
+    expect(epExcludeBand.equipment).not.toContain('bands')
+    expect(epExcludeBand.equipment).not.toContain('cables/band')
+    // but other equipment should still be present (e.g., 'barbell')
+    expect(epExcludeBand.equipment).toContain('barbell')
+  })
+
+  it('carries variationOverride through to engine profile', () => {
+    const overrides = { 'squat/barbell': 'squat/ssb' }
+    const ep = toEngineProfile({ ...form, variationOverride: overrides })
+    expect(ep.variationOverride).toEqual(overrides)
+  })
+
+  it('variationOverride defaults to empty object when not provided', () => {
+    const ep = toEngineProfile(form)
+    expect(ep.variationOverride).toEqual({})
+  })
+
+  it('deloadEnabled is carried to engine profile', () => {
+    const ep = toEngineProfile({ ...form, deloadEnabled: true })
+    expect(ep.deloadEnabled).toBe(true)
+    const ep2 = toEngineProfile({ ...form, deloadEnabled: false })
+    expect(ep2.deloadEnabled).toBe(false)
   })
 })

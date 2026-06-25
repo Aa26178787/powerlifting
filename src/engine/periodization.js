@@ -4,12 +4,15 @@ import { pick } from './variations.js'
 import { volumeScale } from './regionStatus.js'
 import { byName } from './exercises.js'
 import { ZONES, weightFor, weeklyQualitySchedule } from './quality.js'
-import { weekPlan } from './periodizationModel.js'
+import { weekPlan, phaseFor } from './periodizationModel.js'
+import { SCHEMES, pickScheme } from './setSchemes.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
 function resolveName(slot, ctx) {
   if (slotTypeForRole(slot.role) === 'comp') return compVariant(slot.lift, ctx.style[slot.lift])
+  const override = ctx.variationOverride?.[slot.lift]
+  if (override && byName(override)) return override
   const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced)
   return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
 }
@@ -20,22 +23,42 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   const z = ZONES[quality]
   const scale = ex ? volumeScale(ex, ctx.regionStatus ?? {}) : 1
   const rpeTarget = z.loading === 'rpe' ? cap(z.rpeTarget + rpeOffset) : null
+  const role = slotTypeForRole(slot.role) === 'comp' ? 'comp' : (slot.role === 'accessory' ? 'accessory' : 'variation')
+  const eff = ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)
+  const baseSets = Math.round(ctx.setsPerSession[slot.lift] * scale)
+  // scale 0 (region status 3) → 0 sets → generate drops the lift + notes it.
+  // Short-circuit BEFORE scheme expansion, since some expanders always emit >=1 set.
+  if (baseSets < 1) {
+    return {
+      lift: name, baseLift: slot.lift, quality,
+      reps: z.reps, repAnchor: z.repAnchor,
+      pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
+      rpeTarget, weight: weightFor(quality, eff), velocity: null, autoregulate: true,
+      scheme: { type: 'straight', evidenceTier: 'rct', sets: [], note: undefined, group: undefined },
+      sets: 0,
+    }
+  }
+  const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
+  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0 })
+  const scheme = SCHEMES[key]
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0 })
   return {
     lift: name,
     baseLift: slot.lift,
     quality,
-    sets: Math.round(ctx.setsPerSession[slot.lift] * scale),
     reps: z.reps,
     repAnchor: z.repAnchor,
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
     rpeTarget,
-    weight: weightFor(quality, ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)),
+    weight: weightFor(quality, eff),
     velocity: null,
     autoregulate: true,
+    scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: expanded.sets, note: expanded.note, group: expanded.group },
+    sets: expanded.sets.length,
   }
 }
 
-export function buildWorkingWeeks(templateKey, daysPerWeek, ctx) {
+export function buildWorkingWeeks(templateKey, daysPerWeek, ctx, totalWeeks = 3) {
   const template = getTemplate(templateKey)
   const layout = template.layouts[daysPerWeek]
   if (!layout) throw new Error(`template ${templateKey} has no layout for ${daysPerWeek} days`)
@@ -44,9 +67,12 @@ export function buildWorkingWeeks(templateKey, daysPerWeek, ctx) {
   const slotCounts = {}
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
 
+  ctx.totalWeeks = totalWeeks
+
   const weeks = []
-  for (let w = 0; w < 3; w++) {
-    const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition)
+  for (let w = 0; w < totalWeeks; w++) {
+    ctx.weekIndex = w
+    const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
     // per-lift quality schedule for this week + a consuming index
     const sched = {}, idx = {}
     for (const lift of Object.keys(slotCounts)) {

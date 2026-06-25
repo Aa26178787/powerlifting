@@ -35,6 +35,19 @@ describe('buildDeloadWeek', () => {
   })
 })
 
+describe('buildDeloadWeek — straight scheme', () => {
+  it('emits a straight scheme at reduced weight/sets', () => {
+    const wk = buildDeloadWeek(workingWeek, ctx)
+    const ex = wk.sessions[0].exercises[0]
+    expect(ex.scheme).toBeDefined()
+    expect(ex.scheme.type).toBe('straight')
+    expect(ex.scheme.sets.length).toBe(ex.sets)
+    for (const s of ex.scheme.sets) {
+      expect(s.weight).toBe(ex.weight)
+    }
+  })
+})
+
 describe('needsDeload', () => {
   it('always deloads at week 4', () => {
     expect(needsDeload(4, 1)).toBe(true)

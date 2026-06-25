@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import StepPeriodization from './StepPeriodization.jsx'
 import { useProfileStore } from '../../store/profileStore.js'
@@ -16,5 +16,17 @@ describe('StepPeriodization', () => {
     render(<StepPeriodization />)
     await userEvent.setup().click(screen.getByLabelText(/대회 모드/))
     expect(useProfileStore.getState().profile.competition.on).toBe(true)
+  })
+  it('sets mesoWeeks to 6 via number input', () => {
+    render(<StepPeriodization />)
+    const input = screen.getByLabelText(/운동 주차/)
+    fireEvent.change(input, { target: { value: '6' } })
+    expect(useProfileStore.getState().profile.mesoWeeks).toBe(6)
+  })
+  it('toggles deloadEnabled to false when unchecked', async () => {
+    render(<StepPeriodization />)
+    // default is true, so clicking unchecks it
+    await userEvent.setup().click(screen.getByLabelText(/디로드 포함/))
+    expect(useProfileStore.getState().profile.deloadEnabled).toBe(false)
   })
 })

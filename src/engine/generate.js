@@ -31,6 +31,10 @@ export function generate(profile) {
   const { years, daysPerWeek, fatigue, lifts } = profile
   const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
   const competition = profile.competition ?? { on: false, date: '' }
+  const mesoWeeks = Math.max(3, Math.min(8, profile.mesoWeeks ?? 4))
+  const deloadEnabled = profile.deloadEnabled ?? true
+  const peaking = !!(competition.on && competition.date)
+  const variationOverride = profile.variationOverride ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
     : profile.periodizationModel
@@ -59,11 +63,10 @@ export function generate(profile) {
     const sc = slotCounts[priorityLift] || 1
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, peaking, totalWeeks: mesoWeeks }
 
-  const working = buildWorkingWeeks(template, daysPerWeek, ctx)
-  const deload = buildDeloadWeek(working[working.length - 1], ctx)
-  const allWeeks = [...working, deload]
+  const working = buildWorkingWeeks(template, daysPerWeek, ctx, mesoWeeks)
+  const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
 
   const weeks = allWeeks.map((wk) => ({
     ...wk,

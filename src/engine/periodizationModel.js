@@ -12,6 +12,9 @@ export const MODELS = {
   adaptive:   { weekOffsets: WAVE, undulation: 0.5, emphasisConcentration: 0.5 },
 }
 
+function ramp(w, N) { return N <= 1 ? 0 : w / (N - 1) }
+export function weekOffset(weekIndex, totalWeeks) { return ramp(weekIndex, totalWeeks) }
+
 // 'auto' and any unknown value resolve to the adaptive hybrid. Explicit
 // textbook models still pass through unchanged.
 export function resolveModel(model) {
@@ -47,11 +50,11 @@ function peakTarget(n, competition) {
 // How block-like THIS week is, in [0,1]: rises late in the mesocycle, with a
 // strong dominant quality, and as a meet approaches. An even blend with no meet
 // stays ~0 → fully concurrent (DUP-only). Continuous, never a hard switch.
-function adaptiveConcentration(weekIndex, n, competition) {
+function adaptiveConcentration(weekIndex, n, competition, totalWeeks) {
   const dom = Math.max(...QUALITIES.map((q) => n[q]))     // 0.25 (even) .. 1
   const domPull = Math.max(0, (dom - 0.4) / 0.6)          // 0 at <=0.4 -> 1 at 1.0
   const meetPull = competition && competition.on && competition.date ? 0.5 : 0
-  const weekProg = [0.1, 0.4, 0.75][weekIndex] ?? 0.1     // later weeks more block-like
+  const weekProg = ramp(weekIndex, totalWeeks) * 0.75     // later weeks more block-like
   return Math.min(1, (domPull + meetPull) * weekProg)
 }
 
@@ -61,9 +64,9 @@ function lerpBlend(n, target, t) {
   return out
 }
 
-export function weekPlan(model, weekIndex, blend, competition) {
+export function weekPlan(model, weekIndex, blend, competition, totalWeeks = 3) {
   const m = resolveModel(model)
-  const rpeOffset = (MODELS[m] ?? MODELS.adaptive).weekOffsets[weekIndex] ?? 0
+  const rpeOffset = weekOffset(weekIndex, totalWeeks)
   if (m === 'block') {
     const order = QUALITIES.filter((q) => (blend[q] || 0) > 0).sort((a, b) => (blend[b] || 0) - (blend[a] || 0))
     const emphasis = order.length ? order[weekIndex % order.length] : 'strength'
@@ -71,9 +74,17 @@ export function weekPlan(model, weekIndex, blend, competition) {
   }
   if (m === 'adaptive') {
     const n = normalizeBlend(blend)
-    const conc = adaptiveConcentration(weekIndex, n, competition)
+    const conc = adaptiveConcentration(weekIndex, n, competition, totalWeeks)
     const target = oneHot(peakTarget(n, competition))
     return { rpeOffset, blend: lerpBlend(n, target, conc) }
   }
   return { rpeOffset, blend }   // linear / undulating: concurrent (within-week DUP via schedule)
+}
+
+export function phaseFor(weekIndex, totalWeeks, peaking) {
+  if (totalWeeks <= 1) return peaking ? 'peak' : 'intensification'
+  const frac = weekIndex / (totalWeeks - 1)
+  if (frac < 0.34) return 'accumulation'
+  if (frac < 0.67) return 'intensification'
+  return peaking ? 'peak' : 'intensification'
 }
