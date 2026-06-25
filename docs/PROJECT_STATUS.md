@@ -1,0 +1,96 @@
+# 파워리프팅 루틴 생성기 — 진행 상황 & 로드맵
+
+> 최종 갱신: 2026-06-26 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting
+
+근거 기반 개인화 파워리프팅 루틴 생성기. 규칙 기반(결정론적·오프라인·무료) 엔진 + React 웹앱. 모든 수치는 메타분석/RCT/코칭 컨센서스에 근거하며 한계를 UI에 정직하게 고지.
+
+---
+
+## 1. 빌드 완료 (라이브)
+
+### Phase 1 — 기반 엔진 + 웹앱
+- 입력(1RM·경력·일수·목표·컨디션·장비 등) → 규칙 엔진 → 개인화 메소사이클
+- 하이브리드 RPE + %1RM 오토레귤레이션, Tuchscherer RPE→%1RM 차트, e1RM(Epley/Brzycki)
+- 볼륨 랜드마크(MEV/MAV/MRV), 빈도, 강도 분배, 디로드
+- React UI, zustand(localStorage 영속), CSV/인쇄, GitHub Pages 자동 배포
+
+### v2 — 변형·개인화
+- 207개 운동 DB(competition/variation/accessory + 부위 stress 태그)
+- 메인리프트 스타일(바/스탠스/그립), 스티킹포인트, 부위 상태 0-3 그레이드 오토레귤레이션
+- 스타일·약점 기반 변형/보조 선택
+
+### v3 — 설문 위저드 + 진단 + 자질 모델
+- **SP1 — 4-자질 모델**: Power/Strength/Hypertrophy/Endurance 블렌드(슬라이더+프리셋), 자질→zone 매핑, 주기화 모델, 오토레귤레이션 우선(무게=제안치), MRV 캡
+- **SP2 — 8단계 위저드 + 진단**: 약점 종목(엘리트 비율 + IPF GoodLift), 강도 수준, 우선 보강, 변형 e1rmModifier
+- **프로그램 구조**: 주차 직접 설정(3-8) + 디로드 토글, 적응형 하이브리드 주기화(선형+DUP+블록 연속 혼합)
+- **세트 구조 엔진**: 연구 기반 14종(스트레이트/탑세트+백오프/클러스터/피라미드/웨이브/AMRAP/램핑/레스트포즈/드롭/마이오렙/위도우메이커/콘트라스트 등), 자질·주차·역할별 자동 배정, 세트별 구체값 표시
+- **보조운동 세트 구조**: 반복+RPE(체감) 구조 배정
+- **템포 표기**: `템포 3-1-1초 (하강-정지-상승)` + T2K(Tempo to Knees) 데드
+- **운동 단위 제외**(다중 checkbox) + 리프트별 변형 오버라이드
+- **느낌(큐) 약점 → 교정 변형**: 13종 큐(지면추진/힙슈팅/무게중심/등 사용/레그드라이브→T2K 등)
+- **SP3 — 일일 체크인 readiness**: 수면/스트레스/피로/부위 상태 → 그날 부하·볼륨 자동 조정 + 통증 부위 드롭/교체, 과피로 트렌드 모니터 배너
+- **세트별 RPE 누적 피로**: 같은 무게 세트는 RPE 점증(마지막 세트=목표)
+- **kg ↔ lbs 단위 변환**: 입력·표시·CSV 전역
+
+---
+
+## 2. 아키텍처 (주요 파일)
+
+### 엔진 (`src/engine/`, 순수·결정론적·kg)
+- `quality.js` ZONES/블렌드/프리셋 · `periodizationModel.js` 모델/적응형/주차스케일/phaseFor
+- `setSchemes.js` 14 스킴 expand + pickScheme + risingRpe + expandAccessory
+- `standards.js` 진단(상대강도·GL) · `cueVariation.js` 큐→변형
+- `readiness.js`/`applyReadiness.js`/`overreaching.js` SP3
+- `variations.js`/`accessories.js`/`style.js`/`regionStatus.js` 선택·교체
+- `generate.js` 오케스트레이터 · `periodization.js` 주차/세션 빌드 · `deload.js`
+- `exercises.js`(207 DB) · `e1rm.js`/`volume.js`/`tuner.js`/`selector.js`
+
+### UI (`src/ui/`)
+- `store/profileStore.js` zustand(영속, 커스텀 merge — 버전 범프 없이 신규 필드 deep-fill)
+- `wizard/` 8단계(Basics/Lifts/Experience/Goals/Periodization/Style/Equipment/Summary) + StrengthAssessment
+- `components/` RoutineView(세트별 표시+체크인패널+과피로배너) · CheckinPanel · LimitsPanel · RpeLogger
+- `lib/` planAdapter · exportCsv · units
+- `i18n.js` 한글 라벨 맵(엔진 값은 영어 유지)
+
+### 테스트/배포
+- Vitest 260 테스트(엔진 골든 + jsdom 컴포넌트), `npm run build`, GitHub Actions → Pages
+
+---
+
+## 3. 알려진 한계 / 정직 고지 (의도된 범위)
+- 변형→메인 전이 수치 미측정(코칭 컨센서스), 강도 수준=대회 상대값(임상 등급 아님)
+- 특수 세트 구조는 스트레이트 대비 효과 차이 작음(g=0.159) — 다양성·시간효율·피로관리 목적
+- 큐·오버라이드·변형은 **변형 슬롯에만** 적용 → 데드는 3일/주에선 컴페티션 전용이라 4일+부터 반영
+- readiness 환산은 휴리스틱(개인 보정 필요), 과피로 경보=단순 트렌드(진단 아님, ACWR 미사용)
+- 부위 통증 교체(status 2)는 단일 pick을 부위로만 필터(스타일 무시)
+- 다종목 묶음(콘트라스트/슈퍼/자이언트)은 표시·메모만(완전 오케스트레이션 후속)
+- VBT(영상 속도) 모듈은 보류(근거 약함 — 속도손실 밴드 + 개인 보정으로 재설계 시 재검토)
+
+---
+
+## 4. 앞으로 할 것 (로드맵, 우선순위)
+
+### 가까운 우선순위 (실전 디테일 — 사용성 큼)
+- [ ] **워밍업 세트 자동 생성** — 본세트 전 램프업(예: 40/60/80% × 5/3/1) 표시
+- [ ] **세트 간 휴식 시간 표시** — 자질별(파워 3-5분 / 근력 3-5분 / 근비대 1-2분 / 지구력 ~1분)
+- [ ] **변형·보조 운동 한글화** — DB 운동명 i18n 라벨(현재 영어: Front Squat 등)
+- [ ] **로깅 → 다음 세션 피드백** — RpeLogger를 위저드 흐름에 연결, 실제 RPE → `autoreg.loadAdjustment`로 다음 세션 부하 반영(이미 빌드됨, 미연결)
+
+### 중기
+- [ ] **대회 피킹/테이퍼 강화** — 현재 후반 강도 상승만; 본격 볼륨 테이퍼 + 개막 주 단일
+- [ ] **다종목 묶음 오케스트레이션** — 콘트라스트(PAP) 실제 폭발 종목 페어링, 보조 슈퍼/자이언트 그룹 실행
+- [ ] **스타일 인식 통증 교체** — applyReadiness status-2 교체가 스타일/스티킹 반영 + 후보 풀 전체 부위 필터
+- [ ] **데드 저빈도 큐 안내** — 3일/주에서 데드 큐 미반영 시 UI 안내/대체 처리
+- [ ] **진행 추적 / 사이클 간 진전** — 주차별 e1RM 추세, 정체 감지 → 모델 자동 전환
+
+### 장기 / 보류
+- [ ] **VBT 영상 모듈 재설계** — 바패스 속도 프로파일 → 약점 ROM 구간(상대 측정, 속도손실 밴드) + 개인 MVT 보정
+- [ ] **디자인 / 모바일 반응형** — 현재 기본 CSS, 시각 디자인·반응형 개선
+- [ ] **HRV/객관 readiness**, **여성·연령별 표준 보정**
+
+---
+
+## 5. 작업 방식 (참고)
+- 큰 기능: 브레인스톰 → spec(`docs/superpowers/specs/`) → plan(`docs/superpowers/plans/`) → subagent-driven 빌드 → 전체 브랜치 리뷰 → 병합·배포(점진)
+- 작은 응집 변경: 인라인 TDD → 리뷰 → 병합·배포
+- 근거 필요 시 deep-research(검증된 클레임만 인코딩), 결과는 `docs/research/`
