@@ -24,6 +24,10 @@ export const DEFAULT_PROFILE = {
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
   periodizationModel: 'adaptive',
   priorityLift: null,
+  mesoWeeks: 4,
+  deloadEnabled: true,
+  excludedTools: [],
+  variationOverride: { squat: null, bench: null, deadlift: null },
 }
 
 function hasUsableLift(liftInput) {
@@ -71,6 +75,14 @@ export const useProfileStore = create(
           const equipment = has ? s.profile.equipment.filter((e) => e !== name) : [...s.profile.equipment, name]
           return { profile: { ...s.profile, equipment } }
         }),
+      toggleExcludedTool: (tool) =>
+        set((s) => {
+          const has = s.profile.excludedTools.includes(tool)
+          const excludedTools = has ? s.profile.excludedTools.filter((t) => t !== tool) : [...s.profile.excludedTools, tool]
+          return { profile: { ...s.profile, excludedTools } }
+        }),
+      setVariationOverride: (lift, name) =>
+        set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
       reset: () => set({ profile: DEFAULT_PROFILE, plan: null }),
     }),
     {
@@ -97,6 +109,10 @@ export const useProfileStore = create(
             qualities: { ...current.profile.qualities, ...(p.qualities || {}) },
             periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
             priorityLift: p.priorityLift ?? current.profile.priorityLift,
+            mesoWeeks: p.mesoWeeks ?? current.profile.mesoWeeks,
+            deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
+            excludedTools: p.excludedTools ?? current.profile.excludedTools,
+            variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
           },
         }
       },

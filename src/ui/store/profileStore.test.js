@@ -124,3 +124,57 @@ describe('priorityLift', () => {
     expect(useProfileStore.getState().profile.priorityLift).toBe('bench')
   })
 })
+
+describe('v3 mesocycle + variation-control fields', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+  it('defaults include mesoWeeks: 4, deloadEnabled: true, excludedTools: [], variationOverride nulls', () => {
+    const p = useProfileStore.getState().profile
+    expect(p.mesoWeeks).toBe(4)
+    expect(p.deloadEnabled).toBe(true)
+    expect(p.excludedTools).toEqual([])
+    expect(p.variationOverride).toEqual({ squat: null, bench: null, deadlift: null })
+  })
+  it('toggleExcludedTool adds then removes a tool', () => {
+    const { toggleExcludedTool } = useProfileStore.getState()
+    toggleExcludedTool('band')
+    expect(useProfileStore.getState().profile.excludedTools).toContain('band')
+    toggleExcludedTool('band')
+    expect(useProfileStore.getState().profile.excludedTools).not.toContain('band')
+  })
+  it('setVariationOverride sets the lift variation', () => {
+    useProfileStore.getState().setVariationOverride('squat', 'box squat')
+    expect(useProfileStore.getState().profile.variationOverride.squat).toBe('box squat')
+    useProfileStore.getState().setVariationOverride('squat', null)
+    expect(useProfileStore.getState().profile.variationOverride.squat).toBeNull()
+  })
+  it('rehydrates missing v3 fields from defaults (merge test)', async () => {
+    localStorage.clear()
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+          equipment: ['barbell'],
+          style: { squat: { bar: 'low', stance: 'medium' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } },
+          stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
+          regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
+          qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
+          periodizationModel: 'adaptive',
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    // v3 fields restored from defaults
+    expect(p.mesoWeeks).toBe(4)
+    expect(p.deloadEnabled).toBe(true)
+    expect(p.excludedTools).toEqual([])
+    expect(p.variationOverride).toEqual({ squat: null, bench: null, deadlift: null })
+    // persisted user data preserved
+    expect(p.lifts.squat.oneRM).toBe(100)
+    expect(p.years).toBe(3)
+  })
+})
