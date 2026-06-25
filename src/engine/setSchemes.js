@@ -1,4 +1,4 @@
-import { ZONES, weightFor } from './quality.js'
+import { weightFor } from './quality.js'
 import { roundToIncrement } from './e1rm.js'
 
 const r = roundToIncrement
