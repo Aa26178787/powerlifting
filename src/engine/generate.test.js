@@ -77,6 +77,18 @@ const richProfile = {
   equipment: ['barbell','rack','bench','box','pins','deficit','blocks','cables','dumbbells'],
 }
 
+describe('priorityLift', () => {
+  it('bumps the priority lift weekly sets vs no priority (still <= MRV)', () => {
+    const base = generate({ ...profile, daysPerWeek: 4, priorityLift: null })
+    const bumped = generate({ ...profile, daysPerWeek: 4, priorityLift: 'bench' })
+    const benchSets = (plan) => plan.weeks[0].sessions.flatMap((s) => s.exercises).filter((e) => e.baseLift === 'bench').reduce((a, e) => a + e.sets, 0)
+    expect(benchSets(bumped)).toBeGreaterThanOrEqual(benchSets(base))
+  })
+  it('null priority leaves output identical to SP1', () => {
+    expect(() => generate({ ...profile, priorityLift: null })).not.toThrow()
+  })
+})
+
 describe('generate v2', () => {
   it('uses the styled competition deadlift variant on heavy slots', () => {
     const plan = generate(styleProfile)

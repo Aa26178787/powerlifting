@@ -55,6 +55,11 @@ export function generate(profile) {
     const sc = slotCounts[lift] || 1
     cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], Math.floor(mrv / sc)))
   }
+  const priorityLift = profile.priorityLift
+  if (priorityLift && MAIN_LIFTS.includes(priorityLift)) {
+    const sc = slotCounts[priorityLift] || 1
+    cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
+  }
   const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx)
