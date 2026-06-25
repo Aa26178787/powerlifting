@@ -1,11 +1,15 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { liftLabel, styleLabel, stickingLabel } from '../../i18n.js'
+import { liftLabel, styleLabel, stickingLabel, toolGroupLabel } from '../../i18n.js'
+import { query, allEquipment } from '../../../engine/exercises.js'
+import { excludeTags, TOOL_GROUP_KEYS } from '../../../engine/excludableTools.js'
 
 export default function StepStyle() {
   const p = useProfileStore((s) => s.profile)
   const setStyle = useProfileStore((s) => s.setStyle)
   const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
+  const toggleExcludedTool = useProfileStore((s) => s.toggleExcludedTool)
+  const setVariationOverride = useProfileStore((s) => s.setVariationOverride)
 
   return (
     <div>
@@ -51,6 +55,41 @@ export default function StepStyle() {
             </select>
           </label>
         ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>제외할 도구</legend>
+        {TOOL_GROUP_KEYS.map((k) => (
+          <label key={k}>
+            <input
+              type="checkbox"
+              checked={p.excludedTools.includes(k)}
+              onChange={() => toggleExcludedTool(k)}
+            />
+            {' '}{toolGroupLabel(k)}
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>변형 선택</legend>
+        {['squat', 'bench', 'deadlift'].map((lift) => {
+          const available = allEquipment().filter((t) => !excludeTags(p.excludedTools).includes(t))
+          const variations = query({ category: 'variation', targetLift: lift, equipmentAvailable: available })
+          return (
+            <label key={lift}>{liftLabel(lift)} 변형
+              <select
+                value={p.variationOverride[lift] ?? ''}
+                onChange={(e) => setVariationOverride(lift, e.target.value || null)}
+              >
+                <option value="">자동</option>
+                {variations.map((ex) => (
+                  <option key={ex.name} value={ex.name}>{ex.name}</option>
+                ))}
+              </select>
+            </label>
+          )
+        })}
       </fieldset>
     </div>
   )

@@ -23,6 +23,24 @@ export default function StepPeriodization() {
         {peaking && <li>대회가 가까워질수록 근력 피킹으로 좁혀갑니다.</li>}
       </ul>
 
+      <label>운동 주차
+        <input
+          type="number"
+          min={3}
+          max={8}
+          value={p.mesoWeeks}
+          onChange={(e) => setField('mesoWeeks', Math.max(3, Math.min(8, Number(e.target.value) || 4)))}
+        />
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={p.deloadEnabled}
+          onChange={(e) => setField('deloadEnabled', e.target.checked)}
+        />
+        {' '}디로드 포함
+      </label>
+
       <label>
         <input
           type="checkbox"
