@@ -70,3 +70,30 @@ describe('v2 profile fields', () => {
     expect(p.regionStatus.knee).toBe(2)
   })
 })
+
+describe('rehydration of a pre-v2 persisted profile', () => {
+  beforeEach(() => { localStorage.clear() })
+  it('fills missing style/stickingPoint/regionStatus from defaults (no crash)', async () => {
+    // old app version persisted a profile WITHOUT the v2 fields (had injuries)
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, goal: 'strength', fatigue: 2, injuries: ['knee'],
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    // v2 fields restored from defaults (would have been undefined -> form crash)
+    expect(p.style.squat.bar).toBe('low')
+    expect(p.stickingPoint.bench).toBe('none')
+    expect(p.regionStatus.lowerBack).toBe(0)
+    // persisted user data preserved
+    expect(p.lifts.squat.oneRM).toBe(100)
+    expect(p.years).toBe(3)
+  })
+})

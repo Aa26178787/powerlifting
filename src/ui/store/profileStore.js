@@ -62,6 +62,30 @@ export const useProfileStore = create(
         }),
       reset: () => set({ profile: DEFAULT_PROFILE, plan: null }),
     }),
-    { name: 'powerlifting-profile' }
+    {
+      name: 'powerlifting-profile',
+      // No `version` bump on purpose: a version mismatch without a migrate makes
+      // zustand DISCARD the persisted state (losing the user's saved profile).
+      // Instead we keep the stored data and deep-merge it onto the current
+      // defaults so a profile saved by an older app version (which lacks
+      // style/stickingPoint/regionStatus) can't leave those objects undefined —
+      // that previously crashed the form (white screen) on rehydrate.
+      merge: (persisted, current) => {
+        const p = (persisted && persisted.profile) || {}
+        return {
+          ...current,
+          ...persisted,
+          profile: {
+            ...current.profile,
+            ...p,
+            lifts: { ...current.profile.lifts, ...(p.lifts || {}) },
+            competition: { ...current.profile.competition, ...(p.competition || {}) },
+            style: { ...current.profile.style, ...(p.style || {}) },
+            stickingPoint: { ...current.profile.stickingPoint, ...(p.stickingPoint || {}) },
+            regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
+          },
+        }
+      },
+    }
   )
 )
