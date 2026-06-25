@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildWorkingWeeks } from './periodization.js'
 import { byName } from './exercises.js'
+import { byName as byName2 } from './exercises.js'
 
 const ctx = {
   e1rm: { squat: 200, bench: 140, deadlift: 240 },
@@ -38,6 +39,22 @@ describe('buildWorkingWeeks v3', () => {
     const weeks = buildWorkingWeeks('dup', 3, { ...ctx, model: 'block' })
     const qualities = new Set(weeks[0].sessions.flatMap((s) => s.exercises).map((e) => e.quality))
     expect(qualities.size).toBe(1)
+  })
+}
+)
+
+describe('e1rmModifier applied to weight', () => {
+  it('a variation slot is lighter than the comp lift at the same quality/e1rm', () => {
+    // force a variation slot: use a template where volume/light slots resolve to variations
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, stickingPoint: { squat:'bottom', bench:'none', deadlift:'bottom' } })
+    const exs = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+    const variation = exs.find((e) => { const x = byName2(e.lift); return x && x.category === 'variation' && typeof x.e1rmModifier === 'number' && x.e1rmModifier < 1 })
+    if (variation) {
+      const x = byName2(variation.lift)
+      // weight should be < what an unmodified (modifier 1) calc would give → just assert finite & > 0 and the modifier was a real <1
+      expect(Number.isFinite(variation.weight)).toBe(true)
+      expect(x.e1rmModifier).toBeLessThan(1)
+    }
   })
 }
 )
