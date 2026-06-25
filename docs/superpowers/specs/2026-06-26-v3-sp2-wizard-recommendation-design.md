@@ -51,6 +51,18 @@ Functions:
 - `assess(lifts, bodyweight, sex): { perLift: {squat,bench,deadlift: relStandard}, weakLift, glPoints, level }`.
 - `recommendBlend(years, weakLiftPresent): blend` — coaching-heuristic: < 1 yr → strength-leaning (newbie linear gains); 1–3 yr → balanced/powerbuilding; > 3 yr → user-goal-driven default (general). Returns a `{power,strength,hypertrophy,endurance}` normalized blend; the user can override via sliders/presets. (Periodization-model recommendation reuses SP1's `recommendModel`.)
 
+## 4b. Variation load modifiers (`exercises.json` + `periodization.js`)
+
+Today the engine computes a variation's weight from the competition lift's e1RM directly — over-prescribing, since variations are performed at a different %1RM than the comp lift. Add a per-exercise `e1rmModifier` (fraction of the base comp lift's e1RM; default **1.0** for competition lifts and accessories) and apply it: `weight = weightFor(quality, ctx.e1rm[baseLift] * (e1rmModifier ?? 1))` in `periodization.buildExercise`, and the same `* (e1rmModifier ?? 1)` in `deload.buildDeloadWeek`.
+
+Modifiers (midpoints from PRS on the Platform, 2018, coaching-consensus; longer ROM/pause < 1, shorter ROM > 1):
+- **Squat variations:** high-bar 0.94, SSB/safety 0.89, buffalo/duffalo 0.99, cambered 0.91, tempo 0.90, pause 0.93, pin 0.89, box 0.90, anderson 0.88, front 0.84, zercher 0.80, heel-elevated/cyclist 0.85.
+- **Bench variations:** close-grip 0.97, wide 0.95, tempo 0.93, pause/2-second 0.95, spoto 0.94, pin press 0.94, floor 0.93, larsen 0.93, feet-up 0.93, dead bench 0.92, cambered 0.93, incline 0.82, decline 0.95, swiss/axle 0.93, slingshot 1.04, board 1.04.
+- **Deadlift variations:** pause off-floor 0.93, pause below-knee 0.94, deficit 0.93, halting 0.92, block-pull-below-knee 1.00, block-pull-above-knee 1.05, rack-pull-above-knee 1.05, rack-pull-mid-shin 1.02, snatch-grip 0.85, clean-grip 0.92, RDL 0.80, stiff-leg 0.80, trap-bar 1.05, tempo 0.90, sumo-block-pull 1.05.
+- Everything else (competition lifts, accessories) → `e1rmModifier` absent ⇒ treated as 1.0.
+
+Individual variation is large (morphology); these are starting suggestions surfaced as autoregulate targets, not fixed loads (disclosed). The modifier is applied to the WEIGHT only; reps/RPE/quality come from the zone as before.
+
 ## 5. Weak-Lift → Routine (engine, small additions)
 
 `profile.priorityLift: 'squat'|'bench'|'deadlift'|null` (set from the accepted weak-lift recommendation or chosen manually). At generation (option C, within MRV):
@@ -86,7 +98,7 @@ Missing 1RM → assessment/weakLift return null and the wizard shows "1RM을 입
 
 ## 10. Testing (TDD)
 
-Golden tests for `standards.js`: `relStandard` (known oneRM/BW/sex → known fraction), `weakLift` (a lifter with a clearly lagging bench → 'bench'; the natural bench<squat<deadlift ordering does NOT auto-flag bench when all are proportional), `glPoints` (known total/BW/sex → known GL within tolerance), `levelBand` boundaries, `assess` shape, `recommendBlend` per experience tier. generate: `priorityLift` bumps that lift's weekly sets by ~1 (still ≤ MRV) and does nothing when null. Wizard/steps: jsdom interaction — step 2 entry shows assessment + weak-lift toggle sets `priorityLift`; preset/blend recommendation applies; navigation advances only when required fields valid; full end-to-end (wizard → generate → routine renders). Full `npm test` green at the end (this is a breaking-UI migration like SP1 — focused tests per task, full green at the final task).
+Golden tests for `standards.js`: `relStandard` (known oneRM/BW/sex → known fraction), `weakLift` (a lifter with a clearly lagging bench → 'bench'; the natural bench<squat<deadlift ordering does NOT auto-flag bench when all are proportional), `glPoints` (known total/BW/sex → known GL within tolerance), `levelBand` boundaries, `assess` shape, `recommendBlend` per experience tier. generate/periodization: a variation with `e1rmModifier` 0.90 produces a working weight ≈ 90% of what the same slot would get at modifier 1.0 (e.g. deficit deadlift lighter than the comp deadlift at the same quality); a comp lift / accessory (no modifier) is unchanged; deload applies the modifier too. DB-integrity: every variation `e1rmModifier`, when present, is a number in [0.75, 1.10]. `priorityLift` bumps that lift's weekly sets by ~1 (still ≤ MRV) and does nothing when null. Wizard/steps: jsdom interaction — step 2 entry shows assessment + weak-lift toggle sets `priorityLift`; preset/blend recommendation applies; navigation advances only when required fields valid; full end-to-end (wizard → generate → routine renders). Full `npm test` green at the end (this is a breaking-UI migration like SP1 — focused tests per task, full green at the final task).
 
 ## 11. Honest Limits (UI)
 
