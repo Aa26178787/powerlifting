@@ -1,6 +1,6 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { recommendModel } from '../../../engine/periodizationModel.js'
+import { resolveModel } from '../../../engine/periodizationModel.js'
 import { modelLabel, qualityLabel } from '../../i18n.js'
 import StrengthAssessment from '../StrengthAssessment.jsx'
 
@@ -12,16 +12,13 @@ export default function StepSummary() {
     deadlift: p.lifts.deadlift?.oneRM ?? 0,
   }
 
-  const resolvedModel =
-    p.periodizationModel === 'auto'
-      ? recommendModel({ competition: p.competition, blend: p.qualities })
-      : p.periodizationModel
+  const resolvedModel = resolveModel(p.periodizationModel)
 
   return (
     <div>
       <StrengthAssessment oneRMs={oneRMs} bodyweight={p.bodyweight} sex={p.sex} />
 
-      <p>선택된 주기화 모델: <strong>{modelLabel(resolvedModel)}</strong></p>
+      <p>주기화 방식: <strong>{modelLabel(resolvedModel)}</strong></p>
 
       <fieldset>
         <legend>목표 배분</legend>

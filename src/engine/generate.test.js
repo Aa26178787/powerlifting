@@ -21,7 +21,7 @@ describe('resolveE1rm', () => {
 describe('generate v3', () => {
   it('returns a model and a 4-week plan ending in deload', () => {
     const plan = generate(profile)
-    expect(['linear','undulating','block']).toContain(plan.model)
+    expect(['adaptive','linear','undulating','block']).toContain(plan.model)
     expect(plan.weeks).toHaveLength(4)
     expect(plan.weeks[3].isDeload).toBe(true)
   })

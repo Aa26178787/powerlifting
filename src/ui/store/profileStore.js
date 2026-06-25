@@ -22,7 +22,7 @@ export const DEFAULT_PROFILE = {
   stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
   regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
-  periodizationModel: 'auto',
+  periodizationModel: 'adaptive',
   priorityLift: null,
 }
 

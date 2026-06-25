@@ -1,4 +1,5 @@
 import { generate } from '../../engine/generate.js'
+import { allEquipment } from '../../engine/exercises.js'
 
 export function toEngineProfile(form) {
   return {
@@ -11,7 +12,9 @@ export function toEngineProfile(form) {
     style: form.style,
     stickingPoint: form.stickingPoint,
     regionStatus: form.regionStatus,
-    equipment: form.equipment,
+    // Equipment is no longer a user input — assume the athlete has everything,
+    // so the variation/accessory filter never excludes a movement.
+    equipment: allEquipment(),
     sessionTimeLimit: form.sessionTimeLimit,
     competition: form.competition,
     priorityLift: form.priorityLift,

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { liftLabel, styleLabel } from '../../i18n.js'
+import { liftLabel, styleLabel, stickingLabel } from '../../i18n.js'
 
 export default function StepStyle() {
   const p = useProfileStore((s) => s.profile)
@@ -46,7 +46,7 @@ export default function StepStyle() {
           <label key={lift}>{liftLabel(lift)}
             <select value={p.stickingPoint[lift]} onChange={(e) => setStickingPoint(lift, e.target.value)}>
               {['none', 'bottom', 'midrange', 'lockout'].map((v) => (
-                <option key={v} value={v}>{v}</option>
+                <option key={v} value={v}>{stickingLabel(v)}</option>
               ))}
             </select>
           </label>

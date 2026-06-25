@@ -34,3 +34,36 @@ describe('weekPlan', () => {
     expect(weekPlan('linear', 2, blend, { on: false }).rpeOffset).toBe(1.0)
   })
 })
+
+describe('adaptive hybrid', () => {
+  const even = { power: 0.25, strength: 0.25, hypertrophy: 0.25, endurance: 0.25 }
+  const strengthDom = { power: 0.1, strength: 0.7, hypertrophy: 0.2, endurance: 0 }
+
+  it("'auto' and unknown values resolve to adaptive", () => {
+    expect(weekPlan('auto', 1, strengthDom, { on: false }))
+      .toEqual(weekPlan('adaptive', 1, strengthDom, { on: false }))
+    expect(weekPlan('nonsense', 1, strengthDom, { on: false }))
+      .toEqual(weekPlan('adaptive', 1, strengthDom, { on: false }))
+  })
+
+  it('an even blend with no meet stays concurrent in week 1', () => {
+    expect(weekPlan('adaptive', 0, even, { on: false }).blend).toEqual(even)
+  })
+
+  it('concentrates the dominant quality more in later weeks', () => {
+    const w0 = weekPlan('adaptive', 0, strengthDom, { on: false }).blend
+    const w2 = weekPlan('adaptive', 2, strengthDom, { on: false }).blend
+    expect(w2.strength).toBeGreaterThan(w0.strength)
+    expect(w2.strength).toBeGreaterThan(strengthDom.strength)
+  })
+
+  it('a meet pulls the blend toward strength peaking', () => {
+    const peak = weekPlan('adaptive', 2, even, { on: true, date: '2026-09-01' }).blend
+    expect(peak.strength).toBeGreaterThan(even.strength)
+  })
+
+  it('keeps the weekly intensity wave', () => {
+    expect(weekPlan('adaptive', 0, even, { on: false }).rpeOffset).toBe(0)
+    expect(weekPlan('adaptive', 2, even, { on: false }).rpeOffset).toBe(1.0)
+  })
+})

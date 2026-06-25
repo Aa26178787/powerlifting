@@ -1,31 +1,14 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { equipmentLabel, regionLabel, statusLabel } from '../../i18n.js'
-
-const EQUIPMENT = ['barbell', 'rack', 'bench', 'box', 'trap bar', 'dumbbells', 'leg press machine']
+import { regionLabel, statusLabel } from '../../i18n.js'
 
 export default function StepEquipment() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
-  const toggleEquipment = useProfileStore((s) => s.toggleEquipment)
   const setRegionStatus = useProfileStore((s) => s.setRegionStatus)
 
   return (
     <div>
-      <fieldset>
-        <legend>보유 장비</legend>
-        {EQUIPMENT.map((eq) => (
-          <label key={eq}>
-            <input
-              type="checkbox"
-              checked={p.equipment.includes(eq)}
-              onChange={() => toggleEquipment(eq)}
-            />
-            {equipmentLabel(eq)}
-          </label>
-        ))}
-      </fieldset>
-
       <label>주당 훈련일
         <select value={p.daysPerWeek} onChange={(e) => setField('daysPerWeek', Number(e.target.value))}>
           {[3, 4, 5, 6].map((d) => <option key={d} value={d}>{d}</option>)}

@@ -7,9 +7,14 @@ import StepPeriodization from './StepPeriodization.jsx'
 import { useProfileStore } from '../../store/profileStore.js'
 beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
 describe('StepPeriodization', () => {
-  it('sets the periodization model', async () => {
+  it('describes the adaptive hybrid (no textbook model picker)', () => {
     render(<StepPeriodization />)
-    await userEvent.setup().selectOptions(screen.getByLabelText(/주기화 모델/), 'block')
-    expect(useProfileStore.getState().profile.periodizationModel).toBe('block')
+    expect(screen.getByText(/하이브리드/)).toBeTruthy()
+    expect(screen.queryByLabelText(/주기화 모델/)).toBeNull()
+  })
+  it('toggles competition mode', async () => {
+    render(<StepPeriodization />)
+    await userEvent.setup().click(screen.getByLabelText(/대회 모드/))
+    expect(useProfileStore.getState().profile.competition.on).toBe(true)
   })
 })

@@ -51,9 +51,17 @@ const STYLE = { bar: { low: '로우바', high: '하이바' }, stance: { narrow: 
 
 const QUALITY = { power: '파워', strength: '근력', hypertrophy: '근비대', endurance: '근지구력' }
 const PRESET = { powerlifting: '파워리프팅', powerbuilding: '파워빌딩', bodybuilding: '보디빌딩', athletic: '파워·운동선수', general: '일반·균형' }
-const MODEL = { auto: '자동 추천', linear: '선형', undulating: '비선형(DUP)', block: '블록' }
+const MODEL = { auto: '자동 추천', adaptive: '하이브리드 (자동 설계)', linear: '선형', undulating: '비선형(DUP)', block: '블록' }
 
-const STEP = { 1:'기본', 2:'현재 1RM', 3:'경력', 4:'목표', 5:'주기화', 6:'스타일·약점', 7:'장비·일정', 8:'요약' }
+// 스티킹포인트: 가장 안 올라가는 구간을 평소 표현으로 풀이
+const STICKING = {
+  none: '특별히 없음',
+  bottom: '바닥 구간 — 가장 낮은 지점에서 멈칫',
+  midrange: '중간 구간 — 중간에서 정체',
+  lockout: '마무리(락아웃) 구간 — 끝에서 안 펴짐',
+}
+
+const STEP = { 1:'기본', 2:'현재 1RM', 3:'경력', 4:'목표', 5:'주기화', 6:'스타일·약점', 7:'일정·컨디션', 8:'요약' }
 const ASSESS = { weakLift:'약점 종목', level:'강도 수준', gl:'GL 점수', standard:'표준 대비' }
 
 export const liftLabel = (k) => LIFT[k] ?? k
@@ -67,5 +75,6 @@ export const styleLabel = (group, v) => (STYLE[group] && STYLE[group][v]) ?? v
 export const qualityLabel = (k) => QUALITY[k] ?? k
 export const presetLabel = (k) => PRESET[k] ?? k
 export const modelLabel = (k) => MODEL[k] ?? k
+export const stickingLabel = (k) => STICKING[k] ?? k
 export const stepLabel = (n) => STEP[n] ?? String(n)
 export const assessLabel = (k) => ASSESS[k] ?? k

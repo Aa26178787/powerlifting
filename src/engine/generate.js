@@ -10,7 +10,6 @@ import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
 import { bandForBlend, BANDS } from './volume.js'
 import { getTemplate } from './templates.js'
-import { recommendModel } from './periodizationModel.js'
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
 const DEFAULT_STICK = { squat: 'none', bench: 'none', deadlift: 'none' }
@@ -33,7 +32,7 @@ export function generate(profile) {
   const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
   const competition = profile.competition ?? { on: false, date: '' }
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
-    ? recommendModel({ competition, blend })
+    ? 'adaptive'
     : profile.periodizationModel
   const style = profile.style ?? DEFAULT_STYLE
   const stickingPoint = profile.stickingPoint ?? DEFAULT_STICK

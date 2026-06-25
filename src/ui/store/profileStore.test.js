@@ -99,10 +99,10 @@ describe('rehydration of a pre-v2 persisted profile', () => {
 
 describe('v3 quality fields', () => {
   beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
-  it('defaults include qualities + auto model, no goal', () => {
+  it('defaults include qualities + adaptive model, no goal', () => {
     const p = useProfileStore.getState().profile
     expect(p.qualities.strength).toBe(0.5)
-    expect(p.periodizationModel).toBe('auto')
+    expect(p.periodizationModel).toBe('adaptive')
     expect(p).not.toHaveProperty('goal')
   })
   it('setQuality / applyPreset / setPeriodizationModel', () => {
