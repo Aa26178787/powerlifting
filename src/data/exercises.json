@@ -595,7 +595,7 @@
       "primaryMuscle": "glutes/adductors",
       "equipment": ["barbell", "deficit"],
       "stress": ["lowerBack", "shoulder", "hip"],
-      "styleBias": ["conventional"]
+      "styleBias": ["sumo"]
     },
     {
       "name": "Pause Deadlift (off floor)",
