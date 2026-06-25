@@ -88,7 +88,13 @@ export const useProfileStore = create(
       setCueNeed: (lift, key) =>
         set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
       logCheckin: (entry) =>
-        set((s) => ({ checkinLog: [...s.checkinLog, entry] })),
+        set((s) => {
+          // One readiness per session: upsert by {week,day} so re-applying a
+          // session updates its entry rather than appending a duplicate (which
+          // would otherwise skew the overreaching trend).
+          const rest = s.checkinLog.filter((e) => !(e.week === entry.week && e.day === entry.day))
+          return { checkinLog: [...rest, entry] }
+        }),
       clearCheckinLog: () =>
         set({ checkinLog: [] }),
       reset: () => set({ profile: DEFAULT_PROFILE, plan: null, checkinLog: [] }),

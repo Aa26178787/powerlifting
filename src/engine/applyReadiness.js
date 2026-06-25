@@ -19,7 +19,11 @@ export function applyReadiness(session, checkin) {
   for (const ex of session.exercises) {
     const row = byName(ex.lift)
     const status = row ? regionMaxStatus(row, rs) : 0
-    if (status === 3) { notes.push(`${ex.baseLift} 오늘 통증으로 제외`); continue }
+    if (status === 3) {
+      const region = (row?.stress ?? []).find((r) => (rs[r] ?? 0) === 3)
+      notes.push(`${ex.baseLift} 오늘${region ? ` ${region}` : ''} 통증으로 제외`)
+      continue
+    }
     let lift = ex.lift, rescale = 1
     if (status === 2) {
       const cand = pick(ex.baseLift, 'none', {}, allEquipment(), true, [])
