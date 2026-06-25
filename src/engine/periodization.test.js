@@ -72,9 +72,9 @@ describe('set schemes + overrides in working weeks', () => {
     expect(buildWorkingWeeks('dup', 3, { ...ctx, totalWeeks: 5 }, 5)).toHaveLength(5)
   })
   it('variationOverride forces the chosen variation name on its lift slots', () => {
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'box squat', bench: null, deadlift: null } }, 3)
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'Front Squat', bench: null, deadlift: null } }, 3)
     const squatVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
-      .find((e) => e.baseLift === 'squat' && e.lift === 'box squat')
+      .find((e) => e.baseLift === 'squat' && e.lift === 'Front Squat')
     expect(squatVar).toBeTruthy()
   })
 })

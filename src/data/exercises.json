@@ -72,17 +72,6 @@
       "e1rmModifier": 0.89
     },
     {
-      "name": "box squat",
-      "category": "variation",
-      "targetLift": "squat",
-      "stickingPoint": "bottom",
-      "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["barbell", "rack", "box"],
-      "stress": ["shoulder", "hip", "hamstring"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.90
-    },
-    {
       "name": "Box Squat (below parallel)",
       "category": "variation",
       "targetLift": "squat",
