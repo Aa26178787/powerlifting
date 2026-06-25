@@ -26,7 +26,7 @@ export const DEFAULT_PROFILE = {
   priorityLift: null,
   mesoWeeks: 4,
   deloadEnabled: true,
-  excludedTools: [],
+  excludedExercises: [],
   variationOverride: { squat: null, bench: null, deadlift: null },
 }
 
@@ -75,11 +75,11 @@ export const useProfileStore = create(
           const equipment = has ? s.profile.equipment.filter((e) => e !== name) : [...s.profile.equipment, name]
           return { profile: { ...s.profile, equipment } }
         }),
-      toggleExcludedTool: (tool) =>
+      toggleExcludedExercise: (name) =>
         set((s) => {
-          const has = s.profile.excludedTools.includes(tool)
-          const excludedTools = has ? s.profile.excludedTools.filter((t) => t !== tool) : [...s.profile.excludedTools, tool]
-          return { profile: { ...s.profile, excludedTools } }
+          const has = s.profile.excludedExercises.includes(name)
+          const excludedExercises = has ? s.profile.excludedExercises.filter((n) => n !== name) : [...s.profile.excludedExercises, name]
+          return { profile: { ...s.profile, excludedExercises } }
         }),
       setVariationOverride: (lift, name) =>
         set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
@@ -111,7 +111,7 @@ export const useProfileStore = create(
             priorityLift: p.priorityLift ?? current.profile.priorityLift,
             mesoWeeks: p.mesoWeeks ?? current.profile.mesoWeeks,
             deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
-            excludedTools: p.excludedTools ?? current.profile.excludedTools,
+            excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
           },
         }

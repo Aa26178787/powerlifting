@@ -47,6 +47,7 @@
       "primaryMuscle": "quads/glutes",
       "equipment": ["barbell", "rack"],
       "stress": ["knee", "shoulder", "hip"],
+      "tempo": [3, 1, 1],
       "e1rmModifier": 0.90
     },
     {
@@ -829,7 +830,20 @@
       "primaryMuscle": "hamstrings/erectors",
       "equipment": ["barbell"],
       "stress": ["lowerBack", "shoulder", "hamstring"],
+      "tempo": [3, 1, 1],
       "e1rmModifier": 0.90
+    },
+    {
+      "name": "Tempo to Knees Deadlift (T2K)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "hamstring", "hip"],
+      "tempo": [3, 0, 1],
+      "tempoStop": "knee",
+      "e1rmModifier": 0.88
     },
     {
       "name": "Axle Bar Deadlift",

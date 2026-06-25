@@ -1,14 +1,13 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { liftLabel, styleLabel, stickingLabel, toolGroupLabel } from '../../i18n.js'
+import { liftLabel, styleLabel, stickingLabel } from '../../i18n.js'
 import { query, allEquipment } from '../../../engine/exercises.js'
-import { excludeTags, TOOL_GROUP_KEYS } from '../../../engine/excludableTools.js'
 
 export default function StepStyle() {
   const p = useProfileStore((s) => s.profile)
   const setStyle = useProfileStore((s) => s.setStyle)
   const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
-  const toggleExcludedTool = useProfileStore((s) => s.toggleExcludedTool)
+  const toggleExcludedExercise = useProfileStore((s) => s.toggleExcludedExercise)
   const setVariationOverride = useProfileStore((s) => s.setVariationOverride)
 
   return (
@@ -58,36 +57,37 @@ export default function StepStyle() {
       </fieldset>
 
       <fieldset>
-        <legend>제외할 도구</legend>
-        {TOOL_GROUP_KEYS.map((k) => (
-          <label key={k}>
-            <input
-              type="checkbox"
-              checked={p.excludedTools.includes(k)}
-              onChange={() => toggleExcludedTool(k)}
-            />
-            {' '}{toolGroupLabel(k)}
-          </label>
-        ))}
-      </fieldset>
-
-      <fieldset>
-        <legend>변형 선택</legend>
+        <legend>변형 운동 (자동 / 직접 지정 / 제외)</legend>
         {['squat', 'bench', 'deadlift'].map((lift) => {
-          const available = allEquipment().filter((t) => !excludeTags(p.excludedTools).includes(t))
-          const variations = query({ category: 'variation', targetLift: lift, equipmentAvailable: available })
+          const candidates = query({ category: 'variation', targetLift: lift, equipmentAvailable: allEquipment() })
+          const selectable = candidates.filter((ex) => !p.excludedExercises.includes(ex.name))
           return (
-            <label key={lift}>{liftLabel(lift)} 변형
-              <select
-                value={p.variationOverride[lift] ?? ''}
-                onChange={(e) => setVariationOverride(lift, e.target.value || null)}
-              >
-                <option value="">자동</option>
-                {variations.map((ex) => (
-                  <option key={ex.name} value={ex.name}>{ex.name}</option>
+            <div key={lift} className="variation-control">
+              <label>{liftLabel(lift)} 변형
+                <select
+                  value={p.variationOverride[lift] ?? ''}
+                  onChange={(e) => setVariationOverride(lift, e.target.value || null)}
+                >
+                  <option value="">자동</option>
+                  {selectable.map((ex) => (
+                    <option key={ex.name} value={ex.name}>{ex.name}</option>
+                  ))}
+                </select>
+              </label>
+              <details className="exclude-variations">
+                <summary>제외할 변형</summary>
+                {candidates.map((ex) => (
+                  <label key={ex.name}>
+                    <input
+                      type="checkbox"
+                      checked={p.excludedExercises.includes(ex.name)}
+                      onChange={() => toggleExcludedExercise(ex.name)}
+                    />
+                    {' '}{ex.name}
+                  </label>
                 ))}
-              </select>
-            </label>
+              </details>
+            </div>
           )
         })}
       </fieldset>

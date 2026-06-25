@@ -127,19 +127,19 @@ describe('priorityLift', () => {
 
 describe('v3 mesocycle + variation-control fields', () => {
   beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
-  it('defaults include mesoWeeks: 4, deloadEnabled: true, excludedTools: [], variationOverride nulls', () => {
+  it('defaults include mesoWeeks: 4, deloadEnabled: true, excludedExercises: [], variationOverride nulls', () => {
     const p = useProfileStore.getState().profile
     expect(p.mesoWeeks).toBe(4)
     expect(p.deloadEnabled).toBe(true)
-    expect(p.excludedTools).toEqual([])
+    expect(p.excludedExercises).toEqual([])
     expect(p.variationOverride).toEqual({ squat: null, bench: null, deadlift: null })
   })
-  it('toggleExcludedTool adds then removes a tool', () => {
-    const { toggleExcludedTool } = useProfileStore.getState()
-    toggleExcludedTool('band')
-    expect(useProfileStore.getState().profile.excludedTools).toContain('band')
-    toggleExcludedTool('band')
-    expect(useProfileStore.getState().profile.excludedTools).not.toContain('band')
+  it('toggleExcludedExercise adds then removes an exercise', () => {
+    const { toggleExcludedExercise } = useProfileStore.getState()
+    toggleExcludedExercise('Tempo Squat')
+    expect(useProfileStore.getState().profile.excludedExercises).toContain('Tempo Squat')
+    toggleExcludedExercise('Tempo Squat')
+    expect(useProfileStore.getState().profile.excludedExercises).not.toContain('Tempo Squat')
   })
   it('setVariationOverride sets the lift variation', () => {
     useProfileStore.getState().setVariationOverride('squat', 'box squat')
@@ -171,7 +171,7 @@ describe('v3 mesocycle + variation-control fields', () => {
     // v3 fields restored from defaults
     expect(p.mesoWeeks).toBe(4)
     expect(p.deloadEnabled).toBe(true)
-    expect(p.excludedTools).toEqual([])
+    expect(p.excludedExercises).toEqual([])
     expect(p.variationOverride).toEqual({ squat: null, bench: null, deadlift: null })
     // persisted user data preserved
     expect(p.lifts.squat.oneRM).toBe(100)

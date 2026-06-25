@@ -6,13 +6,13 @@ export function styleToken(lift, style) {
   return ''
 }
 
-export function pick(lift, stickingPoint, style, equipmentAvailable, advanced) {
+export function pick(lift, stickingPoint, style, equipmentAvailable, advanced, excluded = []) {
   const pool = query({
     category: 'variation',
     targetLift: lift,
     equipmentAvailable,
     excludeAdvanced: !advanced,
-  })
+  }).filter((e) => !excluded.includes(e.name))
   if (pool.length === 0) return null
   const token = styleToken(lift, style)
   const score = (e) => {

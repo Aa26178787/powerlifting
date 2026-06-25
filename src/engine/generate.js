@@ -42,9 +42,9 @@ export function resolveE1rm(liftInput) {
   return e1rmFrom(weight, reps, rpe)
 }
 
-function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, regionStatus) {
+function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, regionStatus, excluded = []) {
   const bad = new Set(Object.entries(regionStatus).filter(([, v]) => v >= 2).map(([k]) => k))
-  const candidate = pick(baseLift, stickingPoint, style, equipment, advanced)
+  const candidate = pick(baseLift, stickingPoint, style, equipment, advanced, excluded)
   if (candidate && !candidate.stress.some((r) => bad.has(r))) return candidate.name
   return ex
 }
@@ -57,6 +57,7 @@ export function generate(profile) {
   const deloadEnabled = profile.deloadEnabled ?? true
   const peaking = !!(competition.on && competition.date)
   const variationOverride = profile.variationOverride ?? {}
+  const excludedExercises = profile.excludedExercises ?? []
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
     : profile.periodizationModel
@@ -85,7 +86,7 @@ export function generate(profile) {
     const sc = slotCounts[priorityLift] || 1
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, peaking, totalWeeks: mesoWeeks }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, peaking, totalWeeks: mesoWeeks }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
@@ -98,7 +99,7 @@ export function generate(profile) {
         .map((e) => {
           const ex = byName(e.lift)
           if (ex && shouldSwap(ex, regionStatus)) {
-            return { ...e, lift: sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus) }
+            return { ...e, lift: sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus, excludedExercises) }
           }
           return e
         })
@@ -112,7 +113,7 @@ export function generate(profile) {
         return false
       })
       const primary = kept[0]?.baseLift ?? 'squat'
-      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus })
+      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus, excluded: excludedExercises })
       const accessories = withAccessoryScheme(rawAccessories, {
         weekIndex: wk.index - 1,
         advanced,

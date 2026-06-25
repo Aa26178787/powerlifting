@@ -16,6 +16,11 @@ function ExerciseRow({ ex }) {
         )}
         <span className="ex-autoregulate">(자동조절)</span>
       </div>
+      {ex.tempo && (
+        <div className="ex-tempo">
+          템포 {ex.tempo.join('-')}초 (하강-정지-상승){ex.tempoStop === 'knee' ? ' · 무릎까지' : ''}
+        </div>
+      )}
       {scheme && scheme.note && (
         <div className="ex-scheme-note">{scheme.note}</div>
       )}

@@ -77,4 +77,20 @@ describe('set schemes + overrides in working weeks', () => {
       .find((e) => e.baseLift === 'squat' && e.lift === 'Front Squat')
     expect(squatVar).toBeTruthy()
   })
+  it('attaches a tempo spec to tempo exercises', () => {
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'Tempo Squat', bench: null, deadlift: null } }, 3)
+    const tempoEx = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+      .find((e) => e.lift === 'Tempo Squat')
+    expect(tempoEx).toBeTruthy()
+    expect(tempoEx.tempo).toEqual([3, 1, 1])
+  })
+  it('ignores a variationOverride that is in excludedExercises', () => {
+    const weeks = buildWorkingWeeks('dup', 3, {
+      ...ctx,
+      variationOverride: { squat: 'Front Squat', bench: null, deadlift: null },
+      excludedExercises: ['Front Squat'],
+    }, 3)
+    const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
+    expect(names).not.toContain('Front Squat')
+  })
 })
