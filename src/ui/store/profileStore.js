@@ -23,6 +23,7 @@ export const DEFAULT_PROFILE = {
   regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
   periodizationModel: 'auto',
+  priorityLift: null,
 }
 
 function hasUsableLift(liftInput) {
@@ -62,6 +63,8 @@ export const useProfileStore = create(
         set((s) => { const b = presetBlend(key); return b ? { profile: { ...s.profile, qualities: b } } : {} }),
       setPeriodizationModel: (value) =>
         set((s) => ({ profile: { ...s.profile, periodizationModel: value } })),
+      setPriorityLift: (value) =>
+        set((s) => ({ profile: { ...s.profile, priorityLift: value } })),
       toggleEquipment: (name) =>
         set((s) => {
           const has = s.profile.equipment.includes(name)
@@ -93,6 +96,7 @@ export const useProfileStore = create(
             regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
             qualities: { ...current.profile.qualities, ...(p.qualities || {}) },
             periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
+            priorityLift: p.priorityLift ?? current.profile.priorityLift,
           },
         }
       },
