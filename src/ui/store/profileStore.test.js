@@ -152,6 +152,11 @@ describe('v3 mesocycle + variation-control fields', () => {
     useProfileStore.getState().setCueNeed('deadlift', 'legDrive')
     expect(useProfileStore.getState().profile.cueNeed.deadlift).toBe('legDrive')
   })
+  it('units default kg and setUnits switches', () => {
+    expect(useProfileStore.getState().profile.units).toBe('kg')
+    useProfileStore.getState().setUnits('lbs')
+    expect(useProfileStore.getState().profile.units).toBe('lbs')
+  })
   it('rehydrates missing v3 fields from defaults (merge test)', async () => {
     localStorage.clear()
     const old = {

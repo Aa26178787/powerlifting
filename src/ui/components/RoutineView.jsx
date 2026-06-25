@@ -2,9 +2,10 @@ import React, { useState } from 'react'
 import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
+import { toDisplay, unitLabel } from '../lib/units.js'
 import CheckinPanel from './CheckinPanel.jsx'
 
-function ExerciseRow({ ex }) {
+function ExerciseRow({ ex, units }) {
   const scheme = ex.scheme
   return (
     <li className="exercise-row">
@@ -31,7 +32,7 @@ function ExerciseRow({ ex }) {
         <ol className="ex-sets">
           {scheme.sets.map((s, i) => (
             <li key={i}>
-              {i + 1}세트: {s.weight}kg × {s.reps}
+              {i + 1}세트: {toDisplay(s.weight, units)}{unitLabel(units)} × {s.reps}
               {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
               {s.note ? ` · ${s.note}` : ''}
             </li>
@@ -69,6 +70,7 @@ function AccessoryRow({ acc }) {
 export default function RoutineView({ plan }) {
   const checkinLog = useProfileStore((s) => s.checkinLog)
   const logCheckin = useProfileStore((s) => s.logCheckin)
+  const units = useProfileStore((s) => s.profile.units ?? 'kg')
   const [adjusted, setAdjusted] = useState({})
 
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
@@ -104,7 +106,7 @@ export default function RoutineView({ plan }) {
                 {adjusted[key] && (
                   <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
                 )}
-                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
+                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} />)}</ul>
                 {(view.accessories ?? []).length > 0 && (
                   <div className="accessories">
                     <h5>보조운동</h5>

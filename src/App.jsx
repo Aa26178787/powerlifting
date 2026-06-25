@@ -13,7 +13,7 @@ export default function App() {
   const onGenerate = () => setState({ plan: buildPlan(profile) })
   const restart = () => setState({ plan: null })
   const downloadCsv = () => {
-    const blob = new Blob(['﻿' + planToCsv(plan)], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob(['﻿' + planToCsv(plan, profile.units ?? 'kg')], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob); const a = document.createElement('a')
     a.href = url; a.download = 'routine.csv'; a.click(); URL.revokeObjectURL(url)
   }

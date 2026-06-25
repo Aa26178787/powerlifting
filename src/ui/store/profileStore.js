@@ -29,6 +29,7 @@ export const DEFAULT_PROFILE = {
   excludedExercises: [],
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
+  units: 'kg',
 }
 
 function hasUsableLift(liftInput) {
@@ -87,6 +88,8 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
       setCueNeed: (lift, key) =>
         set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
+      setUnits: (units) =>
+        set((s) => ({ profile: { ...s.profile, units } })),
       logCheckin: (entry) =>
         set((s) => {
           // One readiness per session: upsert by {week,day} so re-applying a
@@ -128,6 +131,7 @@ export const useProfileStore = create(
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
+            units: p.units ?? current.profile.units,
           },
           checkinLog: persisted?.checkinLog ?? [],
         }

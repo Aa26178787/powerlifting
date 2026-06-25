@@ -5,7 +5,14 @@ import { ZONES } from './quality.js'
 const ctx = (over = {}) => ({ quality: 'strength', e1rm: 200, zone: ZONES.strength, baseSets: 3, weekIndex: 0, ...over })
 
 describe('setSchemes expanders', () => {
-  it('straight: N identical sets', () => {
+  it('straight: N same-weight sets with RPE ramping to the target (fatigue)', () => {
+    const r = SCHEMES.straight.expand(ctx({ baseSets: 4 }))
+    expect(r.sets).toHaveLength(4)
+    expect(new Set(r.sets.map((s) => s.weight)).size).toBe(1)   // same load
+    expect(r.sets[3].rpe).toBe(ZONES.strength.rpeTarget)        // last set = target
+    expect(r.sets[0].rpe).toBeLessThan(r.sets[3].rpe)           // earlier sets easier
+  })
+  it('straight (legacy shape) still returns baseSets sets', () => {
     const r = SCHEMES.straight.expand(ctx())
     expect(r.sets).toHaveLength(3)
     expect(new Set(r.sets.map((s) => s.weight)).size).toBe(1)
@@ -66,11 +73,12 @@ describe('pickScheme', () => {
 })
 
 describe('expandAccessory (reps + RPE, no weight)', () => {
-  it('straight: baseSets identical rep/RPE sets, no weight field set', () => {
+  it('straight: baseSets rep sets, no weight, RPE rises to the target on the last set', () => {
     const r = expandAccessory('straight', { quality: 'hypertrophy', baseSets: 3 })
     expect(r.sets).toHaveLength(3)
     expect(r.sets.every((s) => Number.isFinite(s.reps) && s.weight === undefined)).toBe(true)
-    expect(r.sets[0].rpe).toBe(8)
+    expect(r.sets[r.sets.length - 1].rpe).toBe(8)         // last set hits the target
+    expect(r.sets[0].rpe).toBeLessThan(r.sets[2].rpe)     // ramps up
   })
   it('endurance straight uses higher reps', () => {
     expect(expandAccessory('straight', { quality: 'endurance' }).sets[0].reps).toBe(15)

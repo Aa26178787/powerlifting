@@ -3,9 +3,19 @@ import { roundToIncrement } from './e1rm.js'
 
 const r = roundToIncrement
 
+// Sets at the SAME load accumulate fatigue: RPE rises ~0.5 per set and the LAST
+// set lands on the zone target (so 170×4×3 isn't a flat RPE 8.5 — it ramps
+// 7→7.5→8→8.5). Returns an array of length `count`. Null target (pct loading) →
+// all null.
+export function risingRpe(target, count) {
+  if (target == null) return Array.from({ length: count }, () => null)
+  return Array.from({ length: count }, (_, i) =>
+    Math.max(5, Math.round((target - (count - 1 - i) * 0.5) * 2) / 2))
+}
+
 function straight({ quality, e1rm, zone, baseSets }) {
   const w = weightFor(quality, e1rm)
-  return { sets: Array.from({ length: baseSets }, () => ({ weight: w, reps: zone.repAnchor, rpe: zone.rpeTarget })) }
+  return { sets: risingRpe(zone.rpeTarget, baseSets).map((rpe) => ({ weight: w, reps: zone.repAnchor, rpe })) }
 }
 function topSetBackoff({ e1rm, zone, baseSets }) {
   const top = r(e1rm * zone.pct[1])
@@ -45,8 +55,7 @@ function wave({ e1rm, zone, baseSets }) {
 }
 function amrapTop({ quality, e1rm, zone, baseSets }) {
   const w = weightFor(quality, e1rm)
-  const sets = []
-  for (let i = 0; i < baseSets - 1; i++) sets.push({ weight: w, reps: zone.reps[1], rpe: zone.rpeTarget })
+  const sets = risingRpe(zone.rpeTarget, Math.max(0, baseSets - 1)).map((rpe) => ({ weight: w, reps: zone.reps[1], rpe }))
   sets.push({ weight: w, reps: 'AMRAP', rpe: null, note: '한계까지(+세트)' })
   return { sets }
 }
@@ -165,6 +174,6 @@ export function expandAccessory(key, { quality = 'hypertrophy', baseSets = 3 } =
     case 'widowmaker':
       return { sets: [{ reps: 20, rpe: 9.5 }] }
     default: // straight
-      return { sets: Array.from({ length: Math.max(1, baseSets) }, () => ({ reps: base.reps, rpe: base.rpe })) }
+      return { sets: risingRpe(base.rpe, Math.max(1, baseSets)).map((rpe) => ({ reps: base.reps, rpe })) }
   }
 }
