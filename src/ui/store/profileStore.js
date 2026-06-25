@@ -28,6 +28,7 @@ export const DEFAULT_PROFILE = {
   deloadEnabled: true,
   excludedExercises: [],
   variationOverride: { squat: null, bench: null, deadlift: null },
+  cueNeed: { squat: null, bench: null, deadlift: null },
 }
 
 function hasUsableLift(liftInput) {
@@ -83,6 +84,8 @@ export const useProfileStore = create(
         }),
       setVariationOverride: (lift, name) =>
         set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
+      setCueNeed: (lift, key) =>
+        set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
       reset: () => set({ profile: DEFAULT_PROFILE, plan: null }),
     }),
     {
@@ -113,6 +116,7 @@ export const useProfileStore = create(
             deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
+            cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
           },
         }
       },

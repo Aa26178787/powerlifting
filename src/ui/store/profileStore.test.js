@@ -147,6 +147,11 @@ describe('v3 mesocycle + variation-control fields', () => {
     useProfileStore.getState().setVariationOverride('squat', null)
     expect(useProfileStore.getState().profile.variationOverride.squat).toBeNull()
   })
+  it('cueNeed defaults to nulls and setCueNeed updates it', () => {
+    expect(useProfileStore.getState().profile.cueNeed).toEqual({ squat: null, bench: null, deadlift: null })
+    useProfileStore.getState().setCueNeed('deadlift', 'legDrive')
+    expect(useProfileStore.getState().profile.cueNeed.deadlift).toBe('legDrive')
+  })
   it('rehydrates missing v3 fields from defaults (merge test)', async () => {
     localStorage.clear()
     const old = {

@@ -1,7 +1,8 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { liftLabel, styleLabel, stickingLabel } from '../../i18n.js'
+import { liftLabel, styleLabel, stickingLabel, cueLabel } from '../../i18n.js'
 import { query, allEquipment } from '../../../engine/exercises.js'
+import { CUE_KEYS } from '../../../engine/cueVariation.js'
 
 export default function StepStyle() {
   const p = useProfileStore((s) => s.profile)
@@ -9,6 +10,7 @@ export default function StepStyle() {
   const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
   const toggleExcludedExercise = useProfileStore((s) => s.toggleExcludedExercise)
   const setVariationOverride = useProfileStore((s) => s.setVariationOverride)
+  const setCueNeed = useProfileStore((s) => s.setCueNeed)
 
   return (
     <div>
@@ -50,6 +52,20 @@ export default function StepStyle() {
             <select value={p.stickingPoint[lift]} onChange={(e) => setStickingPoint(lift, e.target.value)}>
               {['none', 'bottom', 'midrange', 'lockout'].map((v) => (
                 <option key={v} value={v}>{stickingLabel(v)}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>잘 안 되는 느낌 (교정 변형 처방)</legend>
+        {['squat', 'bench', 'deadlift'].map((lift) => (
+          <label key={lift}>{liftLabel(lift)}
+            <select value={p.cueNeed[lift] ?? ''} onChange={(e) => setCueNeed(lift, e.target.value || null)}>
+              <option value="">없음</option>
+              {CUE_KEYS[lift].map((k) => (
+                <option key={k} value={k}>{cueLabel(k)}</option>
               ))}
             </select>
           </label>

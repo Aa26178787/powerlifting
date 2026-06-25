@@ -84,6 +84,12 @@ describe('set schemes + overrides in working weeks', () => {
     expect(tempoEx).toBeTruthy()
     expect(tempoEx.tempo).toEqual([3, 1, 1])
   })
+  it('a cue deficit prescribes its teaching variation on a variation slot (4-day has a deadlift variation)', () => {
+    const weeks = buildWorkingWeeks('dup', 4, { ...ctx, cueNeed: { squat: null, bench: null, deadlift: 'legDrive' } }, 3)
+    const dlVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+      .find((e) => e.baseLift === 'deadlift' && e.lift === 'Tempo to Knees Deadlift (T2K)')
+    expect(dlVar).toBeTruthy()
+  })
   it('ignores a variationOverride that is in excludedExercises', () => {
     const weeks = buildWorkingWeeks('dup', 3, {
       ...ctx,

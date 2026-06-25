@@ -58,6 +58,7 @@ export function generate(profile) {
   const peaking = !!(competition.on && competition.date)
   const variationOverride = profile.variationOverride ?? {}
   const excludedExercises = profile.excludedExercises ?? []
+  const cueNeed = profile.cueNeed ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
     : profile.periodizationModel
@@ -86,7 +87,7 @@ export function generate(profile) {
     const sc = slotCounts[priorityLift] || 1
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, peaking, totalWeeks: mesoWeeks }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working

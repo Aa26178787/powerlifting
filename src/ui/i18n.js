@@ -68,6 +68,12 @@ const SCHEME = { straight:'스트레이트', topSetBackoff:'탑세트+백오프'
 const TOOLGROUP = { band:'밴드', chain:'체인', board:'보드', box:'박스', deficit:'디피싯', pin:'핀·랙풀', specialtyBar:'스페셜티 바', sled:'슬레드' }
 const EVIDENCE = { rct:'검증', consensus:'근거 약함' }
 const PHASE = { accumulation:'축적', intensification:'강화', peak:'피킹' }
+// 모터 큐(느낌) 약점 → 교정 변형
+const CUE = {
+  floorDrive: '지면 미는 힘', upright: '상체 세우기', hipShoot: '힙 슈팅(엉덩이 먼저 솟음)', balance: '무게중심·균형',
+  chestTouch: '가슴 터치·정지', offChest: '가슴에서 멈춤', backUsage: '등·광배 사용', lockout: '락아웃(마무리)',
+  legDrive: '지면 누르는 느낌(레그 드라이브)', hipHinge: '히프 힌지', offFloor: '바닥에서 약함',
+}
 
 export const liftLabel = (k) => LIFT[k] ?? k
 export const goalLabel = (k) => GOAL[k] ?? k
@@ -87,3 +93,4 @@ export const schemeLabel = (k) => SCHEME[k] ?? k
 export const toolGroupLabel = (k) => TOOLGROUP[k] ?? k
 export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
+export const cueLabel = (k) => CUE[k] ?? k
