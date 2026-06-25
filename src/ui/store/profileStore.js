@@ -52,6 +52,7 @@ export const useProfileStore = create(
     (set) => ({
       profile: DEFAULT_PROFILE,
       plan: null,
+      checkinLog: [],
       setField: (path, value) =>
         set((s) => ({ profile: { ...s.profile, [path]: value } })),
       setLift: (lift, liftInput) =>
@@ -86,7 +87,11 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
       setCueNeed: (lift, key) =>
         set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
-      reset: () => set({ profile: DEFAULT_PROFILE, plan: null }),
+      logCheckin: (entry) =>
+        set((s) => ({ checkinLog: [...s.checkinLog, entry] })),
+      clearCheckinLog: () =>
+        set({ checkinLog: [] }),
+      reset: () => set({ profile: DEFAULT_PROFILE, plan: null, checkinLog: [] }),
     }),
     {
       name: 'powerlifting-profile',
@@ -118,6 +123,7 @@ export const useProfileStore = create(
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
           },
+          checkinLog: persisted?.checkinLog ?? [],
         }
       },
     }
