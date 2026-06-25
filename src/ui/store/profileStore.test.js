@@ -30,13 +30,13 @@ describe('setField & setLift', () => {
   })
 })
 
-describe('toggleInjury & toggleEquipment', () => {
-  it('adds then removes an injury', () => {
-    const { toggleInjury } = useProfileStore.getState()
-    toggleInjury('knee')
-    expect(useProfileStore.getState().profile.injuries).toContain('knee')
-    toggleInjury('knee')
-    expect(useProfileStore.getState().profile.injuries).not.toContain('knee')
+describe('toggleEquipment', () => {
+  it('adds then removes equipment', () => {
+    const { toggleEquipment } = useProfileStore.getState()
+    toggleEquipment('dumbbell')
+    expect(useProfileStore.getState().profile.equipment).toContain('dumbbell')
+    toggleEquipment('dumbbell')
+    expect(useProfileStore.getState().profile.equipment).not.toContain('dumbbell')
   })
 })
 
@@ -48,5 +48,25 @@ describe('selectIsValid', () => {
       lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
     }
     expect(selectIsValid(p)).toBe(true)
+  })
+})
+
+describe('v2 profile fields', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+  it('defaults include style, stickingPoint, regionStatus', () => {
+    const p = useProfileStore.getState().profile
+    expect(p.style.squat.bar).toBe('low')
+    expect(p.stickingPoint.bench).toBe('none')
+    expect(p.regionStatus.lowerBack).toBe(0)
+  })
+  it('setStyle / setStickingPoint / setRegionStatus update state', () => {
+    const s = useProfileStore.getState()
+    s.setStyle('deadlift', { stance: 'sumo' })
+    s.setStickingPoint('squat', 'bottom')
+    s.setRegionStatus('knee', 2)
+    const p = useProfileStore.getState().profile
+    expect(p.style.deadlift.stance).toBe('sumo')
+    expect(p.stickingPoint.squat).toBe('bottom')
+    expect(p.regionStatus.knee).toBe(2)
   })
 })
