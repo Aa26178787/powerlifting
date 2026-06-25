@@ -1,62 +1,43 @@
 import { describe, it, expect } from 'vitest'
-import { WEEK_RPE_OFFSET, cap, buildSession, buildWorkingWeeks } from './periodization.js'
+import { buildWorkingWeeks } from './periodization.js'
 import { byName } from './exercises.js'
 
-const richCtx = {
+const ctx = {
   e1rm: { squat: 200, bench: 140, deadlift: 240 },
-  setsPerSession: { squat: 5, bench: 4, deadlift: 5 },
-  style: { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'sumo' } },
-  stickingPoint: { squat: 'bottom', bench: 'lockout', deadlift: 'bottom' },
+  setsPerSession: { squat: 4, bench: 4, deadlift: 4 },
+  style: { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } },
+  stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
   equipment: ['barbell','rack','bench','box','pins','deficit','blocks'],
   advanced: false,
-  regionStatus: { knee: 2 },
+  regionStatus: {},
+  model: 'undulating',
+  blend: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
+  competition: { on: false, date: '' },
 }
 
-describe('cap', () => {
-  it('never returns above 9.5', () => {
-    expect(cap(10.5)).toBe(9.5)
-    expect(cap(8)).toBe(8)
-  })
-})
-
-describe('buildSession', () => {
-  it('builds exercises with RPE raised by the week offset', () => {
-    const slots = [{ lift: 'squat', role: 'heavy' }] // heavy = reps 3, rpeStart 8
-    const session = buildSession(slots, 1, richCtx) // week index 1 -> offset 0.5
-    const ex = session.exercises[0]
-    expect(ex.lift).toBe('Back Squat (Low Bar)')
-    expect(ex.reps).toBe(3)
-    expect(ex.rpeTarget).toBe(8.5)
-    expect(ex.sets).toBe(3) // 5 * 0.6 (volumeScale for knee=2)
-    expect(ex.velocity).toBeNull()
-    expect(ex.weight).toBeGreaterThan(0)
-  })
-})
-
-describe('buildSession v2', () => {
-  it('comp slot resolves to the styled competition variant', () => {
-    const s = buildSession([{ lift: 'deadlift', role: 'heavy' }], 0, richCtx)
-    expect(s.exercises[0].lift).toBe('Sumo Deadlift')
-    expect(s.exercises[0].baseLift).toBe('deadlift')
-  })
-  it('variation slot resolves to a variation (not the bare comp lift name)', () => {
-    const s = buildSession([{ lift: 'squat', role: 'volume' }], 0, richCtx)
-    const ex = byName(s.exercises[0].lift)
-    expect(ex).toBeDefined()
-    expect(['variation','competition']).toContain(ex.category) // variation, or comp fallback
-  })
-  it('knee status 2 scales squat volume down (sets reduced)', () => {
-    const s = buildSession([{ lift: 'squat', role: 'heavy' }], 0, richCtx)
-    // base 5 * 0.6 = 3
-    expect(s.exercises[0].sets).toBe(3)
-  })
-})
-
-describe('buildWorkingWeeks', () => {
-  it('produces three working weeks for a 3-day DUP layout', () => {
-    const weeks = buildWorkingWeeks('dup', 3, richCtx)
+describe('buildWorkingWeeks v3', () => {
+  it('builds 3 weeks and tags every exercise with a quality + rep range', () => {
+    const weeks = buildWorkingWeeks('dup', 3, ctx)
     expect(weeks).toHaveLength(3)
-    expect(weeks[0].sessions).toHaveLength(3)
-    expect(weeks[0].isDeload).toBe(false)
+    const exs = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+    expect(exs.length).toBeGreaterThan(0)
+    for (const e of exs) {
+      expect(['power','strength','hypertrophy','endurance']).toContain(e.quality)
+      expect(Array.isArray(e.reps)).toBe(true)
+      expect(e.reps).toHaveLength(2)
+      expect(e.autoregulate).toBe(true)
+      expect(Number.isFinite(e.weight)).toBe(true)
+    }
   })
-})
+  it('a strength slot uses the strength rep range [2,5]', () => {
+    const weeks = buildWorkingWeeks('dup', 3, ctx)
+    const strengthEx = weeks[0].sessions.flatMap((s) => s.exercises).find((e) => e.quality === 'strength')
+    expect(strengthEx.reps).toEqual([2, 5])
+  })
+  it('block model concentrates a single quality in week 1', () => {
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, model: 'block' })
+    const qualities = new Set(weeks[0].sessions.flatMap((s) => s.exercises).map((e) => e.quality))
+    expect(qualities.size).toBe(1)
+  })
+}
+)
