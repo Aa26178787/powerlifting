@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel } from './i18n.js'
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel } from './i18n.js'
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
@@ -29,4 +29,9 @@ describe('i18n v3', () => {
     expect(modelLabel('block')).toBe('블록')
     expect(modelLabel('auto')).toBe('자동 추천')
   })
+})
+
+describe('i18n sp2', () => {
+  it('step labels', () => { expect(stepLabel(2)).toBe('현재 1RM'); expect(stepLabel(8)).toBe('요약') })
+  it('assess labels', () => { expect(assessLabel('weakLift')).toBe('약점 종목'); expect(assessLabel('gl')).toBe('GL 점수') })
 })
