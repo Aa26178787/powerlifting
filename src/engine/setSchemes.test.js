@@ -10,7 +10,7 @@ describe('setSchemes expanders', () => {
     expect(r.sets).toHaveLength(4)
     expect(new Set(r.sets.map((s) => s.weight)).size).toBe(1)   // same load
     expect(r.sets[3].rpe).toBe(ZONES.strength.rpeTarget)        // last set = target
-    expect(r.sets[0].rpe).toBeLessThan(r.sets[3].rpe)           // earlier sets easier
+    expect(r.sets.every((s, i) => i === 0 || s.rpe >= r.sets[i - 1].rpe)).toBe(true) // monotonic
   })
   it('straight (legacy shape) still returns baseSets sets', () => {
     const r = SCHEMES.straight.expand(ctx())

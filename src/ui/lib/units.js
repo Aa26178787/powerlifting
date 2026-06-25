@@ -6,7 +6,9 @@ export const LB_PER_KG = 2.2046226218
 // prescription rounding (kg→2.5, lbs→5); false = 1-decimal for input fields
 // (so typing isn't snapped).
 export function toDisplay(kg, units, round = true) {
-  if (kg == null || !Number.isFinite(kg)) return kg
+  // Empty string for missing/non-numeric weight so it renders as a blank cell
+  // (RoutineView / CSV) rather than the literal "undefined".
+  if (kg == null || !Number.isFinite(kg)) return ''
   if (units === 'lbs') {
     const lb = kg * LB_PER_KG
     return round ? Math.round(lb / 5) * 5 : Math.round(lb * 10) / 10
