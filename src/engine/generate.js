@@ -8,6 +8,8 @@ import { select } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
+import { bandForBlend, BANDS } from './volume.js'
+import { getTemplate } from './templates.js'
 import { recommendModel } from './periodizationModel.js'
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
@@ -44,7 +46,16 @@ export function generate(profile) {
 
   const template = selectTemplate({ blend, years, daysPerWeek })
   const tuned = tune({ blend, years, daysPerWeek, fatigue })
-  const ctx = { e1rm, setsPerSession: tuned.setsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition }
+  const mrv = BANDS[bandForBlend(blend)].mrv
+  const layout = getTemplate(template).layouts[daysPerWeek]
+  const slotCounts = {}
+  for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
+  const cappedSetsPerSession = {}
+  for (const lift of MAIN_LIFTS) {
+    const sc = slotCounts[lift] || 1
+    cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], Math.floor(mrv / sc)))
+  }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx)
   const deload = buildDeloadWeek(working[working.length - 1], ctx)

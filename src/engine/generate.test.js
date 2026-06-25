@@ -38,6 +38,20 @@ describe('generate v3', () => {
     const plan = generate(profile)
     expect(plan.weeks[0].sessions.every((s) => Array.isArray(s.accessories))).toBe(true)
   })
+  it('an endurance-dominant blend generates without crashing (finite weights incl deload)', () => {
+    const plan = generate({ ...profile, qualities: { power:0, strength:0, hypertrophy:0, endurance:1 } })
+    const all = plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+    expect(all.length).toBeGreaterThan(0)
+    expect(all.every((e) => Number.isFinite(e.weight))).toBe(true)
+  })
+  it('no lift exceeds its MRV in realized weekly volume', () => {
+    const hyper = generate({ ...profile, qualities: { power:0, strength:0, hypertrophy:1, endurance:0 }, daysPerWeek: 6 })
+    // sum sets per baseLift in week 1
+    const wk = hyper.weeks[0]
+    const perLift = {}
+    for (const s of wk.sessions) for (const e of s.exercises) perLift[e.baseLift] = (perLift[e.baseLift]||0) + e.sets
+    for (const lift of Object.keys(perLift)) expect(perLift[lift]).toBeLessThanOrEqual(22) // hypertrophy band mrv
+  })
 })
 
 // Profile for style/accessories tests (no region restrictions)
