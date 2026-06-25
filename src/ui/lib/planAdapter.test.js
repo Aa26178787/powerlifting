@@ -22,9 +22,9 @@ describe('toEngineProfile v3', () => {
 })
 
 describe('buildPlan v3', () => {
-  it('4 weeks; exercises keep engine quality + reps range', () => {
+  it('default mesocycle = 4 working + 1 deload = 5 weeks; exercises keep engine quality + reps range', () => {
     const plan = buildPlan(form)
-    expect(plan.weeks).toHaveLength(4)
+    expect(plan.weeks).toHaveLength(5)
     const ex = plan.weeks[0].sessions[0].exercises[0]
     expect(ex).toHaveProperty('quality')
     expect(Array.isArray(ex.reps)).toBe(true)
