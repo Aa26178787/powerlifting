@@ -1,6 +1,6 @@
 import React from 'react'
 import { useProfileStore, selectIsValid } from '../store/profileStore.js'
-import { liftLabel, goalLabel, equipmentLabel, styleLabel, regionLabel, statusLabel } from '../i18n.js'
+import { liftLabel, equipmentLabel, styleLabel, regionLabel, statusLabel, qualityLabel, presetLabel, modelLabel } from '../i18n.js'
 
 const EQUIPMENT = ['barbell', 'rack', 'bench', 'box', 'trap bar', 'dumbbells', 'leg press machine']
 
@@ -17,6 +17,9 @@ export default function InputForm({ onGenerate }) {
   const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
   const setRegionStatus = useProfileStore((s) => s.setRegionStatus)
   const toggleEquipment = useProfileStore((s) => s.toggleEquipment)
+  const setQuality = useProfileStore((s) => s.setQuality)
+  const applyPreset = useProfileStore((s) => s.applyPreset)
+  const setPeriodizationModel = useProfileStore((s) => s.setPeriodizationModel)
   const valid = selectIsValid(profile)
 
   const setOneRM = (lift, v) => setLift(lift, { oneRM: numberOrNull(v) })
@@ -49,11 +52,27 @@ export default function InputForm({ onGenerate }) {
         </select>
       </label>
 
-      <label>목표
-        <select value={profile.goal} onChange={(e) => setField('goal', e.target.value)}>
-          <option value="strength">{goalLabel('strength')}</option>
-          <option value="hypertrophy">{goalLabel('hypertrophy')}</option>
-          <option value="balanced">{goalLabel('balanced')}</option>
+      <fieldset>
+        <legend>목표 (프리셋)</legend>
+        {['powerlifting','powerbuilding','bodybuilding','athletic','general'].map((k) => (
+          <button type="button" key={k} onClick={() => applyPreset(k)}>{presetLabel(k)}</button>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>목표 배분</legend>
+        {['power','strength','hypertrophy','endurance'].map((q) => (
+          <label key={q}>{qualityLabel(q)}
+            <input type="range" min="0" max="1" step="0.05" value={profile.qualities[q]}
+              onChange={(e) => setQuality(q, Number(e.target.value))} />
+            <span>{Math.round(profile.qualities[q] * 100)}%</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <label>주기화 모델
+        <select value={profile.periodizationModel} onChange={(e) => setPeriodizationModel(e.target.value)}>
+          {['auto','linear','undulating','block'].map((m) => <option key={m} value={m}>{modelLabel(m)}</option>)}
         </select>
       </label>
 
