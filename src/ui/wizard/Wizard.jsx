@@ -5,8 +5,12 @@ import StepBasics from './steps/StepBasics.jsx'
 import StepLifts from './steps/StepLifts.jsx'
 import StepExperience from './steps/StepExperience.jsx'
 import StepGoals from './steps/StepGoals.jsx'
+import StepPeriodization from './steps/StepPeriodization.jsx'
+import StepStyle from './steps/StepStyle.jsx'
+import StepEquipment from './steps/StepEquipment.jsx'
+import StepSummary from './steps/StepSummary.jsx'
 
-const BODY = { 1: StepBasics, 2: StepLifts, 3: StepExperience, 4: StepGoals }
+const BODY = { 1: StepBasics, 2: StepLifts, 3: StepExperience, 4: StepGoals, 5: StepPeriodization, 6: StepStyle, 7: StepEquipment, 8: StepSummary }
 
 export default function Wizard({ onComplete }) {
   const [step, setStep] = useState(1)
