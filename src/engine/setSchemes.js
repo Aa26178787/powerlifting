@@ -104,3 +104,33 @@ export const SCHEMES = {
   widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, expand: widowmaker },
   contrastPAP:      { labelKey: 'contrastPAP',      evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
 }
+
+const CANDIDATES = {
+  'power|accumulation': ['straight', 'cluster'],
+  'power|intensification': ['cluster', 'contrastPAP', 'topSingleBackoff'],
+  'power|peak': ['topSingleBackoff', 'cluster'],
+  'strength|accumulation': ['straight', 'ascendingPyramid', 'amrapTop'],
+  'strength|intensification': ['topSetBackoff', 'wave', 'cluster'],
+  'strength|peak': ['topSingleBackoff', 'ramping'],
+  'hypertrophy|accumulation': ['straight', 'reversePyramid', 'restPause'],
+  'hypertrophy|intensification': ['straight', 'topSetBackoff'],
+  'hypertrophy|peak': ['straight'],
+  'endurance|accumulation': ['straight', 'widowmaker'],
+  'endurance|intensification': ['straight'],
+  'endurance|peak': ['straight'],
+}
+
+const ACCESSORY = {
+  hypertrophy: ['straight', 'restPause', 'dropSet', 'myoReps'],
+  endurance: ['straight', 'widowmaker'],
+  power: ['straight'], strength: ['straight'],
+}
+
+export function pickScheme({ quality, role, phase, advanced, weekIndex = 0 }) {
+  let cands = role === 'accessory'
+    ? (ACCESSORY[quality] ?? ['straight'])
+    : (CANDIDATES[`${quality}|${phase}`] ?? ['straight'])
+  cands = cands.filter((k) => !SCHEMES[k].advancedOnly || advanced)
+  if (!cands.length) cands = ['straight']
+  return cands[weekIndex % cands.length]
+}

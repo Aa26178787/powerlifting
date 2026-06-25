@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MODELS, recommendModel, weekPlan } from './periodizationModel.js'
+import { MODELS, recommendModel, weekPlan, phaseFor } from './periodizationModel.js'
 
 describe('recommendModel', () => {
   it('a meet date recommends block', () => {
@@ -65,5 +65,13 @@ describe('adaptive hybrid', () => {
   it('keeps the weekly intensity wave', () => {
     expect(weekPlan('adaptive', 0, even, { on: false }).rpeOffset).toBe(0)
     expect(weekPlan('adaptive', 2, even, { on: false }).rpeOffset).toBe(1.0)
+  })
+})
+
+describe('phaseFor', () => {
+  it('maps mesocycle position to phase', () => {
+    expect(phaseFor(0, 4, true)).toBe('accumulation')
+    expect(phaseFor(3, 4, true)).toBe('peak')
+    expect(phaseFor(3, 4, false)).toBe('intensification')
   })
 })

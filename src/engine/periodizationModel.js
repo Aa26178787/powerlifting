@@ -77,3 +77,11 @@ export function weekPlan(model, weekIndex, blend, competition) {
   }
   return { rpeOffset, blend }   // linear / undulating: concurrent (within-week DUP via schedule)
 }
+
+export function phaseFor(weekIndex, totalWeeks, peaking) {
+  if (totalWeeks <= 1) return peaking ? 'peak' : 'intensification'
+  const frac = weekIndex / (totalWeeks - 1)
+  if (frac < 0.34) return 'accumulation'
+  if (frac < 0.67) return 'intensification'
+  return peaking ? 'peak' : 'intensification'
+}

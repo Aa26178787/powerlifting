@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SCHEMES } from './setSchemes.js'
+import { SCHEMES, pickScheme } from './setSchemes.js'
 import { ZONES } from './quality.js'
 
 const ctx = (over = {}) => ({ quality: 'strength', e1rm: 200, zone: ZONES.strength, baseSets: 3, weekIndex: 0, ...over })
@@ -42,5 +42,25 @@ describe('setSchemes expanders', () => {
       expect(['rct', 'consensus']).toContain(SCHEMES[k].evidenceTier)
       expect(Array.isArray(r.sets)).toBe(true)
     }
+  })
+})
+
+describe('pickScheme', () => {
+  it('accessory hypertrophy cycles intensity techniques by week', () => {
+    const keys = [0,1,2,3].map((w) => pickScheme({ quality:'hypertrophy', role:'accessory', phase:'accumulation', advanced:true, weekIndex:w }))
+    expect(keys[0]).toBe('straight')
+    expect(new Set(keys).size).toBeGreaterThan(1)
+  })
+  it('power comp in intensification favors cluster/contrast for advanced', () => {
+    expect(['cluster','contrastPAP','topSingleBackoff']).toContain(
+      pickScheme({ quality:'power', role:'comp', phase:'intensification', advanced:true, weekIndex:0 }))
+  })
+  it('drops advancedOnly schemes for novices (falls back)', () => {
+    const k = pickScheme({ quality:'power', role:'comp', phase:'intensification', advanced:false, weekIndex:0 })
+    expect(k).not.toBe('cluster'); expect(k).not.toBe('contrastPAP')
+  })
+  it('strength peak uses peaking schemes', () => {
+    expect(['topSingleBackoff','ramping']).toContain(
+      pickScheme({ quality:'strength', role:'comp', phase:'peak', advanced:true, weekIndex:0 }))
   })
 })
