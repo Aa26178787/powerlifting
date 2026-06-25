@@ -1,20 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { selectTemplate } from './selector.js'
 
-describe('selectTemplate', () => {
-  it('hypertrophy goal always picks the hypertrophy block', () => {
-    expect(selectTemplate({ goal: 'hypertrophy', years: 8, daysPerWeek: 6 })).toBe('hypertrophyBlock')
+const B = (o) => ({ power:0, strength:0, hypertrophy:0, endurance:0, ...o })
+
+describe('selectTemplate (blend)', () => {
+  it('hypertrophy-dominant -> hypertrophyBlock', () => {
+    expect(selectTemplate({ blend: B({ hypertrophy: 1 }), years: 8, daysPerWeek: 6 })).toBe('hypertrophyBlock')
   })
-  it('a true beginner picks linear progression', () => {
-    expect(selectTemplate({ goal: 'strength', years: 0.5, daysPerWeek: 3 })).toBe('linearLP')
+  it('beginner -> linearLP', () => {
+    expect(selectTemplate({ blend: B({ strength: 1 }), years: 0.5, daysPerWeek: 3 })).toBe('linearLP')
   })
-  it('a high-frequency strength lifter picks high frequency', () => {
-    expect(selectTemplate({ goal: 'strength', years: 3, daysPerWeek: 5 })).toBe('highFreqPct')
+  it('strength-dominant high-freq -> highFreqPct', () => {
+    expect(selectTemplate({ blend: B({ strength: 1 }), years: 3, daysPerWeek: 5 })).toBe('highFreqPct')
   })
-  it('a low-frequency strength lifter picks 5/3/1', () => {
-    expect(selectTemplate({ goal: 'strength', years: 3, daysPerWeek: 4 })).toBe('fiveThreeOne')
+  it('strength-dominant low-freq -> fiveThreeOne', () => {
+    expect(selectTemplate({ blend: B({ strength: 1 }), years: 3, daysPerWeek: 4 })).toBe('fiveThreeOne')
   })
-  it('an intermediate balanced lifter picks DUP', () => {
-    expect(selectTemplate({ goal: 'balanced', years: 3, daysPerWeek: 4 })).toBe('dup')
+  it('balanced intermediate -> dup', () => {
+    expect(selectTemplate({ blend: B({ strength: 0.3, hypertrophy: 0.3, power: 0.2, endurance: 0.2 }), years: 3, daysPerWeek: 4 })).toBe('dup')
   })
 })
