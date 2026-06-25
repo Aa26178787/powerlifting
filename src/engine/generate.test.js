@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate } from './generate.js'
+import { byName } from './exercises.js'
 
 const profile = {
   lifts: {
@@ -35,11 +36,45 @@ describe('generate', () => {
     expect(ex.rpeTarget).toBeGreaterThanOrEqual(6)
     expect(ex.rpeTarget).toBeLessThanOrEqual(9.5)
   })
-  it('applies injury substitutions to lift names', () => {
-    const injured = generate({ ...profile, injuries: ['knee'] })
-    const squatExercises = injured.weeks[0].sessions
-      .flatMap((s) => s.exercises)
-      .filter((e) => e.lift === 'box squat')
-    expect(squatExercises.length).toBeGreaterThan(0)
+})
+
+// Profile for style/accessories tests (no region restrictions)
+const styleProfile = {
+  lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+  years: 3, daysPerWeek: 4, goal: 'strength', fatigue: 2,
+  style: { squat: { bar: 'low' }, bench: { grip: 'close' }, deadlift: { stance: 'sumo' } },
+  stickingPoint: { squat: 'bottom', bench: 'lockout', deadlift: 'bottom' },
+  equipment: ['barbell','rack','bench','box','pins','deficit','blocks','cables','dumbbells'],
+}
+
+// Profile for region-status tests
+const richProfile = {
+  lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+  years: 3, daysPerWeek: 4, goal: 'strength', fatigue: 2,
+  style: { squat: { bar: 'low' }, bench: { grip: 'close' }, deadlift: { stance: 'sumo' } },
+  stickingPoint: { squat: 'bottom', bench: 'lockout', deadlift: 'bottom' },
+  regionStatus: { lowerBack: 3 },
+  equipment: ['barbell','rack','bench','box','pins','deficit','blocks','cables','dumbbells'],
+}
+
+describe('generate v2', () => {
+  it('uses the styled competition deadlift variant on heavy slots', () => {
+    const plan = generate(styleProfile)
+    const names = plan.weeks[0].sessions.flatMap((s) => s.exercises).map((e) => e.lift)
+    expect(names).toContain('Sumo Deadlift')
+  })
+  it('attaches accessories to every session', () => {
+    const plan = generate(styleProfile)
+    expect(plan.weeks[0].sessions.every((s) => Array.isArray(s.accessories))).toBe(true)
+    expect(plan.weeks[0].sessions.some((s) => s.accessories.length > 0)).toBe(true)
+  })
+  it('region status 3 (lowerBack) keeps no lowerBack-stressing main work in week 1', () => {
+    const plan = generate(richProfile)
+    const mains = plan.weeks[0].sessions.flatMap((s) => s.exercises)
+    const offenders = mains.filter((e) => {
+      const ex = byName(e.lift)
+      return ex && ex.stress.includes('lowerBack')
+    })
+    expect(offenders.length).toBe(0)
   })
 })

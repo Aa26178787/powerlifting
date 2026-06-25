@@ -29,7 +29,7 @@ export function buildSession(daySlots, weekIndex, ctx) {
     return {
       lift: name,
       baseLift: slot.lift,
-      sets: Math.max(1, Math.round(baseSets * scale)),
+      sets: Math.round(baseSets * scale),
       reps: role.reps,
       rpeTarget,
       pct: undefined,
