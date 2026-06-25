@@ -5,7 +5,7 @@ const ctx = { e1rm: { squat: 200, bench: 140, deadlift: 240 } }
 const workingWeek = {
   index: 3, isDeload: false,
   sessions: [{ day: 1, exercises: [
-    { lift: 'squat', sets: 5, reps: 3, rpeTarget: 9, pct: undefined, weight: 180, velocity: null },
+    { lift: 'Back Squat (Low Bar)', baseLift: 'squat', quality: 'strength', sets: 5, reps: [2,5], repAnchor: 3, pct: 87, rpeTarget: 9, weight: 180, velocity: null, autoregulate: true },
   ] }],
 }
 
@@ -16,7 +16,7 @@ describe('buildDeloadWeek', () => {
     const ex = wk.sessions[0].exercises[0]
     expect(ex.sets).toBe(3) // ceil(5/2)
     expect(ex.rpeTarget).toBe(6)
-    expect(ex.reps).toBe(3)
+    expect(ex.reps).toEqual([2,5])
     expect(ex.weight).toBeLessThan(180)
   })
 })

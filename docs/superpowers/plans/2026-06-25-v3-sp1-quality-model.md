@@ -470,11 +470,15 @@ import { dominantQuality } from './quality.js'
 
 export function selectTemplate({ blend, years, daysPerWeek }) {
   const dom = dominantQuality(blend)
-  if (dom === 'hypertrophy') return 'hypertrophyBlock'
+  // A balanced blend (top two qualities tied, e.g. powerbuilding 0.45/0.45)
+  // has no clear specialization → DUP/undulating, not a specialized template.
+  const sorted = Object.values(blend).sort((a, b) => b - a)
+  const isBalanced = sorted[0] === sorted[1]
+  if (dom === 'hypertrophy' && !isBalanced) return 'hypertrophyBlock'
   if (years < 1) return 'linearLP'
   const heavy = dom === 'strength' || dom === 'power'
-  if (heavy && daysPerWeek >= 5) return 'highFreqPct'
-  if (heavy && daysPerWeek <= 4) return 'fiveThreeOne'
+  if (heavy && !isBalanced && daysPerWeek >= 5) return 'highFreqPct'
+  if (heavy && !isBalanced && daysPerWeek <= 4) return 'fiveThreeOne'
   return 'dup'
 }
 ```

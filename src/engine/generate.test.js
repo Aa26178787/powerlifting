@@ -3,12 +3,10 @@ import { resolveE1rm, generate } from './generate.js'
 import { byName } from './exercises.js'
 
 const profile = {
-  lifts: {
-    squat: { oneRM: 200 },
-    bench: { weight: 113, reps: 5, rpe: 8 }, // ~139 e1RM
-    deadlift: { oneRM: 240 },
-  },
-  years: 3, daysPerWeek: 3, goal: 'balanced', fatigue: 2,
+  lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+  years: 3, daysPerWeek: 4, fatigue: 2,
+  qualities: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
+  periodizationModel: 'auto',
 }
 
 describe('resolveE1rm', () => {
@@ -20,28 +18,48 @@ describe('resolveE1rm', () => {
   })
 })
 
-describe('generate', () => {
-  it('produces a 4-week mesocycle ending in a deload', () => {
+describe('generate v3', () => {
+  it('returns a model and a 4-week plan ending in deload', () => {
     const plan = generate(profile)
-    expect(plan.template).toBe('dup')
+    expect(['linear','undulating','block']).toContain(plan.model)
     expect(plan.weeks).toHaveLength(4)
     expect(plan.weeks[3].isDeload).toBe(true)
-    expect(plan.weeks[0].isDeload).toBe(false)
   })
-  it('every working set has a concrete weight, reps, RPE target', () => {
+  it('every working exercise carries quality, reps range, autoregulate, finite weight', () => {
     const plan = generate(profile)
-    const ex = plan.weeks[0].sessions[0].exercises[0]
-    expect(ex.weight).toBeGreaterThan(0)
-    expect(ex.reps).toBeGreaterThan(0)
-    expect(ex.rpeTarget).toBeGreaterThanOrEqual(6)
-    expect(ex.rpeTarget).toBeLessThanOrEqual(9.5)
+    const exs = plan.weeks.slice(0, 3).flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+    expect(exs.every((e) => ['power','strength','hypertrophy','endurance'].includes(e.quality))).toBe(true)
+    expect(exs.every((e) => Array.isArray(e.reps) && Number.isFinite(e.weight) && e.autoregulate)).toBe(true)
+  })
+  it('respects an explicit model override', () => {
+    expect(generate({ ...profile, periodizationModel: 'block' }).model).toBe('block')
+  })
+  it('attaches accessories to every session', () => {
+    const plan = generate(profile)
+    expect(plan.weeks[0].sessions.every((s) => Array.isArray(s.accessories))).toBe(true)
+  })
+  it('an endurance-dominant blend generates without crashing (finite weights incl deload)', () => {
+    const plan = generate({ ...profile, qualities: { power:0, strength:0, hypertrophy:0, endurance:1 } })
+    const all = plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+    expect(all.length).toBeGreaterThan(0)
+    expect(all.every((e) => Number.isFinite(e.weight))).toBe(true)
+  })
+  it('no lift exceeds its MRV in realized weekly volume', () => {
+    const hyper = generate({ ...profile, qualities: { power:0, strength:0, hypertrophy:1, endurance:0 }, daysPerWeek: 6 })
+    // sum sets per baseLift in week 1
+    const wk = hyper.weeks[0]
+    const perLift = {}
+    for (const s of wk.sessions) for (const e of s.exercises) perLift[e.baseLift] = (perLift[e.baseLift]||0) + e.sets
+    for (const lift of Object.keys(perLift)) expect(perLift[lift]).toBeLessThanOrEqual(22) // hypertrophy band mrv
   })
 })
 
 // Profile for style/accessories tests (no region restrictions)
 const styleProfile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
-  years: 3, daysPerWeek: 4, goal: 'strength', fatigue: 2,
+  years: 3, daysPerWeek: 4, fatigue: 2,
+  qualities: { power: 0, strength: 0.7, hypertrophy: 0.3, endurance: 0 },
+  periodizationModel: 'auto',
   style: { squat: { bar: 'low' }, bench: { grip: 'close' }, deadlift: { stance: 'sumo' } },
   stickingPoint: { squat: 'bottom', bench: 'lockout', deadlift: 'bottom' },
   equipment: ['barbell','rack','bench','box','pins','deficit','blocks','cables','dumbbells'],
@@ -50,7 +68,9 @@ const styleProfile = {
 // Profile for region-status tests
 const richProfile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
-  years: 3, daysPerWeek: 4, goal: 'strength', fatigue: 2,
+  years: 3, daysPerWeek: 4, fatigue: 2,
+  qualities: { power: 0, strength: 0.7, hypertrophy: 0.3, endurance: 0 },
+  periodizationModel: 'auto',
   style: { squat: { bar: 'low' }, bench: { grip: 'close' }, deadlift: { stance: 'sumo' } },
   stickingPoint: { squat: 'bottom', bench: 'lockout', deadlift: 'bottom' },
   regionStatus: { lowerBack: 3 },

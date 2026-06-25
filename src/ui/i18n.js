@@ -49,6 +49,10 @@ const REGION = { lowerBack: '허리', knee: '무릎', shoulder: '어깨', elbow:
 const STATUS = { 0: '정상', 1: '뻐근', 2: '가벼운 통증', 3: '심한 통증/부상' }
 const STYLE = { bar: { low: '로우바', high: '하이바' }, stance: { narrow: '좁게', medium: '보통', wide: '넓게', conventional: '컨벤셔널', sumo: '스모' }, grip: { close: '클로즈', medium: '보통', wide: '넓게' } }
 
+const QUALITY = { power: '파워', strength: '근력', hypertrophy: '근비대', endurance: '근지구력' }
+const PRESET = { powerlifting: '파워리프팅', powerbuilding: '파워빌딩', bodybuilding: '보디빌딩', athletic: '파워·운동선수', general: '일반·균형' }
+const MODEL = { auto: '자동 추천', linear: '선형', undulating: '비선형(DUP)', block: '블록' }
+
 export const liftLabel = (k) => LIFT[k] ?? k
 export const goalLabel = (k) => GOAL[k] ?? k
 export const injuryLabel = (k) => INJURY[k] ?? k
@@ -57,3 +61,6 @@ export const templateLabel = (k) => TEMPLATE[k] ?? k
 export const regionLabel = (k) => REGION[k] ?? k
 export const statusLabel = (n) => STATUS[n] ?? String(n)
 export const styleLabel = (group, v) => (STYLE[group] && STYLE[group][v]) ?? v
+export const qualityLabel = (k) => QUALITY[k] ?? k
+export const presetLabel = (k) => PRESET[k] ?? k
+export const modelLabel = (k) => MODEL[k] ?? k

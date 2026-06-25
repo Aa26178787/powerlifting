@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { tune } from './tuner.js'
 
 describe('tune', () => {
-  const profile = { goal: 'strength', years: 5, daysPerWeek: 4, fatigue: 1 }
+  const profile = { blend: { power:0, strength:1, hypertrophy:0, endurance:0 }, years: 5, daysPerWeek: 4, fatigue: 1 }
 
   it('produces per-lift weekly sets for each main lift', () => {
     const t = tune(profile)
@@ -16,7 +16,7 @@ describe('tune', () => {
     expect(t.setsPerSession.deadlift).toBe(10) // round(10/1)
   })
   it('never prescribes fewer than 1 set per session', () => {
-    const t = tune({ goal: 'strength', years: 0, daysPerWeek: 6, fatigue: 5 })
+    const t = tune({ blend: { power:0, strength:1, hypertrophy:0, endurance:0 }, years: 0, daysPerWeek: 6, fatigue: 5 })
     expect(t.setsPerSession.bench).toBeGreaterThanOrEqual(1)
   })
 })

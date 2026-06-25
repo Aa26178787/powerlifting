@@ -44,4 +44,16 @@ describe('InputForm', () => {
     await userEvent.setup().selectOptions(screen.getByLabelText(/허리 상태/), '2')
     expect(useProfileStore.getState().profile.regionStatus.lowerBack).toBe(2)
   })
+
+  it('applies a preset to the quality blend', async () => {
+    render(<InputForm onGenerate={() => {}} />)
+    await userEvent.setup().click(screen.getByRole('button', { name: /파워빌딩/ }))
+    expect(useProfileStore.getState().profile.qualities.hypertrophy).toBe(0.45)
+  })
+
+  it('selects a periodization model', async () => {
+    render(<InputForm onGenerate={() => {}} />)
+    await userEvent.setup().selectOptions(screen.getByLabelText(/주기화 모델/), 'block')
+    expect(useProfileStore.getState().profile.periodizationModel).toBe('block')
+  })
 })

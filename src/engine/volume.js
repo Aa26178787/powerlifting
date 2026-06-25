@@ -1,3 +1,5 @@
+import { dominantQuality } from './quality.js'
+
 export const BANDS = {
   strength:    { mev: 6,  mav: 10, mrv: 12 },
   balanced:    { mev: 8,  mav: 13, mrv: 18 },
@@ -14,8 +16,15 @@ export function fatigueScale(fatigue) {
   return 1 - (clamp(fatigue, 1, 5) - 1) / 4 * 0.30
 }
 
-export function weeklySets(goal, years, fatigue) {
-  const band = BANDS[goal] ?? BANDS.balanced
+export function bandForBlend(blend) {
+  const dom = dominantQuality(blend)
+  if (dom === 'hypertrophy') return 'hypertrophy'
+  if (dom === 'power' || dom === 'strength') return 'strength'
+  return 'balanced'
+}
+
+export function weeklySets(blend, years, fatigue) {
+  const band = BANDS[bandForBlend(blend)]
   const base = band.mev + (band.mav - band.mev) * yearsProgress(years)
   const scaled = Math.round(base * fatigueScale(fatigue))
   return clamp(scaled, 4, band.mrv)
