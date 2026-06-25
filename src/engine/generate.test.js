@@ -83,4 +83,13 @@ describe('generate v2', () => {
     const deadliftNote = allNotes.find((n) => n.includes('deadlift'))
     expect(deadliftNote).toBeTruthy()
   })
+  it('deload week exercises all have finite numeric weights (no NaN from variant name lookup)', () => {
+    const plan = generate(styleProfile)
+    const deloadWeek = plan.weeks[3]
+    expect(deloadWeek.isDeload).toBe(true)
+    const exercises = deloadWeek.sessions.flatMap((s) => s.exercises)
+    exercises.forEach((e) => {
+      expect(Number.isFinite(e.weight)).toBe(true)
+    })
+  })
 })
