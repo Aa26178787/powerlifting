@@ -75,7 +75,7 @@ export default function RoutineView({ plan }) {
             <div key={s.day} className="session">
               <h4>{s.day}일차</h4>
               <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
-              {s.accessories.length > 0 && (
+              {(s.accessories ?? []).length > 0 && (
                 <div className="accessories">
                   <h5>보조운동</h5>
                   <ul>{s.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>

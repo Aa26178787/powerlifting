@@ -65,7 +65,6 @@ const STEP = { 1:'기본', 2:'현재 1RM', 3:'경력', 4:'목표', 5:'주기화'
 const ASSESS = { weakLift:'약점 종목', level:'강도 수준', gl:'GL 점수', standard:'표준 대비' }
 
 const SCHEME = { straight:'스트레이트', topSetBackoff:'탑세트+백오프', topSingleBackoff:'탑싱글+백오프', ascendingPyramid:'어센딩 피라미드', reversePyramid:'역피라미드', wave:'웨이브(3-2-1)', amrapTop:'AMRAP·PR세트', ramping:'램핑(데일리맥스)', cluster:'클러스터', restPause:'레스트포즈', dropSet:'드롭세트', myoReps:'마이오렙', widowmaker:'위도우메이커(20회)', contrastPAP:'콘트라스트(PAP)' }
-const TOOLGROUP = { band:'밴드', chain:'체인', board:'보드', box:'박스', deficit:'디피싯', pin:'핀·랙풀', specialtyBar:'스페셜티 바', sled:'슬레드' }
 const EVIDENCE = { rct:'검증', consensus:'근거 약함' }
 const PHASE = { accumulation:'축적', intensification:'강화', peak:'피킹' }
 // 모터 큐(느낌) 약점 → 교정 변형
@@ -90,7 +89,6 @@ export const stickingLabel = (k) => STICKING[k] ?? k
 export const stepLabel = (n) => STEP[n] ?? String(n)
 export const assessLabel = (k) => ASSESS[k] ?? k
 export const schemeLabel = (k) => SCHEME[k] ?? k
-export const toolGroupLabel = (k) => TOOLGROUP[k] ?? k
 export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
 export const cueLabel = (k) => CUE[k] ?? k
