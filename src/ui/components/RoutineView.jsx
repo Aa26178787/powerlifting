@@ -1,17 +1,35 @@
 import React from 'react'
-import { liftLabel, templateLabel, qualityLabel } from '../i18n.js'
+import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel } from '../i18n.js'
 
 function ExerciseRow({ ex }) {
-  const pct = ex.pct == null ? '—' : `${ex.pct}%`
-  const reps = Array.isArray(ex.reps) ? `${ex.reps[0]}–${ex.reps[1]}` : ex.reps
-  const rpe = ex.rpeTarget == null ? '' : ` / RPE ${ex.rpeTarget}`
+  const scheme = ex.scheme
   return (
     <li className="exercise-row">
-      <span className="ex-q">[{qualityLabel(ex.quality)}]</span>{' '}
-      <span className="ex-lift">{liftLabel(ex.lift)}</span>{' '}
-      <span className="ex-scheme">{ex.sets}×{reps}</span>{' '}
-      <span className="ex-load">@ {pct}{rpe}</span>{' '}
-      <span className="ex-weight">≈ {ex.weight} (자동조절)</span>
+      <div className="ex-header">
+        <span className="ex-lift">{liftLabel(ex.lift)}</span>{' '}
+        <span className="ex-q">[{qualityLabel(ex.quality)}]</span>{' '}
+        {scheme && (
+          <>
+            <span className="ex-scheme-type">{schemeLabel(scheme.type)}</span>{' '}
+            <span className="ex-evidence-tag">{evidenceLabel(scheme.evidenceTier)}</span>{' '}
+          </>
+        )}
+        <span className="ex-autoregulate">(자동조절)</span>
+      </div>
+      {scheme && scheme.note && (
+        <div className="ex-scheme-note">{scheme.note}</div>
+      )}
+      {scheme && scheme.sets && scheme.sets.length > 0 && (
+        <ol className="ex-sets">
+          {scheme.sets.map((s, i) => (
+            <li key={i}>
+              {i + 1}세트: {s.weight}kg × {s.reps}
+              {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
+              {s.note ? ` · ${s.note}` : ''}
+            </li>
+          ))}
+        </ol>
+      )}
     </li>
   )
 }
