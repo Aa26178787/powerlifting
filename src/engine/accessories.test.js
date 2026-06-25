@@ -9,6 +9,12 @@ describe('accessories.select', () => {
     expect(r.length).toBeGreaterThan(0)
     expect(r.some((e) => e.primaryMuscle === 'triceps')).toBe(true)
   })
+  it('high-bar squat (quad emphasis) surfaces quad accessories', () => {
+    const r = select({ lift: 'squat', style: { bar: 'high' }, stickingPoint: 'none', sessionTimeLimit: null,
+      equipmentAvailable: ['barbell','rack','bench','cables','dumbbells','leg press machine','machine'], regionStatus: {} })
+    expect(r.length).toBeGreaterThan(0)
+    expect(r.some((e) => e.primaryMuscle.includes('quads'))).toBe(true)
+  })
   it('caps count by session time', () => {
     const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 30, ...base })
     expect(r.length).toBeLessThanOrEqual(2) // floor(30/15)=2

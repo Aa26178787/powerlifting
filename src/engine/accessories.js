@@ -8,7 +8,10 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
     .filter((e) => !shouldAvoid(e, regionStatus ?? {}))
   const score = (e) => {
-    let s = weights[e.primaryMuscle] ?? 1.0
+    const matched = Object.entries(weights)
+      .filter(([muscle]) => e.primaryMuscle.includes(muscle))
+      .map(([, w]) => w)
+    let s = matched.length ? Math.max(...matched) : 1.0
     if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) s += 0.5
     return s
   }

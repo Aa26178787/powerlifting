@@ -16,13 +16,13 @@ describe('compVariant', () => {
 })
 
 describe('emphasis', () => {
-  it('low-bar squat biases posterior over quad', () => {
+  it('low-bar squat biases hamstrings over quads', () => {
     const e = emphasis('squat', { bar: 'low' })
-    expect(e.posterior).toBeGreaterThan(1)
-    expect(e.quad).toBeLessThan(1)
+    expect(e.hamstrings).toBeGreaterThan(1)
+    expect(e.quads).toBeLessThan(1)
   })
   it('sumo deadlift biases quads', () => {
-    expect(emphasis('deadlift', { stance: 'sumo' }).quad).toBeGreaterThan(1)
+    expect(emphasis('deadlift', { stance: 'sumo' }).quads).toBeGreaterThan(1)
   })
   it('close-grip bench biases triceps', () => {
     expect(emphasis('bench', { grip: 'close' }).triceps).toBeGreaterThan(1)
