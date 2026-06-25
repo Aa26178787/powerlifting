@@ -11,3 +11,15 @@
 .toolbar { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
 @media print { .input-form, .toolbar, .limits-panel { display: none; } }
 @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+.exclude-variations .exclude-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.1rem 0.6rem;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  padding: 0.4rem;
+}
+.exclude-variations .exclude-item { display: block; font-size: 0.85rem; margin: 0; }
+.variation-control { margin: 0.6rem 0; padding-bottom: 0.4rem; border-bottom: 1px dashed #eee; }

@@ -90,19 +90,21 @@ export default function StepStyle() {
                   ))}
                 </select>
               </label>
-              <details className="exclude-variations">
-                <summary>제외할 변형</summary>
-                {candidates.map((ex) => (
-                  <label key={ex.name}>
-                    <input
-                      type="checkbox"
-                      checked={p.excludedExercises.includes(ex.name)}
-                      onChange={() => toggleExcludedExercise(ex.name)}
-                    />
-                    {' '}{ex.name}
-                  </label>
-                ))}
-              </details>
+              <fieldset className="exclude-variations">
+                <legend>제외할 변형 (체크 = 사용 안 함, 다중 선택)</legend>
+                <div className="exclude-grid">
+                  {candidates.map((ex) => (
+                    <label key={ex.name} className="exclude-item">
+                      <input
+                        type="checkbox"
+                        checked={p.excludedExercises.includes(ex.name)}
+                        onChange={() => toggleExcludedExercise(ex.name)}
+                      />
+                      {' '}{ex.name}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
           )
         })}
