@@ -22,8 +22,8 @@ describe('generate v3', () => {
   it('returns a model and a 4-week plan ending in deload', () => {
     const plan = generate(profile)
     expect(['adaptive','linear','undulating','block']).toContain(plan.model)
-    expect(plan.weeks).toHaveLength(4)
-    expect(plan.weeks[3].isDeload).toBe(true)
+    expect(plan.weeks).toHaveLength(5)
+    expect(plan.weeks[4].isDeload).toBe(true)
   })
   it('every working exercise carries quality, reps range, autoregulate, finite weight', () => {
     const plan = generate(profile)
@@ -117,11 +117,22 @@ describe('generate v2', () => {
   })
   it('deload week exercises all have finite numeric weights (no NaN from variant name lookup)', () => {
     const plan = generate(styleProfile)
-    const deloadWeek = plan.weeks[3]
+    const deloadWeek = plan.weeks[4]
     expect(deloadWeek.isDeload).toBe(true)
     const exercises = deloadWeek.sessions.flatMap((s) => s.exercises)
     exercises.forEach((e) => {
       expect(Number.isFinite(e.weight)).toBe(true)
     })
+  })
+})
+
+describe('generate v3 mesocycle controls', () => {
+  it('honors mesoWeeks + deload toggle', () => {
+    expect(generate({ ...profile, mesoWeeks: 5, deloadEnabled: true }).weeks).toHaveLength(6)
+    expect(generate({ ...profile, mesoWeeks: 5, deloadEnabled: false }).weeks).toHaveLength(5)
+  })
+  it('exercises carry concrete scheme sets', () => {
+    const ex = generate(profile).weeks[0].sessions[0].exercises[0]
+    expect(ex.scheme.sets.length).toBeGreaterThan(0)
   })
 })
