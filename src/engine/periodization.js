@@ -6,14 +6,19 @@ import { byName } from './exercises.js'
 import { ZONES, weightFor, weeklyQualitySchedule } from './quality.js'
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme } from './setSchemes.js'
+import { cueVariation } from './cueVariation.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
 function resolveName(slot, ctx) {
   if (slotTypeForRole(slot.role) === 'comp') return compVariant(slot.lift, ctx.style[slot.lift])
+  const excluded = ctx.excludedExercises ?? []
   const override = ctx.variationOverride?.[slot.lift]
-  if (override && byName(override)) return override
-  const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced)
+  if (override && byName(override) && !excluded.includes(override)) return override
+  // A motor-cue deficit prescribes its teaching variation (unless overridden/excluded).
+  const cue = cueVariation(slot.lift, ctx.cueNeed?.[slot.lift])
+  if (cue && byName(cue) && !excluded.includes(cue)) return cue
+  const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced, excluded)
   return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
 }
 
@@ -53,6 +58,8 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
     weight: weightFor(quality, eff),
     velocity: null,
     autoregulate: true,
+    tempo: ex?.tempo ?? null,
+    tempoStop: ex?.tempoStop ?? null,
     scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: expanded.sets, note: expanded.note, group: expanded.group },
     sets: expanded.sets.length,
   }

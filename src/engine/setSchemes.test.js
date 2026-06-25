@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SCHEMES, pickScheme } from './setSchemes.js'
+import { SCHEMES, pickScheme, expandAccessory } from './setSchemes.js'
 import { ZONES } from './quality.js'
 
 const ctx = (over = {}) => ({ quality: 'strength', e1rm: 200, zone: ZONES.strength, baseSets: 3, weekIndex: 0, ...over })
@@ -62,5 +62,32 @@ describe('pickScheme', () => {
   it('strength peak uses peaking schemes', () => {
     expect(['topSingleBackoff','ramping']).toContain(
       pickScheme({ quality:'strength', role:'comp', phase:'peak', advanced:true, weekIndex:0 }))
+  })
+})
+
+describe('expandAccessory (reps + RPE, no weight)', () => {
+  it('straight: baseSets identical rep/RPE sets, no weight field set', () => {
+    const r = expandAccessory('straight', { quality: 'hypertrophy', baseSets: 3 })
+    expect(r.sets).toHaveLength(3)
+    expect(r.sets.every((s) => Number.isFinite(s.reps) && s.weight === undefined)).toBe(true)
+    expect(r.sets[0].rpe).toBe(8)
+  })
+  it('endurance straight uses higher reps', () => {
+    expect(expandAccessory('straight', { quality: 'endurance' }).sets[0].reps).toBe(15)
+  })
+  it('restPause / dropSet / myoReps / widowmaker each yield rep-based sets with a note', () => {
+    for (const k of ['restPause', 'dropSet', 'myoReps', 'widowmaker']) {
+      const r = expandAccessory(k, { quality: 'hypertrophy' })
+      expect(r.sets.length).toBeGreaterThan(0)
+      expect(r.sets.every((s) => s.reps != null && s.weight === undefined)).toBe(true)
+    }
+  })
+  it('widowmaker is a single 20-rep set', () => {
+    const r = expandAccessory('widowmaker', {})
+    expect(r.sets).toHaveLength(1)
+    expect(r.sets[0].reps).toBe(20)
+  })
+  it('unknown key falls back to straight', () => {
+    expect(expandAccessory('nonsense', { baseSets: 2 }).sets).toHaveLength(2)
   })
 })

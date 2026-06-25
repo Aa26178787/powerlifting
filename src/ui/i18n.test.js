@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, toolGroupLabel, evidenceLabel, phaseLabel } from './i18n.js'
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel } from './i18n.js'
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
@@ -41,9 +41,9 @@ describe('i18n Task 10: scheme/tool/phase/evidence labels', () => {
     expect(schemeLabel('topSetBackoff')).toBe('탑세트+백오프')
     expect(schemeLabel('unknown')).toBe('unknown')
   })
-  it('toolGroupLabel', () => {
-    expect(toolGroupLabel('band')).toBe('밴드')
-    expect(toolGroupLabel('unknown')).toBe('unknown')
+  it('cueLabel', () => {
+    expect(cueLabel('legDrive')).toBe('지면 누르는 느낌(레그 드라이브)')
+    expect(cueLabel('unknown')).toBe('unknown')
   })
   it('evidenceLabel', () => {
     expect(evidenceLabel('rct')).toBe('검증')

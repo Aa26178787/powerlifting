@@ -135,4 +135,11 @@ describe('generate v3 mesocycle controls', () => {
     const ex = generate(profile).weeks[0].sessions[0].exercises[0]
     expect(ex.scheme.sets.length).toBeGreaterThan(0)
   })
+  it('accessories carry a rep-based scheme (quality + sets, no weight)', () => {
+    const plan = generate(styleProfile)
+    const acc = plan.weeks[0].sessions.flatMap((s) => s.accessories)
+    expect(acc.length).toBeGreaterThan(0)
+    expect(acc.every((a) => a.quality && a.scheme && a.scheme.sets.length > 0)).toBe(true)
+    expect(acc.every((a) => a.scheme.sets.every((set) => set.reps != null && set.weight === undefined))).toBe(true)
+  })
 })

@@ -42,14 +42,10 @@ describe('buildPlan v3', () => {
     expect(ep.mesoWeeks).toBe(6)
   })
 
-  it('excludes tool tags from equipment based on excludedTools', () => {
-    const epExcludeBand = toEngineProfile({ ...form, excludedTools: ['band'] })
-    // band group includes: 'band', 'bands', 'cables/band'
-    expect(epExcludeBand.equipment).not.toContain('band')
-    expect(epExcludeBand.equipment).not.toContain('bands')
-    expect(epExcludeBand.equipment).not.toContain('cables/band')
-    // but other equipment should still be present (e.g., 'barbell')
-    expect(epExcludeBand.equipment).toContain('barbell')
+  it('carries excludedExercises and keeps full equipment', () => {
+    const ep = toEngineProfile({ ...form, excludedExercises: ['Tempo Squat'] })
+    expect(ep.excludedExercises).toContain('Tempo Squat')
+    expect(ep.equipment).toContain('barbell')
   })
 
   it('carries variationOverride through to engine profile', () => {

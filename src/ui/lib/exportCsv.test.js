@@ -65,4 +65,17 @@ describe('planToCsv', () => {
     const lines = csv.trim().split('\n')
     expect(lines[3]).toBe('4,예,1,스쿼트,근력,1,120,3,6,')
   })
+  it('emits accessory rows with 체감 load', () => {
+    const withAcc = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [], accessories: [
+          { name: 'leg press', quality: 'hypertrophy', scheme: { type: 'straight', evidenceTier: 'rct', sets: [{ reps: 10, rpe: 8 }, { reps: 10, rpe: 8 }] } },
+        ] },
+      ] }],
+    }
+    const lines = planToCsv(withAcc).trim().split('\n')
+    expect(lines.length).toBe(3) // header + 2 accessory sets
+    expect(lines[1]).toBe('1,아니오,1,레그 프레스,근비대,1,체감,10,8,')
+  })
 })

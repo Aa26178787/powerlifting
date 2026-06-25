@@ -77,4 +77,26 @@ describe('set schemes + overrides in working weeks', () => {
       .find((e) => e.baseLift === 'squat' && e.lift === 'Front Squat')
     expect(squatVar).toBeTruthy()
   })
+  it('attaches a tempo spec to tempo exercises', () => {
+    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'Tempo Squat', bench: null, deadlift: null } }, 3)
+    const tempoEx = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+      .find((e) => e.lift === 'Tempo Squat')
+    expect(tempoEx).toBeTruthy()
+    expect(tempoEx.tempo).toEqual([3, 1, 1])
+  })
+  it('a cue deficit prescribes its teaching variation on a variation slot (4-day has a deadlift variation)', () => {
+    const weeks = buildWorkingWeeks('dup', 4, { ...ctx, cueNeed: { squat: null, bench: null, deadlift: 'legDrive' } }, 3)
+    const dlVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+      .find((e) => e.baseLift === 'deadlift' && e.lift === 'Tempo to Knees Deadlift (T2K)')
+    expect(dlVar).toBeTruthy()
+  })
+  it('ignores a variationOverride that is in excludedExercises', () => {
+    const weeks = buildWorkingWeeks('dup', 3, {
+      ...ctx,
+      variationOverride: { squat: 'Front Squat', bench: null, deadlift: null },
+      excludedExercises: ['Front Squat'],
+    }, 3)
+    const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
+    expect(names).not.toContain('Front Squat')
+  })
 })

@@ -15,16 +15,12 @@ describe('StepStyle', () => {
     expect(screen.getByText(/스티킹포인트/)).toBeTruthy()
   })
 
-  it('toggles an excluded tool checkbox and updates excludedTools', async () => {
+  it('toggles a variation-exclude checkbox and updates excludedExercises', async () => {
     render(<StepStyle />)
-    // 밴드 = 'band' key — label text is '밴드'
-    const checkboxes = screen.getAllByRole('checkbox')
-    // tool checkboxes come after styles fieldset (no checkboxes there)
-    // excludedTools fieldset is the first section with checkboxes
-    const checkbox = checkboxes[0]
-    await userEvent.setup().click(checkbox)
-    const { excludedTools } = useProfileStore.getState().profile
-    expect(excludedTools).toContain('band')
+    // The only checkboxes are the per-variation 제외 boxes; pick the one for a known squat variation.
+    const box = screen.getByRole('checkbox', { name: /Back Squat \(High Bar\)/ })
+    await userEvent.setup().click(box)
+    expect(useProfileStore.getState().profile.excludedExercises).toContain('Back Squat (High Bar)')
   })
 
   it('sets variationOverride.squat when a squat variation is selected', async () => {

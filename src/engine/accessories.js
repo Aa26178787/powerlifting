@@ -2,11 +2,12 @@ import { query } from './exercises.js'
 import { emphasis } from './style.js'
 import { shouldAvoid } from './regionStatus.js'
 
-export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, regionStatus }) {
+export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, regionStatus, excluded = [] }) {
   const weights = emphasis(lift, style)
   const pool = query({ category: 'accessory', equipmentAvailable, excludeAdvanced: true })
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
     .filter((e) => !shouldAvoid(e, regionStatus ?? {}))
+    .filter((e) => !excluded.includes(e.name))
   const score = (e) => {
     const matched = Object.entries(weights)
       .filter(([muscle]) => e.primaryMuscle.includes(muscle))

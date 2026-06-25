@@ -134,3 +134,37 @@ export function pickScheme({ quality, role, phase, advanced, weekIndex = 0 }) {
   if (!cands.length) cands = ['straight']
   return cands[weekIndex % cands.length]
 }
+
+// Accessories have no tracked 1RM, so their schemes prescribe reps + RPE by
+// feel (no weight). Returns { sets:[{reps,rpe?,note?,label?}], note? }.
+const ACCESSORY_REPS = {
+  hypertrophy: { reps: 10, rpe: 8 },
+  endurance: { reps: 15, rpe: 8 },
+}
+
+export function expandAccessory(key, { quality = 'hypertrophy', baseSets = 3 } = {}) {
+  const base = ACCESSORY_REPS[quality] ?? ACCESSORY_REPS.hypertrophy
+  // Scheme-level note is omitted for accessories — the scheme label already
+  // names the structure; per-set notes carry the actionable detail.
+  switch (key) {
+    case 'restPause':
+      return { sets: [{ reps: `${base.reps}+4+3`, rpe: 9, note: '15-20s 후 재개' }] }
+    case 'dropSet':
+      return {
+        sets: [
+          { reps: base.reps + 2, rpe: 9, label: '탑' },
+          { reps: base.reps, note: '즉시 무게↓' },
+          { reps: base.reps, note: '즉시 무게↓' },
+        ],
+      }
+    case 'myoReps': {
+      const sets = [{ reps: base.reps, rpe: 9, label: '활성화' }]
+      for (let i = 0; i < 3; i++) sets.push({ reps: 4, note: '3-5호흡 후' })
+      return { sets }
+    }
+    case 'widowmaker':
+      return { sets: [{ reps: 20, rpe: 9.5 }] }
+    default: // straight
+      return { sets: Array.from({ length: Math.max(1, baseSets) }, () => ({ reps: base.reps, rpe: base.rpe })) }
+  }
+}

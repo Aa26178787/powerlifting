@@ -25,4 +25,11 @@ describe('pick', () => {
     const v = pick('bench', 'lockout', { grip: 'close' }, ['nonexistent-gear'], false)
     expect(v).toBeNull()
   })
+  it('excludes named exercises from the pool', () => {
+    const eq = ['barbell', 'rack', 'box', 'pins', 'deficit', 'blocks', 'cables', 'dumbbells']
+    const chosen = pick('squat', 'bottom', { bar: 'low' }, eq, true)
+    expect(chosen).not.toBeNull()
+    const without = pick('squat', 'bottom', { bar: 'low' }, eq, true, [chosen.name])
+    expect(without?.name).not.toBe(chosen.name)
+  })
 })

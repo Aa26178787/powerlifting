@@ -12,6 +12,7 @@ const plan = {
         {
           lift: 'squat', sets: 2, reps: [2, 5], repAnchor: 3, quality: 'strength',
           pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+          tempo: [3, 1, 1],
           scheme: {
             type: 'topSetBackoff',
             evidenceTier: 'consensus',
@@ -21,7 +22,12 @@ const plan = {
             ],
           },
         },
-      ], accessories: [{ name: 'leg press' }] },
+      ], accessories: [
+        {
+          name: 'leg press', quality: 'hypertrophy',
+          scheme: { type: 'restPause', evidenceTier: 'rct', sets: [{ reps: '10+4+3', rpe: 9, note: '15-20s 후 재개' }] },
+        },
+      ] },
     ] },
     { index: 4, isDeload: true, sessions: [
       { day: 1, exercises: [
@@ -68,6 +74,16 @@ describe('RoutineView', () => {
   it('renders quality tag', () => {
     render(<RoutineView plan={plan} />)
     expect(screen.getAllByText(/근력/).length).toBeGreaterThan(0)
+  })
+  it('renders accessory with its scheme + 체감 per-set line', () => {
+    render(<RoutineView plan={plan} />)
+    expect(screen.getByText(/레스트포즈/)).toBeInTheDocument()
+    expect(screen.getByText(/체감/)).toBeInTheDocument()
+  })
+  it('renders a tempo spec (하강-정지-상승) when present', () => {
+    render(<RoutineView plan={plan} />)
+    expect(screen.getByText(/3-1-1초/)).toBeInTheDocument()
+    expect(screen.getByText(/하강-정지-상승/)).toBeInTheDocument()
   })
   it('renders set reps in the per-set list', () => {
     render(<RoutineView plan={plan} />)

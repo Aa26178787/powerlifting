@@ -16,6 +16,11 @@ function ExerciseRow({ ex }) {
         )}
         <span className="ex-autoregulate">(자동조절)</span>
       </div>
+      {ex.tempo && (
+        <div className="ex-tempo">
+          템포 {ex.tempo.join('-')}초 (하강-정지-상승){ex.tempoStop === 'knee' ? ' · 무릎까지' : ''}
+        </div>
+      )}
       {scheme && scheme.note && (
         <div className="ex-scheme-note">{scheme.note}</div>
       )}
@@ -25,6 +30,30 @@ function ExerciseRow({ ex }) {
             <li key={i}>
               {i + 1}세트: {s.weight}kg × {s.reps}
               {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
+              {s.note ? ` · ${s.note}` : ''}
+            </li>
+          ))}
+        </ol>
+      )}
+    </li>
+  )
+}
+
+function AccessoryRow({ acc }) {
+  const scheme = acc.scheme
+  return (
+    <li className="accessory-row">
+      <div className="acc-header">
+        <span className="acc-name">{liftLabel(acc.name)}</span>{' '}
+        {acc.quality && <span className="acc-q">[{qualityLabel(acc.quality)}]</span>}{' '}
+        {scheme && <span className="acc-scheme-type">{schemeLabel(scheme.type)}</span>}
+      </div>
+      {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
+      {scheme && scheme.sets && scheme.sets.length > 0 && (
+        <ol className="acc-sets">
+          {scheme.sets.map((s, i) => (
+            <li key={i}>
+              {i + 1}세트: {s.reps}회{s.rpe != null ? ` @RPE ${s.rpe}` : ''} (체감)
               {s.note ? ` · ${s.note}` : ''}
             </li>
           ))}
@@ -46,8 +75,11 @@ export default function RoutineView({ plan }) {
             <div key={s.day} className="session">
               <h4>{s.day}일차</h4>
               <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
-              {s.accessories.length > 0 && (
-                <p className="accessories">보조운동: {s.accessories.map((a) => liftLabel(a.name)).join(', ')}</p>
+              {(s.accessories ?? []).length > 0 && (
+                <div className="accessories">
+                  <h5>보조운동</h5>
+                  <ul>{s.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>
+                </div>
               )}
               {s.notes && s.notes.length > 0 && (
                 <p className="notes">⚠️ {s.notes.join(' · ')}</p>
