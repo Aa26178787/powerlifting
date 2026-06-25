@@ -1,7 +1,8 @@
 import { liftLabel, qualityLabel } from '../i18n.js'
+import { toDisplay, unitLabel } from './units.js'
 
-export function planToCsv(plan) {
-  const rows = ['주차,디로드,일차,종목,목표,세트번호,중량,반복,RPE,비고']
+export function planToCsv(plan, units = 'kg') {
+  const rows = [`주차,디로드,일차,종목,목표,세트번호,중량(${unitLabel(units)}),반복,RPE,비고`]
   for (const wk of plan.weeks) {
     for (const s of wk.sessions) {
       for (const ex of s.exercises) {
@@ -14,7 +15,7 @@ export function planToCsv(plan) {
             liftLabel(ex.lift),
             qualityLabel(ex.quality),
             i + 1,
-            set.weight,
+            toDisplay(set.weight, units),
             set.reps,
             set.rpe ?? '',
             set.note ?? '',
