@@ -6,7 +6,7 @@ import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
 import { select } from './accessories.js'
 import { pick } from './variations.js'
-import { shouldSwap, regionMaxStatus } from './regionStatus.js'
+import { shouldSwap } from './regionStatus.js'
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
 const DEFAULT_STICK = { squat: 'none', bench: 'none', deadlift: 'none' }
@@ -47,19 +47,28 @@ export function generate(profile) {
   const weeks = allWeeks.map((wk) => ({
     ...wk,
     sessions: wk.sessions.map((s) => {
-      const exercises = s.exercises
-        .map((e) => {
+      const mapped = s.exercises.map((e) => {
+        const ex = byName(e.lift)
+        if (ex && shouldSwap(ex, regionStatus)) {
+          const swapped = sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus)
+          return { ...e, lift: swapped }
+        }
+        return e
+      })
+      const notes = []
+      for (const e of mapped) {
+        if (e.sets < 1 && MAIN_LIFTS.includes(e.baseLift)) {
           const ex = byName(e.lift)
-          if (ex && shouldSwap(ex, regionStatus)) {
-            const swapped = sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus)
-            return { ...e, lift: swapped }
-          }
-          return e
-        })
-        .filter((e) => e.sets >= 1)
+          const stressedRegions = ex ? ex.stress : []
+          const severeRegion = stressedRegions.find((r) => regionStatus[r] === 3)
+          const region = severeRegion ?? 'injury'
+          notes.push(`${e.baseLift} omitted this week due to severe ${region} status`)
+        }
+      }
+      const exercises = mapped.filter((e) => e.sets >= 1)
       const primary = exercises[0]?.baseLift ?? 'squat'
       const accessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus })
-      return { ...s, exercises, accessories }
+      return { ...s, exercises, accessories, notes }
     }),
   }))
 

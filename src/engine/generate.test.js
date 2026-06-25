@@ -77,4 +77,10 @@ describe('generate v2', () => {
     })
     expect(offenders.length).toBe(0)
   })
+  it('surfaces dropped deadlift in session notes when lowerBack is status 3', () => {
+    const plan = generate(richProfile)
+    const allNotes = plan.weeks[0].sessions.flatMap((s) => s.notes)
+    const deadliftNote = allNotes.find((n) => n.includes('deadlift'))
+    expect(deadliftNote).toBeTruthy()
+  })
 })
