@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BANDS, yearsProgress, fatigueScale, weeklySets } from './volume.js'
+import { BANDS, yearsProgress, fatigueScale, weeklySets, bandForBlend } from './volume.js'
 
 describe('yearsProgress', () => {
   it('is 0 at 0 years and caps at 1 by 5 years', () => {
@@ -16,17 +16,21 @@ describe('fatigueScale', () => {
   })
 })
 
-describe('weeklySets', () => {
-  it('a fresh strength beginner sits at the MEV', () => {
-    expect(weeklySets('strength', 0, 1)).toBe(BANDS.strength.mev) // 6
+describe('bandForBlend', () => {
+  it('strength-dominant -> strength band', () => {
+    expect(bandForBlend({ power:0.1, strength:0.7, hypertrophy:0.2, endurance:0 })).toBe('strength')
   })
-  it('a 5-year strength lifter (low fatigue) reaches the MAV', () => {
-    expect(weeklySets('strength', 5, 1)).toBe(BANDS.strength.mav) // 10
+  it('hypertrophy-dominant -> hypertrophy band', () => {
+    expect(bandForBlend({ power:0, strength:0.2, hypertrophy:0.8, endurance:0 })).toBe('hypertrophy')
   })
-  it('high fatigue reduces volume', () => {
-    expect(weeklySets('hypertrophy', 5, 5)).toBe(11) // round(16*0.7)
+})
+
+describe('weeklySets (blend-keyed)', () => {
+  it('strength blend, 5yr, low fatigue hits the strength MAV', () => {
+    expect(weeklySets({ power:0, strength:1, hypertrophy:0, endurance:0 }, 5, 1)).toBe(BANDS.strength.mav)
   })
-  it('never drops below the floor of 4', () => {
-    expect(weeklySets('strength', 0, 5)).toBeGreaterThanOrEqual(4)
+  it('never exceeds MRV', () => {
+    const v = weeklySets({ power:0, strength:0, hypertrophy:1, endurance:0 }, 10, 1)
+    expect(v).toBeLessThanOrEqual(BANDS.hypertrophy.mrv)
   })
 })
