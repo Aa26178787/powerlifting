@@ -1,6 +1,12 @@
 import React, { useState } from 'react'
 import { useProfileStore, selectIsValid } from '../store/profileStore.js'
 import { stepLabel } from '../i18n.js'
+import StepBasics from './steps/StepBasics.jsx'
+import StepLifts from './steps/StepLifts.jsx'
+import StepExperience from './steps/StepExperience.jsx'
+import StepGoals from './steps/StepGoals.jsx'
+
+const BODY = { 1: StepBasics, 2: StepLifts, 3: StepExperience, 4: StepGoals }
 
 export default function Wizard({ onComplete }) {
   const [step, setStep] = useState(1)
@@ -9,16 +15,11 @@ export default function Wizard({ onComplete }) {
   const liftsValid = selectIsValid(profile)
   const canNext = step !== 2 || liftsValid
 
-  const stepStubs = {
-    1: '기본', 2: '현재 1RM', 3: '경력', 4: '목표', 5: '주기화', 6: '스타일·약점', 7: '장비·일정', 8: '요약'
-  }
-
   return (
     <div className="wizard">
       <h2>{step}. {stepLabel(step)}</h2>
       <div className="wizard-body" data-step={step}>
-        {/* Step bodies are added in Tasks 9-10; minimal stub keeps navigation testable */}
-        <p className="wizard-step-stub">Step {step} content</p>
+        {(() => { const Body = BODY[step]; return Body ? <Body /> : <p className="wizard-step-stub">{stepLabel(step)}</p> })()}
       </div>
       <div className="wizard-nav">
         <button type="button" disabled={step === 1} onClick={() => setStep((n) => Math.max(1, n - 1))}>이전</button>
