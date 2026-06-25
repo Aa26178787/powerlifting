@@ -41,16 +41,16 @@ Everything else from v2 is reused unchanged: exercise DB (207), template layouts
 
 ## 4. Quality → Zone Mapping (`quality.js`)
 
-Each quality defines a zone used to build a working set. `pct` is a fraction-of-1RM range (midpoint used for the suggestion); `repsMain`/`repsBackoff` are representative; loading mode is RPE-derived (via the Tuchscherer chart) EXCEPT Power, which is %1RM-derived (power is about velocity/intent, not proximity to failure):
+Each quality defines a zone used to build a working set. Reps are a **range** `[min, max]` (the lifter autoregulates within it to the target RPE); `repAnchor` is the single rep used to compute the suggested weight; `pct` is a fraction-of-1RM range (midpoint used for the suggestion / shown). Loading mode is RPE-derived (via the Tuchscherer chart) EXCEPT Power, which is %1RM-derived (power is about velocity/intent, not proximity to failure):
 
-| quality | repsMain | %1RM range | loading | rpeTarget | RIR/intent |
-|---|---|---|---|---|---|
-| `power` | 3 | 0.55–0.70 | %1RM (midpoint 0.625) | — | explosive, far from failure (~RIR 4+) |
-| `strength` | 3 | 0.82–0.92 | RPE | 8.5 | RIR 1–2, heavy |
-| `hypertrophy` | 8 | 0.67–0.78 | RPE | 8.5 | RIR ~1–2, volume-driven |
-| `endurance` | 15 | 0.55–0.62 | RPE | 8 | RIR ~2, short rest |
+| quality | reps `[min,max]` | repAnchor | %1RM range | loading | rpeTarget | RIR/intent |
+|---|---|---|---|---|---|---|
+| `power` | `[2, 4]` | 3 | 0.55–0.70 | %1RM (midpoint 0.625) | — | explosive, far from failure (~RIR 4+) |
+| `strength` | `[2, 5]` | 3 | 0.82–0.92 | RPE | 8.5 | RIR 1–2, heavy |
+| `hypertrophy` | `[6, 12]` | 9 | 0.67–0.78 | RPE | 8.5 | RIR ~1–2, volume-driven |
+| `endurance` | `[12, 20]` | 16 | 0.50–0.62 | RPE | 8 | RIR ~2, short rest |
 
-`ZONES` is the lookup. `weightFor(quality, e1rm)` → Power: `roundToIncrement(e1rm * 0.625)`; others: `workingWeight(e1rm, repsMain, rpeTarget)` (reuses Tuchscherer/e1rm.js).
+`ZONES` is the lookup. Each working exercise carries `reps: [min,max]` (rendered as "min–max") and `repAnchor`. `weightFor(quality, e1rm)` → Power: `roundToIncrement(e1rm * 0.625)`; others: `workingWeight(e1rm, repAnchor, rpeTarget)` (reuses Tuchscherer/e1rm.js). `pct` on the exercise = the zone %1RM midpoint (display).
 
 ## 5. Blend → Weekly Allocation (`quality.js`)
 
@@ -69,7 +69,7 @@ Each quality defines a zone used to build a working set. `pct` is a fraction-of-
 
 ## 7. Output / Data Model
 
-`Exercise` gains `quality: 'power'|'strength'|'hypertrophy'|'endurance'` and `autoregulate: true`. `pct` carries the zone %1RM (now meaningful, populated by the engine). Weight is the e1RM-derived suggestion. Mesocycle/Week/Session shapes otherwise unchanged; `velocity` stub stays. Deload unchanged (it already recomputes at RPE 6).
+`Exercise` shape changes from v2's `reps: number` to **`reps: [min, max]`** plus `repAnchor: number`, and gains `quality` and `autoregulate: true`. `pct` carries the zone %1RM midpoint (engine-populated; NO longer derived from `pctOf1RM(reps, rpe)` since reps is now a range — `planAdapter.enrichExercise` stops computing pct and just passes the engine's pct through). Weight is the e1RM-derived suggestion (computed from `repAnchor`). Consumers updated: RoutineView renders reps as "min–max"; CSV exports the range as `"min-max"`. Mesocycle/Week/Session shapes otherwise unchanged; `velocity` stub stays. Deload recomputes at RPE 6 using `repAnchor` (not the range).
 
 ## 8. UI (minimal for SP1; full wizard is SP2)
 
