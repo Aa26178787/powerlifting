@@ -1,24 +1,1887 @@
 {
-  "exercises": {
-    "squat":        {"equipment": ["barbell","rack"], "muscle": "quads"},
-    "box squat":    {"equipment": ["barbell","rack","box"], "muscle": "quads"},
-    "front squat":  {"equipment": ["barbell","rack"], "muscle": "quads"},
-    "bench":        {"equipment": ["barbell","bench"], "muscle": "chest"},
-    "floor press":  {"equipment": ["barbell"], "muscle": "chest"},
-    "deadlift":     {"equipment": ["barbell"], "muscle": "back"},
-    "trap bar deadlift": {"equipment": ["trap bar"], "muscle": "back"},
-    "leg press":    {"equipment": ["leg press machine"], "muscle": "quads"},
-    "dumbbell bench": {"equipment": ["dumbbells","bench"], "muscle": "chest"},
-    "romanian deadlift": {"equipment": ["barbell"], "muscle": "hamstrings"}
-  },
-  "substitutions": {
-    "knee": {"squat": "box squat"},
-    "shoulder": {"bench": "floor press"},
-    "back": {"deadlift": "trap bar deadlift"}
-  },
-  "accessories": {
-    "squat": ["leg press","front squat"],
-    "bench": ["dumbbell bench","floor press"],
-    "deadlift": ["romanian deadlift"]
-  }
+  "exercises": [
+    {
+      "name": "Back Squat (Low Bar)",
+      "category": "competition",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Back Squat (High Bar)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "Pause Squat (bottom)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Pause Squat (above parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Tempo Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Pin Squat (below parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "pins"],
+      "stress": ["knee", "shoulder", "hip"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "Pin Squat (above parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "pins"],
+      "stress": ["knee", "shoulder", "hip"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "Box Squat (below parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "glutes/hamstrings",
+      "equipment": ["barbell", "rack", "box"],
+      "stress": ["shoulder", "hip", "hamstring"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "Box Squat (parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "glutes/hamstrings",
+      "equipment": ["barbell", "rack", "box"],
+      "stress": ["shoulder", "hip", "hamstring"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "Box Squat (above parallel)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "box"],
+      "stress": ["knee", "shoulder", "hip"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "Front Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder", "wrist"]
+    },
+    {
+      "name": "Safety Squat Bar (SSB) Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/upper-back",
+      "equipment": ["ssb", "rack"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "SSB Box Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "quads/upper-back",
+      "equipment": ["ssb", "rack", "box"],
+      "stress": ["knee", "shoulder"],
+      "styleBias": ["low-bar"]
+    },
+    {
+      "name": "SSB Good Morning",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["ssb", "rack"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "SSB Front Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["ssb", "rack"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "Duffalo / Buffalo Bar Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["duffalo bar", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Cambered Bar Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes/upper-back",
+      "equipment": ["cambered bar", "rack"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Banded Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "bands"],
+      "stress": ["knee", "shoulder", "hip"],
+      "advanced": true
+    },
+    {
+      "name": "Chain Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "chains"],
+      "stress": ["knee", "shoulder", "hip"],
+      "advanced": true
+    },
+    {
+      "name": "Heel-Elevated Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell", "plate/wedge"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "Heel-Elevated Goblet Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["db/kb", "wedge"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Zombie Squat (arms forward)",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/upper-back",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "Belt Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["belt squat machine"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Hatfield Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["ssb", "rack uprights"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Anderson Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell", "rack", "pins"],
+      "stress": ["knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Narrow Stance Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell", "rack"],
+      "stress": ["knee", "shoulder"]
+    },
+    {
+      "name": "Wide Stance Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "glutes/adductors",
+      "equipment": ["barbell", "rack"],
+      "stress": ["shoulder", "hip"]
+    },
+    {
+      "name": "Zercher Squat",
+      "category": "variation",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/upper-back/core",
+      "equipment": ["barbell"],
+      "stress": ["knee", "shoulder", "wrist"]
+    },
+    {
+      "name": "Bench Press (Competition Grip)",
+      "category": "competition",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps/shoulders",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Paused Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "2-Second Pause Bench",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Wide Grip Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Close Grip Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Spoto Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Floor Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "triceps/chest",
+      "equipment": ["barbell", "pins", "floor"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Board Press (1-Board)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["barbell", "bench", "1 board"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Board Press (2-Board)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "bench", "2 boards"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Board Press (3-Board)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "bench", "3 boards"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Board Press (4–5 Board)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "bench", "4–5 boards"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Pin Press (off chest)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "pins", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Pin Press (midrange)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["barbell", "pins", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Rack Press (lockout)",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "pins", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Incline Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders/upper-chest",
+      "equipment": ["barbell", "incline bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Decline Bench Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "lower-chest",
+      "equipment": ["barbell", "decline bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Larsen Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Feet-Up Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Slingshot Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "bench", "slingshot"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dead Bench",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Cambered Bar Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["cambered bar", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dumbbell Bench Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dumbbell Incline Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders/upper-chest",
+      "equipment": ["dumbbells", "incline bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Banded Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps/chest",
+      "equipment": ["barbell", "bench", "bands"],
+      "stress": ["shoulder", "elbow"],
+      "advanced": true
+    },
+    {
+      "name": "Chain Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps/chest",
+      "equipment": ["barbell", "bench", "chains"],
+      "stress": ["shoulder", "elbow"],
+      "advanced": true
+    },
+    {
+      "name": "Swiss Bar / Football Bar Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["swiss bar", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Axle Bar Bench Press",
+      "category": "variation",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["axle bar", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "JM Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "rack", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Overhead Press (Barbell)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders",
+      "equipment": ["barbell", "rack"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Push Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "shoulders/triceps",
+      "equipment": ["barbell", "rack"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Seated Overhead Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders",
+      "equipment": ["barbell/db", "bench"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Z Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders/core",
+      "equipment": ["barbell"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dips (weighted)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["dip station", "belt"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Conventional Deadlift",
+      "category": "competition",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/glutes/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Sumo Deadlift",
+      "category": "competition",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "glutes/adductors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hip"]
+    },
+    {
+      "name": "Deficit Deadlift (conventional)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["barbell", "deficit"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"],
+      "styleBias": ["conventional"]
+    },
+    {
+      "name": "Deficit Sumo Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "glutes/adductors",
+      "equipment": ["barbell", "deficit"],
+      "stress": ["lowerBack", "shoulder", "hip"],
+      "styleBias": ["conventional"]
+    },
+    {
+      "name": "Pause Deadlift (off floor)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Pause Deadlift (below knee)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Pause Deadlift (above knee)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Halting Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Block Pull (below knee)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors/lats",
+      "equipment": ["barbell", "blocks"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Block Pull (above knee)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "erectors/traps",
+      "equipment": ["barbell", "blocks"],
+      "stress": ["lowerBack", "shoulder"]
+    },
+    {
+      "name": "Rack Pull (above knee)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "erectors/traps",
+      "equipment": ["barbell", "rack pins"],
+      "stress": ["lowerBack", "shoulder"]
+    },
+    {
+      "name": "Rack Pull (mid-shin)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "erectors/lats",
+      "equipment": ["barbell", "rack pins"],
+      "stress": ["lowerBack", "shoulder"]
+    },
+    {
+      "name": "Snatch Grip Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "upper-back/traps",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "wrist"],
+      "styleBias": ["conventional"]
+    },
+    {
+      "name": "Clean Grip Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "styleBias": ["conventional"]
+    },
+    {
+      "name": "Romanian Deadlift (RDL)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Stiff-Leg Deadlift",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "styleBias": ["conventional"]
+    },
+    {
+      "name": "Trap Bar Deadlift (high handles)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["trap bar"],
+      "stress": ["lowerBack", "knee", "shoulder", "hip"]
+    },
+    {
+      "name": "Trap Bar Deadlift (low handles)",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["trap bar"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Banded Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "erectors/glutes",
+      "equipment": ["barbell", "bands"],
+      "stress": ["lowerBack", "shoulder", "hip"],
+      "advanced": true
+    },
+    {
+      "name": "Chain Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "erectors/glutes",
+      "equipment": ["barbell", "chains"],
+      "stress": ["lowerBack", "shoulder", "hip"],
+      "advanced": true
+    },
+    {
+      "name": "Sumo Block Pull",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "glutes/adductors/erectors",
+      "equipment": ["barbell", "blocks"],
+      "stress": ["lowerBack", "shoulder", "hip"],
+      "styleBias": ["sumo"]
+    },
+    {
+      "name": "Tempo Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Axle Bar Deadlift",
+      "category": "variation",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "hamstrings/grip",
+      "equipment": ["axle bar"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Single-Leg RDL",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["barbell/db"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Landmine Single-Leg RDL",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["barbell", "landmine"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Pendlay Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["barbell"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Barbell Bent-Over Row (overhand)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back/erectors",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder"]
+    },
+    {
+      "name": "Barbell Row (underhand)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": ["barbell"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dumbbell Row (single-arm)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["dumbbell", "bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Kroc Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/traps",
+      "equipment": ["dumbbell", "bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Seal Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["barbell/db", "elevated bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Chest-Supported Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["machine/db", "incline bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "T-Bar Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["t-bar/landmine"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Meadows Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/rear-delts",
+      "equipment": ["barbell", "landmine"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Helms Row",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["dumbbells", "incline bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Seated Cable Row (close)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Seated Cable Row (wide)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Single-Arm Cable Row",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Lat Pulldown (wide)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Lat Pulldown (close neutral)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": ["cables"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Lat Pulldown (single-arm)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Pull-Up (wide)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["pull-up bar"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Pull-Up (neutral)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": ["neutral bar"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Chin-Up (underhand)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": ["pull-up bar"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Weighted Pull-Up/Chin-Up",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": ["pull-up bar", "belt"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Face Pull",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts/upper-back",
+      "equipment": ["cables", "rope"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Band Pull-Apart",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts/upper-back",
+      "equipment": ["band"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Rear Delt Fly",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts",
+      "equipment": ["cables/db"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Barbell Shrug",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "traps",
+      "equipment": ["barbell"],
+      "stress": []
+    },
+    {
+      "name": "Dumbbell Shrug",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "traps",
+      "equipment": ["dumbbells"],
+      "stress": []
+    },
+    {
+      "name": "Trap Bar Shrug",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "traps",
+      "equipment": ["trap bar"],
+      "stress": []
+    },
+    {
+      "name": "Cable Shrug",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "traps",
+      "equipment": ["cables"],
+      "stress": []
+    },
+    {
+      "name": "Landmine Row (bilateral)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["barbell", "landmine"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Inverted Row",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": ["barbell in rack/rings"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Cable Pullover",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Dumbbell Pullover",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": ["dumbbell", "bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Skull Crusher (EZ)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["ez bar", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Skull Crusher (barbell)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["barbell", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Skull Crusher (dumbbell)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Tate Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Rolling DB Extension",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Triceps Pushdown (rope)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["cables", "rope"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Triceps Pushdown (bar)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["cables", "bar"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Overhead Triceps Ext (cable)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["cables"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Overhead Triceps Ext (DB)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["dumbbell"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Close-Grip Push-Up",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "triceps",
+      "equipment": ["bodyweight"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Weighted Dips",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "triceps/chest",
+      "equipment": ["dip station", "belt"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Dumbbell Floor Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "chest/triceps",
+      "equipment": ["dumbbells", "floor"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Cable Fly",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Dumbbell Fly",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Incline Dumbbell Fly",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "upper-chest",
+      "equipment": ["dumbbells", "incline bench"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Pec Deck",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "chest",
+      "equipment": ["machine"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Lateral Raise (DB)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders (lat delt)",
+      "equipment": ["dumbbells"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Cable Lateral Raise",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders (lat delt)",
+      "equipment": ["cables"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Military Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders/triceps",
+      "equipment": ["barbell", "rack"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Seated DB Overhead Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Arnold Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "shoulders",
+      "equipment": ["dumbbells", "bench"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Landmine Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "shoulders/chest",
+      "equipment": ["barbell", "landmine"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Good Morning (standing)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell", "rack"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Good Morning (wide)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "glutes/hamstrings",
+      "equipment": ["barbell", "rack"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Good Morning (narrow)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["barbell", "rack"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Good Morning (cambered)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["cambered bar", "rack"],
+      "stress": ["lowerBack", "shoulder", "hamstring"]
+    },
+    {
+      "name": "Good Morning (seated)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "erectors/QL",
+      "equipment": ["barbell/ssb", "box"],
+      "stress": ["lowerBack", "shoulder"]
+    },
+    {
+      "name": "Romanian Deadlift",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["barbell"],
+      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+    },
+    {
+      "name": "Glute-Ham Raise (GHR)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings/glutes",
+      "equipment": ["ghr machine"],
+      "stress": ["hip", "hamstring"]
+    },
+    {
+      "name": "Nordic Hamstring Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings",
+      "equipment": ["ghr/partner"],
+      "stress": ["hamstring", "bicepsTendon"]
+    },
+    {
+      "name": "Hip Thrust (barbell)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "glutes",
+      "equipment": ["barbell", "bench"],
+      "stress": ["hip"]
+    },
+    {
+      "name": "Hip Thrust (banded)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "glutes",
+      "equipment": ["band", "bench"],
+      "stress": ["hip"],
+      "advanced": true
+    },
+    {
+      "name": "Single-Leg Hip Thrust",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "lockout",
+      "primaryMuscle": "glutes",
+      "equipment": ["bw/db", "bench"],
+      "stress": ["hip"]
+    },
+    {
+      "name": "Back Extension (45°)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "erectors/glutes/hamstrings",
+      "equipment": ["back ext bench"],
+      "stress": ["lowerBack", "hip", "hamstring"]
+    },
+    {
+      "name": "Back Extension (GHD)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "erectors/glutes/hamstrings",
+      "equipment": ["ghd"],
+      "stress": ["lowerBack", "hip", "hamstring"]
+    },
+    {
+      "name": "Reverse Hyperextension",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "glutes/hamstrings/erectors",
+      "equipment": ["reverse hyper"],
+      "stress": ["lowerBack", "hip", "hamstring"]
+    },
+    {
+      "name": "Banded Good Morning",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "midrange",
+      "primaryMuscle": "hamstrings/erectors",
+      "equipment": ["band"],
+      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "advanced": true
+    },
+    {
+      "name": "Kettlebell Swing",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "glutes/hamstrings",
+      "equipment": ["kettlebell"],
+      "stress": ["hip", "hamstring"]
+    },
+    {
+      "name": "Cable Pull-Through",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "glutes/hamstrings",
+      "equipment": ["cables"],
+      "stress": ["hip", "hamstring"]
+    },
+    {
+      "name": "Seated Leg Curl",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings",
+      "equipment": ["machine"],
+      "stress": ["hamstring", "bicepsTendon"]
+    },
+    {
+      "name": "Lying Leg Curl",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings",
+      "equipment": ["machine"],
+      "stress": ["hamstring", "bicepsTendon"]
+    },
+    {
+      "name": "Nordic-Leg Curl Machine",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings",
+      "equipment": ["machine"],
+      "stress": ["hamstring"]
+    },
+    {
+      "name": "Sled Drag (forward)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["sled"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Sled Drag (backward)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "quads",
+      "equipment": ["sled"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Leg Press",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["leg press machine"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Hack Squat (machine)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["hack squat machine"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Barbell Hack Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["db/barbell", "bench"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "SSB Split Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["ssb", "bench"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Front-Foot Elevated Split Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["db", "step"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Walking Lunge",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell/db"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Reverse Lunge",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell/db"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Step-Up",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["barbell/db", "box"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Sissy Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["bw/weighted"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Leg Extension",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "quads",
+      "equipment": ["machine"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Goblet Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["db/kb"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Box Step-Up",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["db", "box"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Cyclist Squat",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads",
+      "equipment": ["barbell", "heels elevated"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Single-Leg Leg Press",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads/glutes",
+      "equipment": ["leg press machine"],
+      "stress": ["knee", "hip"]
+    },
+    {
+      "name": "Hack Squat (narrow)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "bottom",
+      "primaryMuscle": "quads (VMO)",
+      "equipment": ["hack squat machine"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Barbell Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["barbell"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "EZ Bar Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["ez bar"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Dumbbell Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["dumbbells"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Hammer Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps/brachialis",
+      "equipment": ["dumbbells"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Incline DB Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps (long head)",
+      "equipment": ["dumbbells", "incline bench"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Preacher Curl (EZ/BB)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["ez/barbell", "preacher"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Preacher Curl (DB)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["dumbbell", "preacher"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Cable Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["cables"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Spider Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["barbell/db", "incline bench"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Zottman Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps/brachialis",
+      "equipment": ["dumbbells"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Concentration Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "biceps",
+      "equipment": ["dumbbell"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Reverse Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "brachioradialis/forearms",
+      "equipment": ["barbell/ez"],
+      "stress": ["elbow", "bicepsTendon"]
+    },
+    {
+      "name": "Plank",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core",
+      "equipment": ["bodyweight"],
+      "stress": []
+    },
+    {
+      "name": "Side Plank",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "obliques/core",
+      "equipment": ["bodyweight"],
+      "stress": []
+    },
+    {
+      "name": "Ab Wheel Rollout",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core (anterior)",
+      "equipment": ["ab wheel"],
+      "stress": []
+    },
+    {
+      "name": "Cable Crunch",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs",
+      "equipment": ["cables", "rope"],
+      "stress": []
+    },
+    {
+      "name": "Decline Sit-Up (weighted)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs",
+      "equipment": ["decline bench", "plate"],
+      "stress": []
+    },
+    {
+      "name": "Pallof Press",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core (anti-rotation)",
+      "equipment": ["cables/band"],
+      "stress": ["shoulder", "elbow"]
+    },
+    {
+      "name": "Pallof Press (overhead)",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core",
+      "equipment": ["cables/band"],
+      "stress": ["shoulder", "elbow", "wrist"]
+    },
+    {
+      "name": "Hanging Leg Raise",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs/hip-flexors",
+      "equipment": ["pull-up bar"],
+      "stress": ["shoulder"]
+    },
+    {
+      "name": "Lying Leg Raise",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs/hip-flexors",
+      "equipment": ["bench/floor"],
+      "stress": []
+    },
+    {
+      "name": "Dragon Flag",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core",
+      "equipment": ["bench"],
+      "stress": []
+    },
+    {
+      "name": "Landmine Twist",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "obliques/core",
+      "equipment": ["barbell", "landmine"],
+      "stress": []
+    },
+    {
+      "name": "GHD Sit-Up",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs/hip-flexors",
+      "equipment": ["ghd"],
+      "stress": []
+    },
+    {
+      "name": "Russian Twist",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "obliques",
+      "equipment": ["bw/plate"],
+      "stress": []
+    },
+    {
+      "name": "Dead Bug",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core",
+      "equipment": ["bodyweight"],
+      "stress": []
+    },
+    {
+      "name": "Bird Dog",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core/erectors",
+      "equipment": ["bodyweight"],
+      "stress": ["lowerBack"]
+    },
+    {
+      "name": "Farmer's Walk",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "core/traps/grip",
+      "equipment": ["db/trap bar/axle"],
+      "stress": []
+    },
+    {
+      "name": "Yoke Walk",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "core/traps/quads",
+      "equipment": ["yoke"],
+      "stress": ["knee"]
+    },
+    {
+      "name": "Belt Squat March",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "core/quads",
+      "equipment": ["belt squat machine"],
+      "stress": ["knee"]
+    }
+  ]
 }
