@@ -1,30 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { MAIN_LIFTS, substitute, filterByEquipment, accessoriesFor } from './exercises.js'
+import { MAIN_LIFTS, all, byName, query, stressesRegion } from './exercises.js'
 
-describe('MAIN_LIFTS', () => {
-  it('lists the three competition lifts', () => {
-    expect(MAIN_LIFTS).toEqual(['squat','bench','deadlift'])
+describe('exercises query', () => {
+  it('MAIN_LIFTS', () => { expect(MAIN_LIFTS).toEqual(['squat','bench','deadlift']) })
+  it('all() returns the library', () => { expect(all().length).toBeGreaterThanOrEqual(150) })
+  it('byName finds the low-bar squat', () => {
+    expect(byName('Back Squat (Low Bar)').category).toBe('competition')
   })
-})
-
-describe('substitute', () => {
-  it('swaps squat to box squat for a knee injury', () => {
-    expect(substitute('squat', ['knee'])).toBe('box squat')
+  it('query filters by category + targetLift', () => {
+    const r = query({ category: 'variation', targetLift: 'deadlift' })
+    expect(r.length).toBeGreaterThan(0)
+    expect(r.every((e) => e.category === 'variation' && e.targetLift === 'deadlift')).toBe(true)
   })
-  it('returns the original lift when no injury applies', () => {
-    expect(substitute('bench', ['knee'])).toBe('bench')
+  it('equipmentAvailable excludes exercises needing missing gear', () => {
+    const r = query({ targetLift: 'squat', equipmentAvailable: ['barbell', 'rack'] })
+    expect(r.every((e) => e.equipment.every((x) => ['barbell','rack'].includes(x)))).toBe(true)
   })
-})
-
-describe('filterByEquipment', () => {
-  it('keeps only exercises whose equipment is all available', () => {
-    expect(filterByEquipment(['squat','leg press'], ['barbell','rack']))
-      .toEqual(['squat'])
+  it('excludeAdvanced drops band/chain work', () => {
+    const r = query({ excludeAdvanced: true })
+    expect(r.every((e) => !e.advanced)).toBe(true)
   })
-})
-
-describe('accessoriesFor', () => {
-  it('returns accessories mapped to the bench', () => {
-    expect(accessoriesFor('bench')).toEqual(['dumbbell bench','floor press'])
+  it('stressesRegion checks the stress tag', () => {
+    const dl = byName('Conventional Deadlift')
+    expect(stressesRegion(dl, 'lowerBack')).toBe(true)
   })
 })

@@ -1,5 +1,9 @@
-import { ROLE, getTemplate } from './templates.js'
+import { ROLE, getTemplate, slotTypeForRole } from './templates.js'
 import { workingWeight } from './e1rm.js'
+import { compVariant } from './style.js'
+import { pick } from './variations.js'
+import { volumeScale } from './regionStatus.js'
+import { byName } from './exercises.js'
 
 export const WEEK_RPE_OFFSET = [0, 0.5, 1.0]
 
@@ -7,20 +11,30 @@ export function cap(rpe) {
   return Math.min(9.5, rpe)
 }
 
+function resolveName(slot, ctx) {
+  if (slotTypeForRole(slot.role) === 'comp') return compVariant(slot.lift, ctx.style[slot.lift])
+  const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced)
+  return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
+}
+
 export function buildSession(daySlots, weekIndex, ctx) {
   const offset = WEEK_RPE_OFFSET[weekIndex] ?? 0
   const exercises = daySlots.map((slot) => {
     const role = ROLE[slot.role]
     const rpeTarget = cap(role.rpeStart + offset)
-    const e1rm = ctx.e1rm[slot.lift]
+    const name = resolveName(slot, ctx)
+    const ex = byName(name)
+    const scale = ex ? volumeScale(ex, ctx.regionStatus ?? {}) : 1
+    const baseSets = ctx.setsPerSession[slot.lift]
     return {
-      lift: slot.lift,
-      sets: ctx.setsPerSession[slot.lift],
+      lift: name,
+      baseLift: slot.lift,
+      sets: Math.round(baseSets * scale),
       reps: role.reps,
       rpeTarget,
-      pct: undefined, // filled below
-      weight: workingWeight(e1rm, role.reps, rpeTarget),
-      velocity: null, // Phase 2 VBT stub
+      pct: undefined,
+      weight: workingWeight(ctx.e1rm[slot.lift], role.reps, rpeTarget),
+      velocity: null,
     }
   })
   return { day: null, exercises }

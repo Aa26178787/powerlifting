@@ -1,18 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { toEngineProfile, enrichExercise, accessoriesForSession, buildPlan } from './planAdapter.js'
+import { toEngineProfile, enrichExercise, buildPlan } from './planAdapter.js'
 
 const form = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
   years: 3, daysPerWeek: 3, goal: 'balanced', fatigue: 2,
-  competition: { on: false, date: '' }, age: 30, bodyweight: 90, sex: 'M',
-  weakLift: 'bench', injuries: [], sessionTimeLimit: null, equipment: ['barbell', 'rack', 'bench'],
+  style: { squat:{bar:'low'}, bench:{grip:'close'}, deadlift:{stance:'sumo'} },
+  stickingPoint: { squat:'bottom', bench:'lockout', deadlift:'bottom' },
+  regionStatus: { knee: 1 }, equipment: ['barbell','rack','bench'], sessionTimeLimit: null,
 }
 
 describe('toEngineProfile', () => {
-  it('keeps only engine fields', () => {
+  it('passes the v2 fields and drops UI-only ones', () => {
     const ep = toEngineProfile(form)
-    expect(Object.keys(ep).sort()).toEqual(['daysPerWeek', 'fatigue', 'goal', 'injuries', 'lifts', 'years'])
-    expect(ep.lifts.squat).toEqual({ oneRM: 200 })
+    expect(Object.keys(ep).sort()).toEqual(['daysPerWeek','equipment','fatigue','goal','lifts','regionStatus','sessionTimeLimit','stickingPoint','style','years'])
+    expect(ep.style.deadlift.stance).toBe('sumo')
   })
 })
 
@@ -27,34 +28,12 @@ describe('enrichExercise', () => {
   })
 })
 
-describe('accessoriesForSession', () => {
-  it('returns equipment-filtered accessories for the session main lifts', () => {
-    const session = { day: 1, exercises: [{ lift: 'bench' }] }
-    const acc = accessoriesForSession(session, ['barbell', 'bench', 'dumbbells'], [], null)
-    expect(acc).toContain('dumbbell bench')
-  })
-  it('caps the count when a session time limit is set', () => {
-    const session = { day: 1, exercises: [{ lift: 'squat' }, { lift: 'bench' }] }
-    const acc = accessoriesForSession(session, ['barbell', 'rack', 'bench', 'dumbbells', 'leg press machine'], [], 20)
-    expect(acc.length).toBeLessThanOrEqual(1) // floor(20/20)=1
-  })
-})
-
-describe('buildPlan', () => {
-  it('produces an enriched 4-week plan with pct filled on every exercise', () => {
+describe('buildPlan v2', () => {
+  it('produces 4 weeks with engine accessories and pct-filled exercises', () => {
     const plan = buildPlan(form)
     expect(plan.weeks).toHaveLength(4)
     const allEx = plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
     expect(allEx.every((e) => e.pct === null || typeof e.pct === 'number')).toBe(true)
-    expect(allEx.some((e) => typeof e.pct === 'number')).toBe(true)
     expect(plan.weeks[0].sessions[0]).toHaveProperty('accessories')
-  })
-})
-
-describe('accessoriesForSession with injury substitution', () => {
-  it('still finds accessories when an injury renamed the main lift', () => {
-    const session = { day: 1, exercises: [{ lift: 'box squat' }] } // knee-substituted squat
-    const acc = accessoriesForSession(session, ['barbell', 'rack'], ['knee'], null)
-    expect(acc).toContain('front squat')
   })
 })

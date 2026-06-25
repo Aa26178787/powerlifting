@@ -16,9 +16,11 @@ export const DEFAULT_PROFILE = {
   bodyweight: null,
   sex: '',
   weakLift: '',
-  injuries: [],
   sessionTimeLimit: null,
   equipment: ['barbell', 'rack', 'bench'],
+  style: { squat: { bar: 'low', stance: 'medium' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } },
+  stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
+  regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
 }
 
 function hasUsableLift(liftInput) {
@@ -46,12 +48,12 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, [path]: value } })),
       setLift: (lift, liftInput) =>
         set((s) => ({ profile: { ...s.profile, lifts: { ...s.profile.lifts, [lift]: liftInput } } })),
-      toggleInjury: (name) =>
-        set((s) => {
-          const has = s.profile.injuries.includes(name)
-          const injuries = has ? s.profile.injuries.filter((i) => i !== name) : [...s.profile.injuries, name]
-          return { profile: { ...s.profile, injuries } }
-        }),
+      setStyle: (lift, patch) =>
+        set((s) => ({ profile: { ...s.profile, style: { ...s.profile.style, [lift]: { ...s.profile.style[lift], ...patch } } } })),
+      setStickingPoint: (lift, value) =>
+        set((s) => ({ profile: { ...s.profile, stickingPoint: { ...s.profile.stickingPoint, [lift]: value } } })),
+      setRegionStatus: (region, value) =>
+        set((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, [region]: value } } })),
       toggleEquipment: (name) =>
         set((s) => {
           const has = s.profile.equipment.includes(name)

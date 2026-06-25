@@ -125,3 +125,7 @@ export function getTemplate(key) {
   if (!t) throw new Error(`unknown template: ${key}`)
   return t
 }
+
+export function slotTypeForRole(role) {
+  return role === 'heavy' ? 'comp' : 'variation'
+}

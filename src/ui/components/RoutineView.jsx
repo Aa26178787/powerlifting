@@ -26,7 +26,10 @@ export default function RoutineView({ plan }) {
               <h4>{s.day}일차</h4>
               <ul>{s.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} />)}</ul>
               {s.accessories.length > 0 && (
-                <p className="accessories">보조운동: {s.accessories.map(liftLabel).join(', ')}</p>
+                <p className="accessories">보조운동: {s.accessories.map((a) => liftLabel(a.name)).join(', ')}</p>
+              )}
+              {s.notes && s.notes.length > 0 && (
+                <p className="notes">⚠️ {s.notes.join(' · ')}</p>
               )}
             </div>
           ))}

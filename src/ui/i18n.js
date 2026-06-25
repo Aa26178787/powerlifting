@@ -45,8 +45,15 @@ const TEMPLATE = {
   hypertrophyBlock: '근비대 블록 (Hypertrophy)',
 }
 
+const REGION = { lowerBack: '허리', knee: '무릎', shoulder: '어깨', elbow: '팔꿈치', wrist: '손목', hip: '고관절', hamstring: '햄스트링', pec: '가슴', bicepsTendon: '이두건', ankle: '발목' }
+const STATUS = { 0: '정상', 1: '뻐근', 2: '가벼운 통증', 3: '심한 통증/부상' }
+const STYLE = { bar: { low: '로우바', high: '하이바' }, stance: { narrow: '좁게', medium: '보통', wide: '넓게', conventional: '컨벤셔널', sumo: '스모' }, grip: { close: '클로즈', medium: '보통', wide: '넓게' } }
+
 export const liftLabel = (k) => LIFT[k] ?? k
 export const goalLabel = (k) => GOAL[k] ?? k
 export const injuryLabel = (k) => INJURY[k] ?? k
 export const equipmentLabel = (k) => EQUIPMENT[k] ?? k
 export const templateLabel = (k) => TEMPLATE[k] ?? k
+export const regionLabel = (k) => REGION[k] ?? k
+export const statusLabel = (n) => STATUS[n] ?? String(n)
+export const styleLabel = (group, v) => (STYLE[group] && STYLE[group][v]) ?? v
