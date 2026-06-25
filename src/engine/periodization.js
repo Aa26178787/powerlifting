@@ -24,7 +24,7 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
     lift: name,
     baseLift: slot.lift,
     quality,
-    sets: Math.max(1, Math.round(ctx.setsPerSession[slot.lift] * scale)),
+    sets: Math.round(ctx.setsPerSession[slot.lift] * scale),
     reps: z.reps,
     repAnchor: z.repAnchor,
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),

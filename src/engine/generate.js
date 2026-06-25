@@ -7,6 +7,8 @@ import { MAIN_LIFTS, byName } from './exercises.js'
 import { select } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
+import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
+import { recommendModel } from './periodizationModel.js'
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
 const DEFAULT_STICK = { squat: 'none', bench: 'none', deadlift: 'none' }
@@ -18,15 +20,19 @@ export function resolveE1rm(liftInput) {
 }
 
 function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, regionStatus) {
-  // pick a variation of baseLift whose stress excludes any status>=2 region
   const bad = new Set(Object.entries(regionStatus).filter(([, v]) => v >= 2).map(([k]) => k))
   const candidate = pick(baseLift, stickingPoint, style, equipment, advanced)
   if (candidate && !candidate.stress.some((r) => bad.has(r))) return candidate.name
-  return ex // keep (already volume-scaled)
+  return ex
 }
 
 export function generate(profile) {
-  const { lifts, years, daysPerWeek, goal, fatigue } = profile
+  const { years, daysPerWeek, fatigue, lifts } = profile
+  const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
+  const competition = profile.competition ?? { on: false, date: '' }
+  const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
+    ? recommendModel({ competition, blend })
+    : profile.periodizationModel
   const style = profile.style ?? DEFAULT_STYLE
   const stickingPoint = profile.stickingPoint ?? DEFAULT_STICK
   const regionStatus = profile.regionStatus ?? {}
@@ -36,9 +42,9 @@ export function generate(profile) {
   const e1rm = {}
   for (const lift of MAIN_LIFTS) e1rm[lift] = resolveE1rm(lifts[lift])
 
-  const template = selectTemplate({ goal, years, daysPerWeek })
-  const tuned = tune({ goal, years, daysPerWeek, fatigue })
-  const ctx = { e1rm, setsPerSession: tuned.setsPerSession, style, stickingPoint, equipment, advanced, regionStatus }
+  const template = selectTemplate({ blend, years, daysPerWeek })
+  const tuned = tune({ blend, years, daysPerWeek, fatigue })
+  const ctx = { e1rm, setsPerSession: tuned.setsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx)
   const deload = buildDeloadWeek(working[working.length - 1], ctx)
@@ -47,30 +53,29 @@ export function generate(profile) {
   const weeks = allWeeks.map((wk) => ({
     ...wk,
     sessions: wk.sessions.map((s) => {
-      const mapped = s.exercises.map((e) => {
-        const ex = byName(e.lift)
-        if (ex && shouldSwap(ex, regionStatus)) {
-          const swapped = sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus)
-          return { ...e, lift: swapped }
-        }
-        return e
-      })
       const notes = []
-      for (const e of mapped) {
-        if (e.sets < 1 && MAIN_LIFTS.includes(e.baseLift)) {
+      const exercises = s.exercises
+        .map((e) => {
           const ex = byName(e.lift)
-          const stressedRegions = ex ? ex.stress : []
-          const severeRegion = stressedRegions.find((r) => regionStatus[r] === 3)
-          const region = severeRegion ?? 'injury'
+          if (ex && shouldSwap(ex, regionStatus)) {
+            return { ...e, lift: sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus) }
+          }
+          return e
+        })
+      const kept = exercises.filter((e) => {
+        if (e.sets >= 1) return true
+        if (MAIN_LIFTS.includes(e.baseLift)) {
+          const ex = byName(e.lift)
+          const region = (ex ? ex.stress : []).find((r) => (regionStatus[r] ?? 0) === 3) ?? 'injury'
           notes.push(`${e.baseLift} omitted this week due to severe ${region} status`)
         }
-      }
-      const exercises = mapped.filter((e) => e.sets >= 1)
-      const primary = exercises[0]?.baseLift ?? 'squat'
+        return false
+      })
+      const primary = kept[0]?.baseLift ?? 'squat'
       const accessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus })
-      return { ...s, exercises, accessories, notes }
+      return { ...s, exercises: kept, accessories, notes }
     }),
   }))
 
-  return { template, weeks }
+  return { template, model, weeks }
 }
