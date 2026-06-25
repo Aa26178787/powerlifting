@@ -1,8 +1,7 @@
 import React from 'react'
 import { useProfileStore, selectIsValid } from '../store/profileStore.js'
-import { liftLabel, goalLabel, injuryLabel, equipmentLabel } from '../i18n.js'
+import { liftLabel, goalLabel, equipmentLabel, styleLabel, regionLabel, statusLabel } from '../i18n.js'
 
-const INJURIES = ['knee', 'shoulder', 'back']
 const EQUIPMENT = ['barbell', 'rack', 'bench', 'box', 'trap bar', 'dumbbells', 'leg press machine']
 
 function numberOrNull(v) {
@@ -14,7 +13,9 @@ export default function InputForm({ onGenerate }) {
   const profile = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
   const setLift = useProfileStore((s) => s.setLift)
-  const toggleInjury = useProfileStore((s) => s.toggleInjury)
+  const setStyle = useProfileStore((s) => s.setStyle)
+  const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
+  const setRegionStatus = useProfileStore((s) => s.setRegionStatus)
   const toggleEquipment = useProfileStore((s) => s.toggleEquipment)
   const valid = selectIsValid(profile)
 
@@ -101,23 +102,59 @@ export default function InputForm({ onGenerate }) {
       </label>
 
       <fieldset>
-        <legend>부상 부위</legend>
-        {INJURIES.map((inj) => (
-          <label key={inj}>
-            <input type="checkbox" checked={profile.injuries.includes(inj)}
-              onChange={() => toggleInjury(inj)} />
-            {injuryLabel(inj)}
-          </label>
-        ))}
-      </fieldset>
-
-      <fieldset>
         <legend>보유 장비</legend>
         {EQUIPMENT.map((eq) => (
           <label key={eq}>
             <input type="checkbox" checked={profile.equipment.includes(eq)}
               onChange={() => toggleEquipment(eq)} />
             {equipmentLabel(eq)}
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>스타일</legend>
+        <label>스쿼트 바
+          <select value={profile.style.squat.bar} onChange={(e) => setStyle('squat', { bar: e.target.value })}>
+            <option value="low">{styleLabel('bar','low')}</option>
+            <option value="high">{styleLabel('bar','high')}</option>
+          </select>
+        </label>
+        <label>스쿼트 스탠스
+          <select value={profile.style.squat.stance} onChange={(e) => setStyle('squat', { stance: e.target.value })}>
+            {['narrow','medium','wide'].map((v) => <option key={v} value={v}>{styleLabel('stance',v)}</option>)}
+          </select>
+        </label>
+        <label>벤치 그립
+          <select value={profile.style.bench.grip} onChange={(e) => setStyle('bench', { grip: e.target.value })}>
+            {['close','medium','wide'].map((v) => <option key={v} value={v}>{styleLabel('grip',v)}</option>)}
+          </select>
+        </label>
+        <label>데드리프트 스탠스
+          <select value={profile.style.deadlift.stance} onChange={(e) => setStyle('deadlift', { stance: e.target.value })}>
+            {['conventional','sumo'].map((v) => <option key={v} value={v}>{styleLabel('stance',v)}</option>)}
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>스티킹포인트 (가장 안 올라가는 구간)</legend>
+        {['squat','bench','deadlift'].map((lift) => (
+          <label key={lift}>{liftLabel(lift)}
+            <select value={profile.stickingPoint[lift]} onChange={(e) => setStickingPoint(lift, e.target.value)}>
+              {['none','bottom','midrange','lockout'].map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>부위 상태 (0 정상 ~ 3 심한 통증/부상)</legend>
+        {Object.keys(profile.regionStatus).map((region) => (
+          <label key={region}>{regionLabel(region)} 상태
+            <select value={profile.regionStatus[region]} onChange={(e) => setRegionStatus(region, Number(e.target.value))}>
+              {[0,1,2,3].map((n) => <option key={n} value={n}>{statusLabel(n)}</option>)}
+            </select>
           </label>
         ))}
       </fieldset>

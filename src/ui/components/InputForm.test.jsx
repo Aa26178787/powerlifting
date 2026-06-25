@@ -34,9 +34,14 @@ describe('InputForm', () => {
     expect(called).toBe(true)
   })
 
-  it('updates days per week in the store', async () => {
+  it('updates deadlift stance style in the store', async () => {
     render(<InputForm onGenerate={() => {}} />)
-    await userEvent.setup().selectOptions(screen.getByLabelText(/주당 훈련일/), '5')
-    expect(useProfileStore.getState().profile.daysPerWeek).toBe(5)
+    await userEvent.setup().selectOptions(screen.getByLabelText(/데드리프트 스탠스/), 'sumo')
+    expect(useProfileStore.getState().profile.style.deadlift.stance).toBe('sumo')
+  })
+  it('updates a region status in the store', async () => {
+    render(<InputForm onGenerate={() => {}} />)
+    await userEvent.setup().selectOptions(screen.getByLabelText(/허리 상태/), '2')
+    expect(useProfileStore.getState().profile.regionStatus.lowerBack).toBe(2)
   })
 })
