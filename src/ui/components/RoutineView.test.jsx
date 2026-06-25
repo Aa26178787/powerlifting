@@ -10,12 +10,12 @@ const plan = {
     { index: 1, isDeload: false, sessions: [
       { day: 1, exercises: [
         { lift: 'squat', sets: 5, reps: 5, pct: 81.1, rpeTarget: 8, weight: 162.5, velocity: null },
-      ], accessories: ['leg press'] },
+      ], accessories: [{ name: 'leg press' }] },
     ] },
     { index: 4, isDeload: true, sessions: [
       { day: 1, exercises: [
         { lift: 'squat', sets: 3, reps: 5, pct: null, rpeTarget: 6, weight: 120, velocity: null },
-      ], accessories: [] },
+      ], accessories: [], notes: ['deadlift omitted this week due to severe lowerBack status'] },
     ] },
   ],
 }
@@ -34,5 +34,9 @@ describe('RoutineView', () => {
     render(<RoutineView plan={plan} />)
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
     expect(screen.getByText(/레그 프레스/)).toBeInTheDocument()
+  })
+  it('renders session notes when present', () => {
+    render(<RoutineView plan={plan} />)
+    expect(screen.getByText(/omitted/)).toBeInTheDocument()
   })
 })
