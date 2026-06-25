@@ -25,7 +25,19 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   const rpeTarget = z.loading === 'rpe' ? cap(z.rpeTarget + rpeOffset) : null
   const role = slotTypeForRole(slot.role) === 'comp' ? 'comp' : (slot.role === 'accessory' ? 'accessory' : 'variation')
   const eff = ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)
-  const baseSets = Math.max(1, Math.round(ctx.setsPerSession[slot.lift] * scale))
+  const baseSets = Math.round(ctx.setsPerSession[slot.lift] * scale)
+  // scale 0 (region status 3) → 0 sets → generate drops the lift + notes it.
+  // Short-circuit BEFORE scheme expansion, since some expanders always emit >=1 set.
+  if (baseSets < 1) {
+    return {
+      lift: name, baseLift: slot.lift, quality,
+      reps: z.reps, repAnchor: z.repAnchor,
+      pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
+      rpeTarget, weight: weightFor(quality, eff), velocity: null, autoregulate: true,
+      scheme: { type: 'straight', evidenceTier: 'rct', sets: [], note: undefined, group: undefined },
+      sets: 0,
+    }
+  }
   const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0 })
   const scheme = SCHEMES[key]
