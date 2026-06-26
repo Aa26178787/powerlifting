@@ -77,4 +77,9 @@ describe('buildPlan v3', () => {
   it('passes accessoryPreference through (default machine when set)', () => {
     expect(toEngineProfile({ ...form, accessoryPreference: 'free' }).accessoryPreference).toBe('free')
   })
+
+  it('passes per-lift frequency through', () => {
+    const p = toEngineProfile({ ...form, frequency: { squat: 3, bench: 2, deadlift: 1 } })
+    expect(p.frequency).toEqual({ squat: 3, bench: 2, deadlift: 1 })
+  })
 })

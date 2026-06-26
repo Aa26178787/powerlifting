@@ -31,6 +31,7 @@ export const DEFAULT_PROFILE = {
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
   accessoryPreference: 'machine',
+  frequency: { squat: 2, bench: 2, deadlift: 1 },
 }
 
 function hasUsableLift(liftInput) {
@@ -63,6 +64,8 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, style: { ...s.profile.style, [lift]: { ...s.profile.style[lift], ...patch } } } })),
       setStickingPoint: (lift, value) =>
         set((s) => ({ profile: { ...s.profile, stickingPoint: { ...s.profile.stickingPoint, [lift]: value } } })),
+      setFrequency: (lift, value) =>
+        set((s) => ({ profile: { ...s.profile, frequency: { ...s.profile.frequency, [lift]: value } } })),
       setRegionStatus: (region, value) =>
         set((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, [region]: value } } })),
       setQuality: (q, value) =>
@@ -123,6 +126,7 @@ export const useProfileStore = create(
             competition: { ...current.profile.competition, ...(p.competition || {}) },
             style: { ...current.profile.style, ...(p.style || {}) },
             stickingPoint: { ...current.profile.stickingPoint, ...(p.stickingPoint || {}) },
+            frequency: { ...current.profile.frequency, ...(p.frequency || {}) },
             regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
             qualities: { ...current.profile.qualities, ...(p.qualities || {}) },
             periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
