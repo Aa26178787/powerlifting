@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BANDS, yearsProgress, fatigueScale, weeklySets, bandForBlend, ageScale } from './volume.js'
+import { BANDS, yearsProgress, fatigueScale, weeklySets, bandForBlend, ageScale, volumeRamp } from './volume.js'
 
 describe('yearsProgress', () => {
   it('is 0 at 0 years and caps at 1 by 5 years', () => {
@@ -57,5 +57,24 @@ describe('weeklySets age taper', () => {
   })
   it('omitting age preserves legacy value', () => {
     expect(weeklySets({ power:0, strength:1, hypertrophy:0, endurance:0 }, 5, 1)).toBe(BANDS.strength.mav)
+  })
+})
+
+describe('volumeRamp', () => {
+  it('flat at week 1, ramps ~35% by the last week, flat for single week', () => {
+    expect(volumeRamp(0, 4)).toBe(1)
+    expect(volumeRamp(3, 4)).toBeCloseTo(1.35, 5)
+    expect(volumeRamp(0, 1)).toBe(1)
+  })
+  it('is monotonic across weeks', () => {
+    expect(volumeRamp(1, 4)).toBeGreaterThan(volumeRamp(0, 4))
+    expect(volumeRamp(2, 4)).toBeGreaterThan(volumeRamp(1, 4))
+  })
+})
+
+describe('weeklySets higher floor', () => {
+  it('a novice mixed-blend starts above MEV (not pinned to it)', () => {
+    const blend = { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 } // -> balanced band
+    expect(weeklySets(blend, 1, 1)).toBeGreaterThan(BANDS.balanced.mev)
   })
 })

@@ -230,3 +230,22 @@ describe('recommendation quality (acceptance)', () => {
     expect(squatVars.some((n)=>/Box Squat/.test(n))).toBe(false)
   })
 })
+
+describe('main lift volume floor + weekly ramp', () => {
+  const base = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 1, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    qualities: { power:0, strength:0.5, hypertrophy:0.5, endurance:0 },
+  }
+  const squatSets = (r, w) => r.weeks[w].sessions.flatMap(s=>s.exercises).filter(e=>e.baseLift==='squat').reduce((a,e)=>a+e.sets,0)
+  it('week 4 squat volume exceeds week 1 (ramp)', () => {
+    const r = generate(base)
+    expect(squatSets(r, 3)).toBeGreaterThan(squatSets(r, 0))
+  })
+  it('week 1 squat session volume is above the old MEV-pinned minimum', () => {
+    const r = generate(base)
+    const wk1 = r.weeks[0].sessions.flatMap(s=>s.exercises).filter(e=>e.baseLift==='squat')
+    // at least one squat session with >= 5 working sets (old default was ~4)
+    expect(Math.max(...wk1.map(e=>e.sets))).toBeGreaterThanOrEqual(5)
+  })
+})

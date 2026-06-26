@@ -32,7 +32,17 @@ export function bandForBlend(blend) {
 
 export function weeklySets(blend, years, fatigue, age) {
   const band = BANDS[bandForBlend(blend)]
-  const base = band.mev + (band.mav - band.mev) * yearsProgress(years)
+  // Higher floor: even novices start above MEV (mid of the MEV->MAV range),
+  // advanced reach MAV. This is the mesocycle WEEK-1 (floor) volume.
+  const base = band.mev + (band.mav - band.mev) * (0.5 + 0.5 * yearsProgress(years))
   const scaled = Math.round(base * fatigueScale(fatigue) * ageScale(age))
   return clamp(scaled, 4, band.mrv)
+}
+
+// Weekly volume ramp across the mesocycle: week 1 sits at the floor (weeklySets),
+// ramping up ~35% toward MRV by the last working week (progressive overload by
+// volume). Capped to MRV downstream. totalWeeks<=1 -> flat.
+export function volumeRamp(weekIndex, totalWeeks) {
+  if (totalWeeks <= 1) return 1
+  return 1 + 0.35 * (weekIndex / (totalWeeks - 1))
 }

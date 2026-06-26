@@ -7,6 +7,7 @@ import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './qualit
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
+import { volumeRamp } from './volume.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
@@ -30,7 +31,8 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   const rpeTarget = z.loading === 'rpe' ? cap(z.rpeTarget + rpeOffset) : null
   const role = slotTypeForRole(slot.role) === 'comp' ? 'comp' : (slot.role === 'accessory' ? 'accessory' : 'variation')
   const eff = ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)
-  const baseSets = Math.round(ctx.setsPerSession[slot.lift] * scale)
+  const weekSets = ctx.weekSets?.[slot.lift] ?? ctx.setsPerSession[slot.lift]
+  const baseSets = Math.round(weekSets * scale)
   // scale 0 (region status 3) → 0 sets → generate drops the lift + notes it.
   // Short-circuit BEFORE scheme expansion, since some expanders always emit >=1 set.
   if (baseSets < 1) {
@@ -80,6 +82,15 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
   const weeks = []
   for (let w = 0; w < totalWeeks; w++) {
     ctx.weekIndex = w
+    // Per-week volume ramp: scale the floor setsPerSession up toward MRV, capped
+    // by MRV / sessions-per-lift so a lift never exceeds its weekly MRV.
+    const ramp = volumeRamp(w, totalWeeks)
+    ctx.weekSets = {}
+    for (const lift of Object.keys(slotCounts)) {
+      const base = ctx.setsPerSession[lift] ?? 0
+      const cap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
+      ctx.weekSets[lift] = Math.max(1, Math.min(Math.round(base * ramp), cap))
+    }
     const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
     // per-lift quality schedule for this week + a consuming index
     const sched = {}, idx = {}

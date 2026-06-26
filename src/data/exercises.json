@@ -1569,15 +1569,6 @@
       "stress": ["knee"]
     },
     {
-      "name": "Barbell Hack Squat",
-      "category": "accessory",
-      "targetLift": "squat",
-      "stickingPoint": "bottom",
-      "primaryMuscle": "quads",
-      "equipment": ["barbell"],
-      "stress": ["knee"]
-    },
-    {
       "name": "Bulgarian Split Squat",
       "category": "accessory",
       "targetLift": "squat",
