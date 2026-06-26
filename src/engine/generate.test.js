@@ -180,7 +180,6 @@ describe('recommendation quality (acceptance)', () => {
   }
   const mainSchemes = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.exercises).map(e=>e.scheme.type)
   const mainSets = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.exercises).map(e=>e.sets)
-  const accNames = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.accessories).map(a=>a.lift ?? a.name)
 
   it('main lifts never use 1-set intensity techniques', () => {
     const r = generate({ ...base, qualities: PRESETS.powerbuilding })
@@ -189,6 +188,7 @@ describe('recommendation quality (acceptance)', () => {
   })
   it('main working exercises have at least 2 sets each (no 1-set collapse)', () => {
     const r = generate({ ...base, qualities: PRESETS.powerlifting })
+    expect(mainSets(r).length).toBeGreaterThan(0)
     expect(Math.min(...mainSets(r))).toBeGreaterThanOrEqual(2)
   })
   it('squat variation slots are not Box Squat by default', () => {

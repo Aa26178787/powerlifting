@@ -51,9 +51,19 @@ describe('accessoryPreference', () => {
     expect(lp).toBeGreaterThanOrEqual(0)
     expect(lp < bs || bs === -1).toBe(true)
   })
-  it('free preference does not boost machines', () => {
+  it('"any" preference still demotes skill accessories (Box Step-Up ranks below Leg Press)', () => {
+    const names = ranks('any')
+    const lp = names.indexOf('Leg Press')
+    const bs = names.indexOf('Box Step-Up')
+    expect(lp).toBeGreaterThanOrEqual(0)
+    expect(lp < bs || bs === -1).toBe(true)
+  })
+  it('free preference does not boost machines but still demotes skill', () => {
     const names = ranks('free')
-    // a free-weight squat accessory should appear; skill still demoted
+    const lp = names.indexOf('Leg Press')
+    const bs = names.indexOf('Box Step-Up')
     expect(names.length).toBeGreaterThan(0)
+    // Box Step-Up (skill) must rank below Leg Press (machine) or be absent
+    expect(bs === -1 || (lp !== -1 && lp < bs)).toBe(true)
   })
 })

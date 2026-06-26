@@ -7,14 +7,14 @@ const SKILL_RX = /step-up|sled|yoke|sissy|dragon flag|kettlebell|kb swing|pistol
 
 export function movementTypeOf(ex) {
   if (ex.movementType) return ex.movementType
-  if (ex.equipment.some((e) => MACHINE_EQUIP.some((m) => e.includes(m)))) return 'machine'
+  if ((ex.equipment ?? []).some((e) => MACHINE_EQUIP.some((m) => e.includes(m)))) return 'machine'
   if (SKILL_RX.test(ex.name)) return 'skill'
   return 'free'
 }
 
 function prefBonus(type, pref) {
+  if (type === 'skill') return -0.5   // skill/unstable always demoted (niche regardless of machine/free preference)
   if (pref === 'any') return 0
-  if (type === 'skill') return -0.5          // skill/unstable demotion is the key lever
   if (pref === 'machine') return type === 'machine' ? 0.3 : 0
   if (pref === 'free')    return type === 'free'    ? 0.3 : 0
   return 0
