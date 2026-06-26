@@ -19,4 +19,11 @@ describe('tune', () => {
     const t = tune({ blend: { power:0, strength:1, hypertrophy:0, endurance:0 }, years: 0, daysPerWeek: 6, fatigue: 5 })
     expect(t.setsPerSession.bench).toBeGreaterThanOrEqual(1)
   })
+  it('threads age to weeklySets (older -> fewer or equal sets)', () => {
+    const blend = { power:0, strength:0, hypertrophy:1, endurance:0 }
+    const young = tune({ blend, years:5, daysPerWeek:4, fatigue:1, age:30 })
+    const old   = tune({ blend, years:5, daysPerWeek:4, fatigue:1, age:60 })
+    expect(old.weeklySets.squat).toBeLessThanOrEqual(young.weeklySets.squat)
+    expect(old.weeklySets.squat).toBeLessThan(young.weeklySets.squat)
+  })
 })

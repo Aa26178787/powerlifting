@@ -72,7 +72,7 @@ export function generate(profile) {
   for (const lift of MAIN_LIFTS) e1rm[lift] = resolveE1rm(lifts[lift])
 
   const template = selectTemplate({ blend, years, daysPerWeek })
-  const tuned = tune({ blend, years, daysPerWeek, fatigue })
+  const tuned = tune({ blend, years, daysPerWeek, fatigue, age: profile.age })
   const mrv = BANDS[bandForBlend(blend)].mrv
   const layout = getTemplate(template).layouts[daysPerWeek]
   const slotCounts = {}

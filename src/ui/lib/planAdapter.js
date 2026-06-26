@@ -5,6 +5,7 @@ export function toEngineProfile(form) {
   return {
     lifts: form.lifts,
     years: form.years,
+    age: form.age,
     daysPerWeek: form.daysPerWeek,
     fatigue: form.fatigue,
     qualities: form.qualities,

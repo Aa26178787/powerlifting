@@ -2,8 +2,8 @@ import { weeklySets } from './volume.js'
 import { desiredFrequency } from './frequency.js'
 import { MAIN_LIFTS } from './exercises.js'
 
-export function tune({ blend, years, daysPerWeek, fatigue }) {
-  const perLiftWeekly = weeklySets(blend, years, fatigue)
+export function tune({ blend, years, daysPerWeek, fatigue, age }) {
+  const perLiftWeekly = weeklySets(blend, years, fatigue, age)
   const frequency = desiredFrequency('strength', daysPerWeek)
   const weeklySetsMap = {}
   const setsPerSession = {}
