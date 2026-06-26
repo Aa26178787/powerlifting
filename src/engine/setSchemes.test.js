@@ -99,3 +99,17 @@ describe('expandAccessory (reps + RPE, no weight)', () => {
     expect(expandAccessory('nonsense', { baseSets: 2 }).sets).toHaveLength(2)
   })
 })
+
+describe('strengthHypertrophy scheme', () => {
+  it('heavy strength top + hypertrophy-rep backoff in one exercise', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 3 })
+    expect(sets.length).toBe(3)
+    expect(sets[0].reps).toBe(ZONES.strength.reps[0])        // 헤비 탑 저반복
+    expect(sets[1].reps).toBe(ZONES.hypertrophy.repAnchor)   // 근비대 백오프
+    expect(sets[0].weight).toBeGreaterThan(sets[1].weight)   // 백오프가 더 가벼움
+  })
+  it('always emits at least a top + one backoff', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 1 })
+    expect(sets.length).toBe(2)
+  })
+})

@@ -1,4 +1,4 @@
-import { weightFor } from './quality.js'
+import { weightFor, ZONES } from './quality.js'
 import { roundToIncrement } from './e1rm.js'
 
 const r = roundToIncrement
@@ -96,6 +96,15 @@ function widowmaker({ e1rm }) {
 function contrastPAP(ctx) {
   return { sets: topSingleBackoff(ctx).sets, note: '폭발 종목과 세트 교대 (180s, ≥48h 회복)', group: 'contrast' }
 }
+function strengthHypertrophy({ e1rm, baseSets }) {
+  const sZ = ZONES.strength, hZ = ZONES.hypertrophy
+  const top = r(e1rm * sZ.pct[1])                 // ~0.92
+  const sets = [{ weight: top, reps: sZ.reps[0], rpe: sZ.rpeTarget, label: '탑(근력)' }]
+  const back = r(e1rm * hZ.pct[0])                // ~0.67 → 근비대 부하
+  for (let i = 1; i < Math.max(2, baseSets); i++)
+    sets.push({ weight: back, reps: hZ.repAnchor, rpe: hZ.rpeTarget, label: '백오프(근비대)' })
+  return { sets }
+}
 
 export const SCHEMES = {
   straight:         { labelKey: 'straight',         evidenceTier: 'rct',       fatigue: 2, expand: straight },
@@ -111,7 +120,8 @@ export const SCHEMES = {
   dropSet:          { labelKey: 'dropSet',          evidenceTier: 'rct',       fatigue: 4, expand: dropSet },
   myoReps:          { labelKey: 'myoReps',          evidenceTier: 'consensus', fatigue: 4, expand: myoReps },
   widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, expand: widowmaker },
-  contrastPAP:      { labelKey: 'contrastPAP',      evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
+  contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
+  strengthHypertrophy: { labelKey: 'strengthHypertrophy', evidenceTier: 'consensus', fatigue: 3, expand: strengthHypertrophy },
 }
 
 const CANDIDATES = {
