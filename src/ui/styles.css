@@ -76,7 +76,7 @@ table, .num, .set-table td { font-variant-numeric: tabular-nums; }
 .ex-autoregulate, .acc-feel { font-size:var(--f0); color:var(--text-muted); }
 .ex-tempo, .ex-scheme-note, .acc-scheme-note { font-size:var(--f1); color:var(--text-muted); margin:var(--s1) 0; }
 .set-table-wrap { overflow-x:auto; margin-top:var(--s2); }
-.set-table { border-collapse:collapse; width:100%; min-width:320px; font-size:var(--f1); }
+.set-table { border-collapse:collapse; width:100%; min-width:320px; max-width:560px; font-size:var(--f1); }
 .set-table th { text-align:left; color:var(--text-muted); font-weight:500; font-size:var(--f0); border-bottom:1px solid var(--border); padding:var(--s1) var(--s3) var(--s1) 0; }
 .set-table td { padding:var(--s1) var(--s3) var(--s1) 0; border-bottom:1px solid #f0f2f5; }
 .set-table td.num { text-align:right; padding-right:var(--s4); }

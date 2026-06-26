@@ -46,6 +46,7 @@ describe('templateLabel', () => {
 describe('i18n Task 10: scheme/tool/phase/evidence labels', () => {
   it('schemeLabel', () => {
     expect(schemeLabel('topSetBackoff')).toBe('탑세트+백오프')
+    expect(schemeLabel('strengthHypertrophy')).not.toBe('strengthHypertrophy')
     expect(schemeLabel('unknown')).toBe('unknown')
   })
   it('cueLabel', () => {
