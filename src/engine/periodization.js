@@ -1,4 +1,4 @@
-import { getTemplate, slotTypeForRole } from './templates.js'
+import { slotTypeForRole } from './templates.js'
 import { compVariant } from './style.js'
 import { pick } from './variations.js'
 import { volumeScale } from './regionStatus.js'
@@ -71,15 +71,10 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   }
 }
 
-export function buildWorkingWeeks(templateKey, daysPerWeek, ctx, totalWeeks = 3) {
-  const template = getTemplate(templateKey)
-  const layout = template.layouts[daysPerWeek]
-  if (!layout) throw new Error(`template ${templateKey} has no layout for ${daysPerWeek} days`)
-
-  // count working slots per lift in the layout
+export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
+  if (!layout) throw new Error('buildWorkingWeeks requires a layout')
   const slotCounts = {}
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
-
   ctx.totalWeeks = totalWeeks
 
   const weeks = []

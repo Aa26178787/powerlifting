@@ -171,6 +171,22 @@ describe('generate v3 mesocycle controls', () => {
   })
 })
 
+describe('per-lift frequency layout', () => {
+  const base = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 5, fatigue: 1, mesoWeeks: 3, deloadEnabled: false,
+    qualities: { power:0, strength:1, hypertrophy:0, endurance:0 },
+  }
+  const liftSlots = (r, lift) => r.weeks[0].sessions.flatMap(s=>s.exercises).filter(e=>e.baseLift===lift).length
+  it('honors explicit per-lift frequency in week 1 slot counts', () => {
+    const r = generate({ ...base, frequency: { squat: 3, bench: 1, deadlift: 0 } })
+    expect(liftSlots(r, 'squat')).toBe(3)
+    expect(liftSlots(r, 'bench')).toBe(1)
+    expect(liftSlots(r, 'deadlift')).toBe(0)
+    expect(r.template).toBe('custom')
+  })
+})
+
 describe('recommendation quality (acceptance)', () => {
   const base = {
     lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
