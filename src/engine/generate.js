@@ -1,5 +1,4 @@
 import { e1rmFrom } from './e1rm.js'
-import { selectTemplate } from './selector.js'
 import { tune } from './tuner.js'
 import { buildWorkingWeeks } from './periodization.js'
 import { buildDeloadWeek } from './deload.js'
@@ -9,7 +8,8 @@ import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
 import { bandForBlend, BANDS } from './volume.js'
-import { getTemplate } from './templates.js'
+import { buildLayout } from './layoutGenerator.js'
+import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 
@@ -67,14 +67,16 @@ export function generate(profile) {
   const regionStatus = profile.regionStatus ?? {}
   const equipment = profile.equipment ?? ['barbell', 'rack', 'bench']
   const advanced = years >= 3
+  const freqInput = profile.frequency ?? defaultFrequency(daysPerWeek)
+  const frequency = {}
+  for (const lift of MAIN_LIFTS) frequency[lift] = Math.max(0, Math.min(daysPerWeek, freqInput[lift] ?? 0))
 
   const e1rm = {}
   for (const lift of MAIN_LIFTS) e1rm[lift] = resolveE1rm(lifts[lift])
 
-  const template = selectTemplate({ blend, years, daysPerWeek })
-  const tuned = tune({ blend, years, daysPerWeek, fatigue, age: profile.age })
+  const tuned = tune({ blend, years, daysPerWeek, fatigue, age: profile.age, frequency })
   const mrv = BANDS[bandForBlend(blend)].mrv
-  const layout = getTemplate(template).layouts[daysPerWeek]
+  const layout = buildLayout({ daysPerWeek, frequency })
   const slotCounts = {}
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
   const cappedSetsPerSession = {}
@@ -89,7 +91,7 @@ export function generate(profile) {
   }
   const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
 
-  const working = buildWorkingWeeks(template, daysPerWeek, ctx, mesoWeeks)
+  const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
 
   const weeks = allWeeks.map((wk) => ({
@@ -125,5 +127,5 @@ export function generate(profile) {
     }),
   }))
 
-  return { template, model, weeks }
+  return { template: 'custom', model, weeks }
 }

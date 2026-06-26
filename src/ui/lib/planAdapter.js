@@ -22,6 +22,7 @@ export function toEngineProfile(form) {
     excludedExercises: form.excludedExercises ?? [],
     cueNeed: form.cueNeed ?? {},
     accessoryPreference: form.accessoryPreference,
+    frequency: form.frequency,
   }
 }
 

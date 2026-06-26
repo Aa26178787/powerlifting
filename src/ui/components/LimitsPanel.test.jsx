@@ -27,4 +27,8 @@ describe('LimitsPanel disclosures', () => {
     render(<LimitsPanel />)
     expect(screen.getByText(/변형 운동은 표준 변형/)).toBeInTheDocument()
   })
+  it('discloses frequency distribution heuristic', () => {
+    render(<LimitsPanel />)
+    expect(screen.getByText(/종목별 빈도는 요일에 균등 간격/)).toBeInTheDocument()
+  })
 })

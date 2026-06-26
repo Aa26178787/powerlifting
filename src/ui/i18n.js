@@ -43,6 +43,7 @@ const TEMPLATE = {
   dup: '일일 비선형 주기화 (DUP)',
   highFreqPct: '고빈도 (High Frequency)',
   hypertrophyBlock: '근비대 블록 (Hypertrophy)',
+  custom: '맞춤 빈도 (Custom)',
 }
 
 const REGION = { lowerBack: '허리', knee: '무릎', shoulder: '어깨', elbow: '팔꿈치', wrist: '손목', hip: '고관절', hamstring: '햄스트링', pec: '가슴', bicepsTendon: '이두건', ankle: '발목' }

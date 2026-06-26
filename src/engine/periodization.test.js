@@ -3,6 +3,35 @@ import { buildWorkingWeeks } from './periodization.js'
 import { byName, allEquipment } from './exercises.js'
 import { ZONES } from './quality.js'
 
+const DUP_LAYOUTS = {
+  3: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'deadlift', role: 'heavy' }, { lift: 'bench', role: 'volume' }],
+    [{ lift: 'squat', role: 'volume' }, { lift: 'bench', role: 'light' }],
+  ],
+  4: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'deadlift', role: 'heavy' }, { lift: 'bench', role: 'volume' }],
+    [{ lift: 'squat', role: 'volume' }, { lift: 'bench', role: 'light' }],
+    [{ lift: 'deadlift', role: 'volume' }, { lift: 'bench', role: 'heavy' }],
+  ],
+  5: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'deadlift', role: 'heavy' }],
+    [{ lift: 'squat', role: 'volume' }, { lift: 'bench', role: 'volume' }],
+    [{ lift: 'deadlift', role: 'volume' }, { lift: 'bench', role: 'light' }],
+    [{ lift: 'squat', role: 'light' }, { lift: 'bench', role: 'heavy' }],
+  ],
+  6: [
+    [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }],
+    [{ lift: 'deadlift', role: 'heavy' }, { lift: 'bench', role: 'volume' }],
+    [{ lift: 'squat', role: 'volume' }],
+    [{ lift: 'bench', role: 'light' }, { lift: 'deadlift', role: 'volume' }],
+    [{ lift: 'squat', role: 'light' }],
+    [{ lift: 'bench', role: 'heavy' }],
+  ],
+}
+
 const ctx = {
   e1rm: { squat: 200, bench: 140, deadlift: 240 },
   setsPerSession: { squat: 4, bench: 4, deadlift: 4 },
@@ -20,7 +49,7 @@ const ctx = {
 
 describe('buildWorkingWeeks v3', () => {
   it('builds 3 weeks and tags every exercise with a quality + rep range', () => {
-    const weeks = buildWorkingWeeks('dup', 3, ctx)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], ctx)
     expect(weeks).toHaveLength(3)
     const exs = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
     expect(exs.length).toBeGreaterThan(0)
@@ -35,12 +64,12 @@ describe('buildWorkingWeeks v3', () => {
   it('a strength slot with a mixed blend uses the concurrent rep range [2,12]', () => {
     // ctx.blend is 50/50 strength/hypertrophy → isMixed, concurrent=true → strengthHypertrophy scheme
     // displayReps = [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]] = [2, 12]
-    const weeks = buildWorkingWeeks('dup', 3, ctx)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], ctx)
     const strengthEx = weeks[0].sessions.flatMap((s) => s.exercises).find((e) => e.quality === 'strength')
     expect(strengthEx.reps).toEqual([2, 12])
   })
   it('block model concentrates a single quality in week 1', () => {
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, model: 'block' })
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, model: 'block' })
     const qualities = new Set(weeks[0].sessions.flatMap((s) => s.exercises).map((e) => e.quality))
     expect(qualities.size).toBe(1)
   })
@@ -50,7 +79,7 @@ describe('buildWorkingWeeks v3', () => {
 describe('e1rmModifier applied to weight', () => {
   it('a variation slot is lighter than the comp lift at the same quality/e1rm', () => {
     // force a variation slot: use a template where volume/light slots resolve to variations
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, stickingPoint: { squat:'bottom', bench:'none', deadlift:'bottom' } })
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, stickingPoint: { squat:'bottom', bench:'none', deadlift:'bottom' } })
     const exs = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
     const variation = exs.find((e) => { const x = byName(e.lift); return x && x.category === 'variation' && typeof x.e1rmModifier === 'number' && x.e1rmModifier < 1 })
     if (variation) {
@@ -65,36 +94,36 @@ describe('e1rmModifier applied to weight', () => {
 
 describe('set schemes + overrides in working weeks', () => {
   it('every exercise carries a scheme with concrete sets', () => {
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, advanced: true, totalWeeks: 3 }, 3)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, advanced: true, totalWeeks: 3 }, 3)
     const ex = weeks[0].sessions[0].exercises[0]
     expect(ex.scheme).toBeTruthy()
     expect(ex.scheme.sets.length).toBeGreaterThan(0)
     expect(ex.sets).toBe(ex.scheme.sets.length)
   })
   it('respects a totalWeeks of 5', () => {
-    expect(buildWorkingWeeks('dup', 3, { ...ctx, totalWeeks: 5 }, 5)).toHaveLength(5)
+    expect(buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, totalWeeks: 5 }, 5)).toHaveLength(5)
   })
   it('variationOverride forces the chosen variation name on its lift slots', () => {
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'Front Squat', bench: null, deadlift: null } }, 3)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, variationOverride: { squat: 'Front Squat', bench: null, deadlift: null } }, 3)
     const squatVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
       .find((e) => e.baseLift === 'squat' && e.lift === 'Front Squat')
     expect(squatVar).toBeTruthy()
   })
   it('attaches a tempo spec to tempo exercises', () => {
-    const weeks = buildWorkingWeeks('dup', 3, { ...ctx, variationOverride: { squat: 'Tempo Squat', bench: null, deadlift: null } }, 3)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], { ...ctx, variationOverride: { squat: 'Tempo Squat', bench: null, deadlift: null } }, 3)
     const tempoEx = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
       .find((e) => e.lift === 'Tempo Squat')
     expect(tempoEx).toBeTruthy()
     expect(tempoEx.tempo).toEqual([3, 1, 1])
   })
   it('a cue deficit prescribes its teaching variation on a variation slot (4-day has a deadlift variation)', () => {
-    const weeks = buildWorkingWeeks('dup', 4, { ...ctx, cueNeed: { squat: null, bench: null, deadlift: 'legDrive' } }, 3)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[4], { ...ctx, cueNeed: { squat: null, bench: null, deadlift: 'legDrive' } }, 3)
     const dlVar = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
       .find((e) => e.baseLift === 'deadlift' && e.lift === 'Tempo to Knees Deadlift (T2K)')
     expect(dlVar).toBeTruthy()
   })
   it('ignores a variationOverride that is in excludedExercises', () => {
-    const weeks = buildWorkingWeeks('dup', 3, {
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], {
       ...ctx,
       variationOverride: { squat: 'Front Squat', bench: null, deadlift: null },
       excludedExercises: ['Front Squat'],
@@ -119,7 +148,7 @@ describe('buildWorkingWeeks concurrent (mixed blend)', () => {
   })
 
   it('emits a strengthHypertrophy main exercise with both rep ranges', () => {
-    const weeks = buildWorkingWeeks('dup', 4, ctx(), 4)
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[4], ctx(), 4)
     const ex = weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
       .find(e => e.scheme.type === 'strengthHypertrophy')
     expect(ex).toBeTruthy()

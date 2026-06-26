@@ -1,15 +1,16 @@
 import { weeklySets } from './volume.js'
-import { desiredFrequency } from './frequency.js'
+import { defaultFrequency } from './frequency.js'
 import { MAIN_LIFTS } from './exercises.js'
 
-export function tune({ blend, years, daysPerWeek, fatigue, age }) {
+export function tune({ blend, years, daysPerWeek, fatigue, age, frequency }) {
   const perLiftWeekly = weeklySets(blend, years, fatigue, age)
-  const frequency = desiredFrequency('strength', daysPerWeek)
+  const freq = frequency ?? defaultFrequency(daysPerWeek)
   const weeklySetsMap = {}
   const setsPerSession = {}
   for (const lift of MAIN_LIFTS) {
+    const f = freq?.[lift] ?? 0
     weeklySetsMap[lift] = perLiftWeekly
-    setsPerSession[lift] = Math.max(1, Math.round(perLiftWeekly / frequency[lift]))
+    setsPerSession[lift] = f > 0 ? Math.max(1, Math.round(perLiftWeekly / f)) : 0
   }
-  return { weeklySets: weeklySetsMap, frequency, setsPerSession }
+  return { weeklySets: weeklySetsMap, frequency: freq, setsPerSession }
 }
