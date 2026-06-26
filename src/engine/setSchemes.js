@@ -116,10 +116,10 @@ export const SCHEMES = {
   amrapTop:         { labelKey: 'amrapTop',         evidenceTier: 'consensus', fatigue: 3, expand: amrapTop },
   ramping:          { labelKey: 'ramping',          evidenceTier: 'consensus', fatigue: 4, expand: ramping },
   cluster:          { labelKey: 'cluster',          evidenceTier: 'rct',       fatigue: 3, advancedOnly: true, expand: cluster },
-  restPause:        { labelKey: 'restPause',        evidenceTier: 'rct',       fatigue: 4, expand: restPause },
-  dropSet:          { labelKey: 'dropSet',          evidenceTier: 'rct',       fatigue: 4, expand: dropSet },
-  myoReps:          { labelKey: 'myoReps',          evidenceTier: 'consensus', fatigue: 4, expand: myoReps },
-  widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, expand: widowmaker },
+  restPause:        { labelKey: 'restPause',        evidenceTier: 'rct',       fatigue: 4, accessoryOnly: true, expand: restPause },
+  dropSet:          { labelKey: 'dropSet',          evidenceTier: 'rct',       fatigue: 4, accessoryOnly: true, expand: dropSet },
+  myoReps:          { labelKey: 'myoReps',          evidenceTier: 'consensus', fatigue: 4, accessoryOnly: true, expand: myoReps },
+  widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, accessoryOnly: true, expand: widowmaker },
   contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
   strengthHypertrophy: { labelKey: 'strengthHypertrophy', evidenceTier: 'consensus', fatigue: 3, expand: strengthHypertrophy },
 }
@@ -160,6 +160,7 @@ export function pickScheme({ quality, role, phase, advanced, weekIndex = 0, seed
     cands = ['strengthHypertrophy', ...cands]
   }
   cands = cands.filter((k) => !SCHEMES[k].advancedOnly || advanced)
+  cands = cands.filter((k) => role === 'accessory' || !SCHEMES[k].accessoryOnly)
   if (!cands.length) cands = ['straight']
   return cands[(weekIndex + seed) % cands.length]
 }
