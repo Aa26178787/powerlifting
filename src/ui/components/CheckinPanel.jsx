@@ -64,9 +64,9 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
         </label>
       </div>
 
-      <div>
+      <div className="checkin-regions">
         {REGIONS.map((region) => (
-          <label key={region} style={{ display: 'inline-block', margin: '4px' }}>
+          <label key={region}>
             {regionLabel(region)}
             <select
               value={regionStatus[region] ?? 0}
@@ -82,10 +82,10 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
         ))}
       </div>
 
-      <button onClick={handleApply}>컨디션 반영</button>
+      <button className="btn checkin-apply" onClick={handleApply}>컨디션 반영</button>
 
       {readiness !== null && (
-        <div>오늘 readiness {Math.round(readiness * 100)}%</div>
+        <div className="readiness-badge">오늘 readiness {Math.round(readiness * 100)}%</div>
       )}
     </div>
   )
