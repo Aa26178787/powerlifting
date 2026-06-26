@@ -6,6 +6,7 @@ export default function StepEquipment() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
   const setRegionStatus = useProfileStore((s) => s.setRegionStatus)
+  const setFrequency = useProfileStore((s) => s.setFrequency)
 
   return (
     <div>
@@ -33,6 +34,17 @@ export default function StepEquipment() {
           <option value="any">무관</option>
         </select>
       </label>
+
+      <fieldset>
+        <legend>종목별 주 빈도 (0 = 제외)</legend>
+        {[['squat','스쿼트'],['bench','벤치'],['deadlift','데드리프트']].map(([lift, ko]) => (
+          <label key={lift}>{ko} 주 빈도
+            <select value={p.frequency[lift]} onChange={(e) => setFrequency(lift, Number(e.target.value))}>
+              {Array.from({ length: p.daysPerWeek + 1 }, (_, n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset>
         <legend>부위 상태 (0 정상 ~ 3 심한 통증/부상)</legend>
