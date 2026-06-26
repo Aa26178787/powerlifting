@@ -73,3 +73,16 @@ export function weeklyQualitySchedule(totalSets, blend) {
   for (const q of PRIORITY) for (let i = 0; i < alloc[q]; i++) out.push(q)
   return out
 }
+
+export const MIX_GAP = 0.15   // top-2 간격이 이하이면 혼합
+export const MIX_MAX = 0.55   // 최대 자질이 이하이면(지배 자질 없음) 혼합
+
+export function classifyBlend(blend) {
+  const n = normalizeBlend(blend)
+  const sorted = [...QUALITIES].sort((a, b) => n[b] - n[a])
+  const dom = sorted[0]
+  const second = sorted[1]
+  const gap = n[dom] - n[second]
+  const isMixed = gap <= MIX_GAP || n[dom] < MIX_MAX
+  return { dom, second, gap, isMixed, n }
+}

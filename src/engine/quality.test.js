@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule } from './quality.js'
+import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule, classifyBlend } from './quality.js'
 
 describe('constants', () => {
   it('four qualities and zone shapes', () => {
@@ -58,5 +58,22 @@ describe('weeklyQualitySchedule', () => {
     expect(s.filter((q) => q === 'strength')).toHaveLength(3)
     expect(s.filter((q) => q === 'hypertrophy')).toHaveLength(3)
     expect(s[0]).toBe('strength') // strength first
+  })
+})
+
+describe('classifyBlend', () => {
+  it('clear strength dominant is not mixed', () => {
+    expect(classifyBlend({ power:0.1, strength:0.7, hypertrophy:0.2, endurance:0 }).isMixed).toBe(false)
+  })
+  it('near-equal top two is mixed (gap <= MIX_GAP)', () => {
+    expect(classifyBlend({ power:0, strength:0.57, hypertrophy:0.43, endurance:0 }).isMixed).toBe(true)
+  })
+  it('no quality above MIX_MAX is mixed', () => {
+    expect(classifyBlend({ power:0.1, strength:0.5, hypertrophy:0.3, endurance:0.1 }).isMixed).toBe(true)
+  })
+  it('returns normalized blend and dominant', () => {
+    const c = classifyBlend({ power:0, strength:2, hypertrophy:1, endurance:1 })
+    expect(c.dom).toBe('strength')
+    expect(c.n.strength).toBeCloseTo(0.5, 5)
   })
 })
