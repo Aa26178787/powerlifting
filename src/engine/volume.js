@@ -16,6 +16,12 @@ export function fatigueScale(fatigue) {
   return 1 - (clamp(fatigue, 1, 5) - 1) / 4 * 0.30
 }
 
+export function ageScale(age) {
+  if (age == null) return 1
+  if (age <= 40) return 1
+  return clamp(1 - (age - 40) / 20 * 0.15, 0.85, 1)
+}
+
 export function bandForBlend(blend) {
   const { dom, isMixed } = classifyBlend(blend)
   if (dom === 'hypertrophy' && !isMixed) return 'hypertrophy'
@@ -24,9 +30,9 @@ export function bandForBlend(blend) {
   return 'balanced'
 }
 
-export function weeklySets(blend, years, fatigue) {
+export function weeklySets(blend, years, fatigue, age) {
   const band = BANDS[bandForBlend(blend)]
   const base = band.mev + (band.mav - band.mev) * yearsProgress(years)
-  const scaled = Math.round(base * fatigueScale(fatigue))
+  const scaled = Math.round(base * fatigueScale(fatigue) * ageScale(age))
   return clamp(scaled, 4, band.mrv)
 }
