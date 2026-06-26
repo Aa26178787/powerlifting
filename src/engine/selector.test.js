@@ -19,4 +19,13 @@ describe('selectTemplate (blend)', () => {
   it('balanced intermediate -> dup', () => {
     expect(selectTemplate({ blend: B({ strength: 0.3, hypertrophy: 0.3, power: 0.2, endurance: 0.2 }), years: 3, daysPerWeek: 4 })).toBe('dup')
   })
+  it('slider strength-leaning mix -> dup (no knife-edge)', () => {
+    expect(selectTemplate({ blend: B({ power:0.1, strength:0.46, hypertrophy:0.44 }), years:3, daysPerWeek:4 })).toBe('dup')
+  })
+  it('slider hyp-leaning mix -> dup (no knife-edge)', () => {
+    expect(selectTemplate({ blend: B({ power:0.1, strength:0.44, hypertrophy:0.46 }), years:3, daysPerWeek:4 })).toBe('dup')
+  })
+  it('clear strength still -> fiveThreeOne', () => {
+    expect(selectTemplate({ blend: B({ power:0.1, strength:0.7, hypertrophy:0.2 }), years:3, daysPerWeek:4 })).toBe('fiveThreeOne')
+  })
 })
