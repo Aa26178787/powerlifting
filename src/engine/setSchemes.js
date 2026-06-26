@@ -145,13 +145,23 @@ const ACCESSORY = {
   power: ['straight'], strength: ['straight'],
 }
 
-export function pickScheme({ quality, role, phase, advanced, weekIndex = 0 }) {
+// 결정론 seed: 운동/역할별로 주차 회전 시작점을 달리해 1주차 straight 일색 방지
+export function schemeSeed(baseLift, role) {
+  const liftIdx = { squat: 0, bench: 1, deadlift: 2 }[baseLift] ?? 0
+  const roleIdx = { heavy: 0, volume: 1, light: 2, hyper: 0, accessory: 0 }[role] ?? 0
+  return liftIdx + roleIdx
+}
+
+export function pickScheme({ quality, role, phase, advanced, weekIndex = 0, seed = 0, concurrent = false }) {
   let cands = role === 'accessory'
     ? (ACCESSORY[quality] ?? ['straight'])
     : (CANDIDATES[`${quality}|${phase}`] ?? ['straight'])
+  if (concurrent && role !== 'accessory' && (quality === 'strength' || quality === 'power')) {
+    cands = ['strengthHypertrophy', ...cands]
+  }
   cands = cands.filter((k) => !SCHEMES[k].advancedOnly || advanced)
   if (!cands.length) cands = ['straight']
-  return cands[weekIndex % cands.length]
+  return cands[(weekIndex + seed) % cands.length]
 }
 
 // Accessories have no tracked 1RM, so their schemes prescribe reps + RPE by

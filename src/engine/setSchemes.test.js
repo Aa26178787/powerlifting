@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SCHEMES, pickScheme, expandAccessory } from './setSchemes.js'
+import { SCHEMES, pickScheme, expandAccessory, schemeSeed } from './setSchemes.js'
 import { ZONES } from './quality.js'
 
 const ctx = (over = {}) => ({ quality: 'strength', e1rm: 200, zone: ZONES.strength, baseSets: 3, weekIndex: 0, ...over })
@@ -97,6 +97,26 @@ describe('expandAccessory (reps + RPE, no weight)', () => {
   })
   it('unknown key falls back to straight', () => {
     expect(expandAccessory('nonsense', { baseSets: 2 }).sets).toHaveLength(2)
+  })
+})
+
+describe('pickScheme concurrent + seed', () => {
+  it('concurrent strength prepends strengthHypertrophy', () => {
+    const k = pickScheme({ quality:'strength', role:'comp', phase:'accumulation', advanced:false, weekIndex:0, concurrent:true })
+    expect(k).toBe('strengthHypertrophy')
+  })
+  it('non-concurrent strength keeps default candidate', () => {
+    const k = pickScheme({ quality:'strength', role:'comp', phase:'accumulation', advanced:false, weekIndex:0 })
+    expect(k).toBe('straight')   // CANDIDATES['strength|accumulation'][0]
+  })
+  it('concurrent does not affect accessories', () => {
+    const k = pickScheme({ quality:'strength', role:'accessory', phase:'accumulation', advanced:false, weekIndex:0, concurrent:true })
+    expect(k).toBe('straight')
+  })
+  it('schemeSeed differs by lift', () => {
+    expect(schemeSeed('squat','heavy')).toBe(0)
+    expect(schemeSeed('bench','heavy')).toBe(1)
+    expect(schemeSeed('deadlift','heavy')).toBe(2)
   })
 })
 
