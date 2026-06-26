@@ -38,9 +38,12 @@ export function pick(lift, stickingPoint, style, equipmentAvailable, advanced, e
     if (token && Array.isArray(e.styleBias) && e.styleBias.includes(token)) s += 1
     return s
   }
-  return [...pool].sort((a, b) =>
-    (score(b) - score(a)) ||
-    (priorityOf(a) - priorityOf(b)) ||
-    a.name.localeCompare(b.name)
-  )[0]
+  return [...pool].sort((a, b) => {
+    const sa = score(a), sb = score(b)
+    // Specialty exercises without a sticking-point match rank below all non-specialty.
+    // Only a sticking-point match (score >= 2) elevates a specialty exercise to tier 0.
+    const tierA = isSpecialty(a.name) && sa < 2 ? 1 : 0
+    const tierB = isSpecialty(b.name) && sb < 2 ? 1 : 0
+    return (tierA - tierB) || (sb - sa) || (priorityOf(a) - priorityOf(b)) || a.name.localeCompare(b.name)
+  })[0]
 }

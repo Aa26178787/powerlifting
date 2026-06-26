@@ -170,3 +170,31 @@ describe('generate v3 mesocycle controls', () => {
     expect(acc.every((a) => a.scheme.sets.every((set) => set.reps != null && set.weight === undefined))).toBe(true)
   })
 })
+
+describe('recommendation quality (acceptance)', () => {
+  const base = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    equipment: ['barbell','rack','bench','cables','dumbbells','leg press machine','machine','box','db','ghr machine'],
+    accessoryPreference: 'machine',
+  }
+  const mainSchemes = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.exercises).map(e=>e.scheme.type)
+  const mainSets = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.exercises).map(e=>e.sets)
+  const accNames = (r) => r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.accessories).map(a=>a.lift ?? a.name)
+
+  it('main lifts never use 1-set intensity techniques', () => {
+    const r = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const banned = ['restPause','dropSet','myoReps','widowmaker']
+    expect(mainSchemes(r).every((k) => !banned.includes(k))).toBe(true)
+  })
+  it('main working exercises have at least 2 sets each (no 1-set collapse)', () => {
+    const r = generate({ ...base, qualities: PRESETS.powerlifting })
+    expect(Math.min(...mainSets(r))).toBeGreaterThanOrEqual(2)
+  })
+  it('squat variation slots are not Box Squat by default', () => {
+    const r = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const squatVars = r.weeks.flatMap(w=>w.sessions).flatMap(s=>s.exercises)
+      .filter(e=>e.baseLift==='squat' && e.scheme).map(e=>e.lift)
+    expect(squatVars.some((n)=>/Box Squat/.test(n))).toBe(false)
+  })
+})
