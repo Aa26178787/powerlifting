@@ -45,7 +45,7 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   }
   const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
   const cls = ctx.blend ? classifyBlend(ctx.blend) : null
-  const concurrent = !!(cls && cls.isMixed && cls.n.hypertrophy >= 0.25)
+  const concurrent = !!(cls && cls.isMixed && cls.n.hypertrophy >= 0.25 && (ctx.years == null || ctx.years >= 1))
   const seed = schemeSeed(slot.lift, slot.role)
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent })
   const scheme = SCHEMES[key]

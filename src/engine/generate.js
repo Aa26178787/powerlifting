@@ -87,7 +87,7 @@ export function generate(profile) {
     const sc = slotCounts[priorityLift] || 1
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
 
   const working = buildWorkingWeeks(template, daysPerWeek, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working

@@ -147,6 +147,10 @@ describe('input coupling: powerbuilding vs powerlifting', () => {
     const lifts = r.weeks[0].sessions.flatMap(s => s.exercises).map(e => e.baseLift)
     expect(lifts).toContain('squat')
   })
+  it('novice (years<1) does NOT get concurrent scheme even with mixed blend', () => {
+    const r = generate({ ...base, years: 0.5, qualities: PRESETS.powerbuilding })
+    expect(schemes(r)).not.toContain('strengthHypertrophy')
+  })
 })
 
 describe('generate v3 mesocycle controls', () => {
