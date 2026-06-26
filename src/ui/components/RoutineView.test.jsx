@@ -90,10 +90,15 @@ describe('RoutineView', () => {
     expect(screen.getByText(/3-1-1초/)).toBeInTheDocument()
     expect(screen.getByText(/하강-정지-상승/)).toBeInTheDocument()
   })
-  it('renders set reps in the per-set list', () => {
+  it('renders a set table with the set number and weight cells', () => {
     render(<RoutineView plan={plan} />)
-    // Multiple "1세트:" lines appear (one per exercise), use getAllByText
-    expect(screen.getAllByText(/1세트:/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/무게/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/반복/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/162\.5/)).toBeInTheDocument()
+  })
+  it('tags exercise quality with a data-quality badge', () => {
+    const { container } = render(<RoutineView plan={plan} />)
+    expect(container.querySelector('[data-quality="strength"]')).toBeTruthy()
   })
   it('renders a CheckinPanel control (컨디션 반영 button) per session', () => {
     render(<RoutineView plan={plan} />)

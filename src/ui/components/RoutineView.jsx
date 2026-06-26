@@ -8,17 +8,13 @@ import CheckinPanel from './CheckinPanel.jsx'
 function ExerciseRow({ ex, units }) {
   const scheme = ex.scheme
   return (
-    <li className="exercise-row">
+    <li className="exercise-row" data-quality={ex.quality}>
       <div className="ex-header">
-        <span className="ex-lift">{liftLabel(ex.lift)}</span>{' '}
-        <span className="ex-q">[{qualityLabel(ex.quality)}]</span>{' '}
-        {scheme && (
-          <>
-            <span className="ex-scheme-type">{schemeLabel(scheme.type)}</span>{' '}
-            <span className="ex-evidence-tag">{evidenceLabel(scheme.evidenceTier)}</span>{' '}
-          </>
-        )}
-        <span className="ex-autoregulate">(자동조절)</span>
+        <span className="ex-lift">{liftLabel(ex.lift)}</span>
+        <span className="badge q" data-quality={ex.quality}>{qualityLabel(ex.quality)}</span>
+        {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
+        {scheme && <span className="tag evidence">{evidenceLabel(scheme.evidenceTier)}</span>}
+        <span className="ex-autoregulate">자동조절</span>
       </div>
       {ex.tempo && (
         <div className="ex-tempo">
@@ -29,15 +25,22 @@ function ExerciseRow({ ex, units }) {
         <div className="ex-scheme-note">{scheme.note}</div>
       )}
       {scheme && scheme.sets && scheme.sets.length > 0 && (
-        <ol className="ex-sets">
-          {scheme.sets.map((s, i) => (
-            <li key={i}>
-              {i + 1}세트: {toDisplay(s.weight, units)}{unitLabel(units)} × {s.reps}
-              {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
-              {s.note ? ` · ${s.note}` : ''}
-            </li>
-          ))}
-        </ol>
+        <div className="set-table-wrap">
+          <table className="set-table">
+            <thead><tr><th>세트</th><th>무게</th><th>반복</th><th>RPE</th><th>비고</th></tr></thead>
+            <tbody>
+              {scheme.sets.map((s, i) => (
+                <tr key={i}>
+                  <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
+                  <td className="num">{toDisplay(s.weight, units)}{unitLabel(units)}</td>
+                  <td className="num">{s.reps}</td>
+                  <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
+                  <td>{s.note ?? ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </li>
   )
@@ -46,22 +49,30 @@ function ExerciseRow({ ex, units }) {
 function AccessoryRow({ acc }) {
   const scheme = acc.scheme
   return (
-    <li className="accessory-row">
+    <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
-        <span className="acc-name">{liftLabel(acc.name)}</span>{' '}
-        {acc.quality && <span className="acc-q">[{qualityLabel(acc.quality)}]</span>}{' '}
-        {scheme && <span className="acc-scheme-type">{schemeLabel(scheme.type)}</span>}
+        <span className="acc-name">{liftLabel(acc.name)}</span>
+        {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
+        {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
+        <span className="acc-feel">체감</span>
       </div>
       {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
       {scheme && scheme.sets && scheme.sets.length > 0 && (
-        <ol className="acc-sets">
-          {scheme.sets.map((s, i) => (
-            <li key={i}>
-              {i + 1}세트: {s.reps}회{s.rpe != null ? ` @RPE ${s.rpe}` : ''} (체감)
-              {s.note ? ` · ${s.note}` : ''}
-            </li>
-          ))}
-        </ol>
+        <div className="set-table-wrap">
+          <table className="set-table acc">
+            <thead><tr><th>세트</th><th>반복</th><th>RPE</th><th>비고</th></tr></thead>
+            <tbody>
+              {scheme.sets.map((s, i) => (
+                <tr key={i}>
+                  <td>{i + 1}</td>
+                  <td className="num">{s.reps}회</td>
+                  <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
+                  <td>{s.note ?? ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </li>
   )
