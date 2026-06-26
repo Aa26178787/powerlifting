@@ -27,7 +27,7 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
   }
 
   return (
-    <div>
+    <div className="checkin-panel">
       <div>
         <label>
           수면시간

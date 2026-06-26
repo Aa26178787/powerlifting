@@ -19,16 +19,19 @@ export default function App() {
   }
   return (
     <div className="app">
-      <h1>파워리프팅 루틴 생성기</h1>
+      <header className="app-header">
+        <h1>파워리프팅 루틴 생성기</h1>
+        <p className="app-sub">근거 기반 개인화 루틴 · 무게는 RPE 자동조절 제안치</p>
+      </header>
       <LimitsPanel />
       {!plan
         ? <Wizard onComplete={onGenerate} />
         : (
           <div>
             <div className="toolbar">
-              <button type="button" onClick={downloadCsv}>CSV 다운로드</button>
-              <button type="button" onClick={() => window.print()}>인쇄</button>
-              <button type="button" onClick={restart}>처음부터</button>
+              <button type="button" className="btn" onClick={downloadCsv}>CSV 다운로드</button>
+              <button type="button" className="btn btn-secondary" onClick={() => window.print()}>인쇄</button>
+              <button type="button" className="btn btn-secondary" onClick={restart}>처음부터</button>
             </div>
             <RoutineView plan={plan} />
           </div>

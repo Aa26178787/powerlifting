@@ -35,10 +35,10 @@ export default function Wizard({ onComplete }) {
         {(() => { const Body = BODY[step]; return Body ? <Body /> : <p className="wizard-step-stub">{stepLabel(step)}</p> })()}
       </div>
       <div className="wizard-nav">
-        <button type="button" disabled={step === 1} onClick={() => setStep((n) => Math.max(1, n - 1))}>이전</button>
+        <button type="button" className="btn btn-secondary" disabled={step === 1} onClick={() => setStep((n) => Math.max(1, n - 1))}>이전</button>
         {step < last
-          ? <button type="button" disabled={!canNext} onClick={() => setStep((n) => Math.min(last, n + 1))}>다음</button>
-          : <button type="button" onClick={onComplete}>루틴 생성</button>}
+          ? <button type="button" className="btn" disabled={!canNext} onClick={() => setStep((n) => Math.min(last, n + 1))}>다음</button>
+          : <button type="button" className="btn" onClick={onComplete}>루틴 생성</button>}
       </div>
     </div>
   )
