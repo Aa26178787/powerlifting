@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pick, styleToken } from './variations.js'
+import { pick, styleToken, priorityOf } from './variations.js'
 
 describe('styleToken', () => {
   it('maps squat/deadlift styles', () => {
@@ -31,5 +31,22 @@ describe('pick', () => {
     expect(chosen).not.toBeNull()
     const without = pick('squat', 'bottom', { bar: 'low' }, eq, true, [chosen.name])
     expect(without?.name).not.toBe(chosen.name)
+  })
+})
+
+import { allEquipment } from './exercises.js'
+
+describe('priorityOf + tie-break', () => {
+  it('specialty variations rank after standard ones', () => {
+    expect(priorityOf({ name: 'Box Squat (below parallel)' })).toBe(70)
+    expect(priorityOf({ name: 'Pause Squat (bottom)' })).toBe(40)
+  })
+  it('explicit priority field wins', () => {
+    expect(priorityOf({ name: 'Box Squat', priority: 5 })).toBe(5)
+  })
+  it('low-bar squat with no sticking point does NOT default to Box Squat', () => {
+    const v = pick('squat', 'none', { bar: 'low' }, allEquipment(), false, [])
+    expect(v).not.toBeNull()
+    expect(v.name).not.toMatch(/Box Squat/)
   })
 })
