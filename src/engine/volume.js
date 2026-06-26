@@ -1,4 +1,4 @@
-import { dominantQuality } from './quality.js'
+import { classifyBlend } from './quality.js'
 
 export const BANDS = {
   strength:    { mev: 6,  mav: 10, mrv: 12 },
@@ -17,8 +17,9 @@ export function fatigueScale(fatigue) {
 }
 
 export function bandForBlend(blend) {
-  const dom = dominantQuality(blend)
-  if (dom === 'hypertrophy') return 'hypertrophy'
+  const { dom, isMixed } = classifyBlend(blend)
+  if (dom === 'hypertrophy' && !isMixed) return 'hypertrophy'
+  if (isMixed) return 'balanced'
   if (dom === 'power' || dom === 'strength') return 'strength'
   return 'balanced'
 }

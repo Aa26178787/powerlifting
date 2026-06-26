@@ -23,6 +23,9 @@ describe('bandForBlend', () => {
   it('hypertrophy-dominant -> hypertrophy band', () => {
     expect(bandForBlend({ power:0, strength:0.2, hypertrophy:0.8, endurance:0 })).toBe('hypertrophy')
   })
+  it('mixed blend -> balanced band', () => {
+    expect(bandForBlend({ power:0.1, strength:0.45, hypertrophy:0.45, endurance:0 })).toBe('balanced')
+  })
 })
 
 describe('weeklySets (blend-keyed)', () => {
