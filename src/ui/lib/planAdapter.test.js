@@ -65,4 +65,12 @@ describe('buildPlan v3', () => {
     const ep2 = toEngineProfile({ ...form, deloadEnabled: false })
     expect(ep2.deloadEnabled).toBe(false)
   })
+
+  it('passes user equipment through (not allEquipment)', () => {
+    expect(toEngineProfile(form).equipment).toEqual(['barbell','rack','bench'])
+  })
+
+  it('passes age through', () => {
+    expect(toEngineProfile({ ...form, age: 45 }).age).toBe(45)
+  })
 })

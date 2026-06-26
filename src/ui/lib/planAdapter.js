@@ -1,5 +1,4 @@
 import { generate } from '../../engine/generate.js'
-import { allEquipment } from '../../engine/exercises.js'
 
 export function toEngineProfile(form) {
   return {
@@ -13,8 +12,7 @@ export function toEngineProfile(form) {
     style: form.style,
     stickingPoint: form.stickingPoint,
     regionStatus: form.regionStatus,
-    // Assume the athlete has all equipment; exclusion is now per-exercise.
-    equipment: allEquipment(),
+    equipment: form.equipment,
     sessionTimeLimit: form.sessionTimeLimit,
     competition: form.competition,
     priorityLift: form.priorityLift,
