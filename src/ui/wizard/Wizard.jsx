@@ -21,6 +21,15 @@ export default function Wizard({ onComplete }) {
 
   return (
     <div className="wizard">
+      <ol className="stepper">
+        {Array.from({ length: last }, (_, i) => i + 1).map((n) => (
+          <li key={n} className="stepper-item" aria-current={n === step ? 'step' : undefined}
+              data-state={n < step ? 'done' : n === step ? 'current' : 'todo'}>
+            <span className="stepper-dot">{n}</span>
+            <span className="stepper-label">{stepLabel(n)}</span>
+          </li>
+        ))}
+      </ol>
       <h2>{step}. {stepLabel(step)}</h2>
       <div className="wizard-body" data-step={step}>
         {(() => { const Body = BODY[step]; return Body ? <Body /> : <p className="wizard-step-stub">{stepLabel(step)}</p> })()}

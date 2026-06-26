@@ -11,9 +11,14 @@ beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
 describe('Wizard', () => {
   it('starts at step 1 and advances', async () => {
     render(<Wizard onComplete={() => {}} />)
-    expect(screen.getByText(/기본/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /기본/ })).toBeInTheDocument()
     await userEvent.setup().click(screen.getByRole('button', { name: /다음/ }))
-    expect(screen.getByText(/현재 1RM/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /현재 1RM/ })).toBeInTheDocument()
+  })
+  it('renders a step indicator marking the current step', () => {
+    render(<Wizard onComplete={() => {}} />)
+    const current = document.querySelector('.stepper [aria-current="step"]')
+    expect(current).toBeTruthy()
   })
   it('calls onComplete from the final step', async () => {
     // jump to step 8 by setting valid lifts then advancing
