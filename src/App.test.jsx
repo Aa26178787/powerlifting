@@ -38,7 +38,7 @@ describe('App', () => {
 
   it('shows the evidence-limits disclosure', () => {
     render(<App />)
-    expect(screen.getByText(/근거.*한계/)).toBeInTheDocument()
+    expect(screen.getByText(/근거.*한계.*꼭 읽어주세요/)).toBeInTheDocument()
   })
 
   it('shows 처음부터 button after routine generated; clears plan on click', async () => {
