@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate } from './generate.js'
 import { byName } from './exercises.js'
+import { PRESETS } from './quality.js'
 
 const profile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
@@ -123,6 +124,28 @@ describe('generate v2', () => {
     exercises.forEach((e) => {
       expect(Number.isFinite(e.weight)).toBe(true)
     })
+  })
+})
+
+describe('input coupling: powerbuilding vs powerlifting', () => {
+  const base = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+  }
+  const schemes = (r) => r.weeks.flatMap(w => w.sessions).flatMap(s => s.exercises).map(e => e.scheme.type)
+
+  it('powerbuilding produces within-session concurrent (strengthHypertrophy)', () => {
+    const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
+    expect(schemes(pb)).toContain('strengthHypertrophy')
+  })
+  it('powerlifting does NOT use concurrent (clear strength dominant)', () => {
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    expect(schemes(pl)).not.toContain('strengthHypertrophy')
+  })
+  it('restrictive equipment keeps competition lifts and does not crash', () => {
+    const r = generate({ ...base, qualities: PRESETS.powerlifting, equipment: ['barbell','rack','bench'] })
+    const lifts = r.weeks[0].sessions.flatMap(s => s.exercises).map(e => e.baseLift)
+    expect(lifts).toContain('squat')
   })
 })
 
