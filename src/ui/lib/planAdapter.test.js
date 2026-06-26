@@ -73,4 +73,8 @@ describe('buildPlan v3', () => {
   it('passes age through', () => {
     expect(toEngineProfile({ ...form, age: 45 }).age).toBe(45)
   })
+
+  it('passes accessoryPreference through (default machine when set)', () => {
+    expect(toEngineProfile({ ...form, accessoryPreference: 'free' }).accessoryPreference).toBe('free')
+  })
 })

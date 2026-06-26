@@ -21,6 +21,7 @@ export function toEngineProfile(form) {
     variationOverride: form.variationOverride ?? {},
     excludedExercises: form.excludedExercises ?? [],
     cueNeed: form.cueNeed ?? {},
+    accessoryPreference: form.accessoryPreference,
   }
 }
 

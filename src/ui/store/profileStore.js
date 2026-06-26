@@ -30,6 +30,7 @@ export const DEFAULT_PROFILE = {
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
+  accessoryPreference: 'machine',
 }
 
 function hasUsableLift(liftInput) {
@@ -132,6 +133,7 @@ export const useProfileStore = create(
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
             units: p.units ?? current.profile.units,
+            accessoryPreference: p.accessoryPreference ?? current.profile.accessoryPreference,
           },
           checkinLog: persisted?.checkinLog ?? [],
         }
