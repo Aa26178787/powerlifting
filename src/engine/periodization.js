@@ -3,9 +3,9 @@ import { compVariant } from './style.js'
 import { pick } from './variations.js'
 import { volumeScale } from './regionStatus.js'
 import { byName } from './exercises.js'
-import { ZONES, weightFor, weeklyQualitySchedule } from './quality.js'
+import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './quality.js'
 import { weekPlan, phaseFor } from './periodizationModel.js'
-import { SCHEMES, pickScheme } from './setSchemes.js'
+import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
@@ -44,14 +44,20 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
     }
   }
   const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
-  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0 })
+  const cls = ctx.blend ? classifyBlend(ctx.blend) : null
+  const concurrent = !!(cls && cls.isMixed && cls.n.hypertrophy >= 0.25)
+  const seed = schemeSeed(slot.lift, slot.role)
+  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent })
   const scheme = SCHEMES[key]
   const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0 })
+  const displayReps = key === 'strengthHypertrophy'
+    ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]
+    : z.reps
   return {
     lift: name,
     baseLift: slot.lift,
     quality,
-    reps: z.reps,
+    reps: displayReps,
     repAnchor: z.repAnchor,
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
     rpeTarget,

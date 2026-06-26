@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildWorkingWeeks } from './periodization.js'
-import { byName } from './exercises.js'
+import { byName, allEquipment } from './exercises.js'
+import { ZONES } from './quality.js'
 
 const ctx = {
   e1rm: { squat: 200, bench: 140, deadlift: 240 },
@@ -31,10 +32,12 @@ describe('buildWorkingWeeks v3', () => {
       expect(Number.isFinite(e.weight)).toBe(true)
     }
   })
-  it('a strength slot uses the strength rep range [2,5]', () => {
+  it('a strength slot with a mixed blend uses the concurrent rep range [2,12]', () => {
+    // ctx.blend is 50/50 strength/hypertrophy → isMixed, concurrent=true → strengthHypertrophy scheme
+    // displayReps = [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]] = [2, 12]
     const weeks = buildWorkingWeeks('dup', 3, ctx)
     const strengthEx = weeks[0].sessions.flatMap((s) => s.exercises).find((e) => e.quality === 'strength')
-    expect(strengthEx.reps).toEqual([2, 5])
+    expect(strengthEx.reps).toEqual([2, 12])
   })
   it('block model concentrates a single quality in week 1', () => {
     const weeks = buildWorkingWeeks('dup', 3, { ...ctx, model: 'block' })
@@ -98,5 +101,30 @@ describe('set schemes + overrides in working weeks', () => {
     }, 3)
     const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
     expect(names).not.toContain('Front Squat')
+  })
+})
+
+describe('buildWorkingWeeks concurrent (mixed blend)', () => {
+  const ctx = () => ({
+    e1rm: { squat:200, bench:140, deadlift:240 },
+    setsPerSession: { squat:4, bench:4, deadlift:4 },
+    style: { squat:{ bar:'low' }, bench:{ grip:'medium' }, deadlift:{ stance:'conventional' } },
+    stickingPoint: { squat:'none', bench:'none', deadlift:'none' },
+    equipment: allEquipment(),
+    advanced: true, regionStatus: {},
+    blend: { power:0.1, strength:0.45, hypertrophy:0.45, endurance:0 },
+    model: 'adaptive', competition: { on:false, date:'' },
+    variationOverride: {}, excludedExercises: [], cueNeed: {},
+    peaking: false, totalWeeks: 4,
+  })
+
+  it('emits a strengthHypertrophy main exercise with both rep ranges', () => {
+    const weeks = buildWorkingWeeks('dup', 4, ctx(), 4)
+    const ex = weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
+      .find(e => e.scheme.type === 'strengthHypertrophy')
+    expect(ex).toBeTruthy()
+    expect(ex.scheme.sets.some(s => s.reps === ZONES.strength.reps[0])).toBe(true)
+    expect(ex.scheme.sets.some(s => s.reps === ZONES.hypertrophy.repAnchor)).toBe(true)
+    expect(ex.reps).toEqual([ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]])
   })
 })
