@@ -72,6 +72,32 @@ describe('pickScheme', () => {
   })
 })
 
+describe('accessoryOnly: 1-set techniques excluded from main lifts', () => {
+  const phases = ['accumulation', 'intensification', 'peak']
+  const quals = ['power', 'strength', 'hypertrophy', 'endurance']
+  const banned = ['restPause', 'dropSet', 'myoReps', 'widowmaker']
+  it('main (non-accessory) roles never get a 1-set technique', () => {
+    for (const role of ['comp', 'variation']) {
+      for (const quality of quals) {
+        for (const phase of phases) {
+          for (let w = 0; w < 6; w++) {
+            const k = pickScheme({ quality, role, phase, advanced: true, weekIndex: w, seed: 0 })
+            expect(banned).not.toContain(k)
+          }
+        }
+      }
+    }
+  })
+  it('accessory role can still use them', () => {
+    const k = pickScheme({ quality: 'hypertrophy', role: 'accessory', phase: 'accumulation', advanced: false, weekIndex: 1 })
+    // ACCESSORY['hypertrophy'] = ['straight','restPause','dropSet','myoReps']; weekIndex 1 -> 'restPause'
+    expect(k).toBe('restPause')
+  })
+  it('SCHEMES flags the four techniques accessoryOnly', () => {
+    for (const k of banned) expect(SCHEMES[k].accessoryOnly).toBe(true)
+  })
+})
+
 describe('expandAccessory (reps + RPE, no weight)', () => {
   it('straight: baseSets rep sets, no weight, RPE rises to the target on the last set', () => {
     const r = expandAccessory('straight', { quality: 'hypertrophy', baseSets: 3 })

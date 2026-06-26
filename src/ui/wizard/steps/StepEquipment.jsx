@@ -26,6 +26,14 @@ export default function StepEquipment() {
         />
       </label>
 
+      <label>보조운동 선호
+        <select value={p.accessoryPreference} onChange={(e) => setField('accessoryPreference', e.target.value)}>
+          <option value="machine">머신 선호</option>
+          <option value="free">프리웨이트 선호</option>
+          <option value="any">무관</option>
+        </select>
+      </label>
+
       <fieldset>
         <legend>부위 상태 (0 정상 ~ 3 심한 통증/부상)</legend>
         {Object.keys(p.regionStatus).map((region) => (

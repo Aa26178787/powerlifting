@@ -19,4 +19,12 @@ describe('LimitsPanel disclosures', () => {
     render(<LimitsPanel />)
     expect(screen.getByText(/근력\+근비대가 비슷한 비율/)).toBeInTheDocument()
   })
+  it('discloses accessory machine preference', () => {
+    render(<LimitsPanel />)
+    expect(screen.getByText(/머신과 프리웨이트는 효과/)).toBeInTheDocument()
+  })
+  it('discloses variation priority', () => {
+    render(<LimitsPanel />)
+    expect(screen.getByText(/변형 운동은 표준 변형/)).toBeInTheDocument()
+  })
 })

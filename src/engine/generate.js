@@ -114,7 +114,7 @@ export function generate(profile) {
         return false
       })
       const primary = kept[0]?.baseLift ?? 'squat'
-      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus, excluded: excludedExercises })
+      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus, excluded: excludedExercises, accessoryPreference: profile.accessoryPreference })
       const accessories = withAccessoryScheme(rawAccessories, {
         weekIndex: wk.index - 1,
         advanced,
