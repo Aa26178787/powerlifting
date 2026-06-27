@@ -50,3 +50,36 @@ describe('priorityOf + tie-break', () => {
     expect(v.name).not.toMatch(/Box Squat/)
   })
 })
+
+// ── Case 8: 2D cause matching in variations ───────────────────────────────────
+describe('2D cause matching in pick (case 8)', () => {
+  it('cause-match variation scores 3 > position-only 2 > no-match 0', () => {
+    // DL bottom, stance='sumo' (no sumo-specific variations in [barbell, trap bar] pool),
+    // cause='quads':
+    //   Trap Bar DL (high handles): sp='bottom', pm='quads/glutes' → causeOf=['quads']
+    //     → position(2) + cause(1) = 3
+    //   All barbell DL bottom vars:  pm=hamstrings|upper-back → causeOf≠'quads'
+    //     → position(2) + style-sumo-miss(0) = 2
+    // → Trap Bar DL wins
+    const eq = ['barbell', 'trap bar']
+    const v = pick('deadlift', 'bottom', { stance: 'sumo' }, eq, false, [], 'quads')
+    expect(v).not.toBeNull()
+    expect(v.name).toBe('Trap Bar Deadlift (high handles)')
+  })
+
+  it('specialty gate (score≥2) is preserved — cause alone (no position) does not elevate specialty', () => {
+    // position='none' → stickingPoint block not entered → cause match unreachable → score stays 0
+    // Box Squat (specialty) must NOT be picked first even if cause='hip' (its override)
+    const v = pick('squat', 'none', { bar: 'low' }, ['barbell', 'rack', 'box'], false, [], 'hip')
+    expect(v).not.toBeNull()
+    expect(v.name).not.toMatch(/Box Squat/)
+  })
+
+  it('cause=undefined preserves existing position-only ranking (regression)', () => {
+    const eq = ['barbell', 'rack', 'deficit']
+    const withCause   = pick('deadlift', 'bottom', { stance: 'conventional' }, eq, false)
+    const withUndef   = pick('deadlift', 'bottom', { stance: 'conventional' }, eq, false, [], undefined)
+    // Both should return the same exercise (no cause tiebreaker applied)
+    expect(withUndef?.name).toBe(withCause?.name)
+  })
+})

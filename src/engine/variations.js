@@ -1,4 +1,5 @@
 import { query } from './exercises.js'
+import { causeOf } from './stickingPoint.js'
 
 // 전문(specialty)·niche 변형 stem — 표준 변형보다 후순위(낮을수록 우선)
 const SPECIALTY = [
@@ -23,7 +24,7 @@ export function styleToken(lift, style) {
   return ''
 }
 
-export function pick(lift, stickingPoint, style, equipmentAvailable, advanced, excluded = []) {
+export function pick(lift, stickingPoint, style, equipmentAvailable, advanced, excluded = [], cause = undefined) {
   const pool = query({
     category: 'variation',
     targetLift: lift,
@@ -34,7 +35,10 @@ export function pick(lift, stickingPoint, style, equipmentAvailable, advanced, e
   const token = styleToken(lift, style)
   const score = (e) => {
     let s = 0
-    if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) s += 2
+    if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) {
+      s += 2
+      if (cause && causeOf(e).includes(cause)) s += 1
+    }
     if (token && Array.isArray(e.styleBias) && e.styleBias.includes(token)) s += 1
     return s
   }
