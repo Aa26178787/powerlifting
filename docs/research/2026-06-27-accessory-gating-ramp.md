@@ -40,13 +40,15 @@ function deficitBaseWeight({ dom, n }) {
 | **PL** | 8 (불변·bit-identical) | quads/glutes·hamstrings·chest·triceps (컴파운드 주동근) |
 | **PB** | 8 (동일 개수) | **biceps·측delt·lats**·triceps·hamstrings (SBD 미달근육 채움) |
 
-개수 동일(`goalBias` 무수정), **타깃 근육만 이동**. 454 테스트 green(+13). PL bit-identical(명시 배열 회귀), bodybuilding/general/athletic 불변(churn 0). 의도 churn = 50/50 테스트 픽스처 0→0.6(구조적 단언이라 통과).
+**타깃 근육 차별화** + (후속) **개수도 증가**(아래 갱신). PL bit-identical(명시 배열 회귀), bodybuilding/general/athletic 타깃 불변(churn 0). 의도 churn = 50/50 테스트 픽스처 0→0.6(구조적 단언이라 통과).
+
+> **갱신 (2026-06-27): PB 보조 개수 증가** — 사용자 요청으로 `goalBias`도 hyp 점유율 연동: strength/power 지배라도 `baseDeficit>0`(hyp 활성 영역)이면 goalBias **−1→0**(minCap 2→1, sharedCap 2→3). 결과 세션당 보조 PL 2 / **PB 3** / 보디빌딩 4, athletic은 hyp0.20·baseDeficit 0이라 −1 유지(power-mixed 오활성 안 함 — isMixed 대신 baseDeficit>0 키잉의 이유). 그라데이션 **PL 8 < PB 12 < BB 16**(4일·4주). 455 테스트 green. PB는 이제 타깃 근육 *및* 개수 둘 다 차별화.
 
 ## 정직고지
 > 보조 근육 타깃팅 강도는 RCT 아닌 휴리스틱(consensus 외삽). PB가 PL과 달리 미달 근육군 보조 받는 *방향*은 근거 지지(부하 무관 근비대 Schoenfeld 2017; 근력 수확체감 Pelland/Zourdos 2026)이나, 정확 계수(full 0.6·활성 시작 hyp 0.30·포화 0.50)·MEV/MAV/MRV 밴드는 컨센서스·추정치. PL은 SBD 특이성 위해 deficit-fill 0 유지.
 
 ## 범위 한계
-- "어느 근육"만 차별화, "몇 개"는 보존(`goalBias` 무수정). PB에 보조 볼륨/개수까지 늘리려면 별도 결정(범위 밖).
+- ~~"어느 근육"만 차별화, "몇 개"는 보존(`goalBias` 무수정). PB에 보조 볼륨/개수까지 늘리려면 별도 결정(범위 밖).~~ → **해소(상단 갱신)**: goalBias도 hyp 점유율 연동 → PB 개수 2→3/세션.
 - 2-메인 세션(liftCap=1)은 최상위 특이성 픽 보호 → 차별화는 주로 단일-메인 세션 2번째 슬롯서 발현(보수적 의도).
 - 강도(top 88%·avg 80.8%)는 PL·PB 동일 — 정상(둘 다 근력 특이성 위해 무겁게). 차별화는 볼륨(PB accumulate ramp·6세트) + scheme(strengthHypertrophy) + **보조 타깃(이 수정)**.
 

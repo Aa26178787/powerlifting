@@ -131,11 +131,20 @@ export function generate(profile) {
   // Blend classification is constant for the whole plan — compute once.
   const cls = classifyBlend(blend)
   const dom = cls.dom
-  const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
   // Deficit-fill base weight: strength/power dominant uses hyp-share ramp (SBD specificity gate).
   // Overflow guard (isOverMrv) is always active regardless of gate.
   // During peaking the effective weight is further scaled by deficitPhaseScale() per-week.
   const baseDeficit = deficitBaseWeight(cls)
+  // Accessory-count bias: hypertrophy-dominant → +1 (more accessories). Strength/power
+  // dominant → -1 (fewer, SBD-specific) UNLESS the hyp share is in the active zone
+  // (baseDeficit > 0, e.g. powerbuilding str/hyp tie) → 0, granting one extra accessory
+  // slot for muscle-group completeness while keeping the strength frame. Pure strength
+  // (powerlifting) and power-dominant (athletic) stay at -1 — their baseDeficit is 0.
+  const goalBias = dom === 'hypertrophy'
+    ? 1
+    : (dom === 'strength' || dom === 'power')
+      ? (baseDeficit > 0 ? 0 : -1)
+      : 0
 
   const weeks = allWeeks.map((wk) => {
     // Hoist phase and per-week deficit weight once — shared by all three consumers

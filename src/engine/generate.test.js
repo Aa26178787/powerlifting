@@ -540,11 +540,29 @@ describe('accessory deficit-fill gating ramp', () => {
     const pbAllNames = pb.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).map(a => a.name).sort().join(',')
     expect(pbAllNames, 'PB accessory names should differ from PL').not.toBe(plAllNames)
   })
-  it('PB total accessory count === PL total count (goalBias unchanged, targeting only shifts)', () => {
+  it('PB total accessory count > PL count (goalBias -1→0 in the hyp-active zone grants +1 slot)', () => {
+    // PB {str0.45/hyp0.45}: dom=strength but baseDeficit>0 (hyp share ≥ LO) → goalBias 0
+    // → minCap 1, sharedCap 3 (vs PL's -1 → minCap 2, sharedCap 2). So PB carries one
+    // extra accessory per session for muscle-group completeness; PL stays SBD-lean.
     const pl = generate({ ...base, qualities: PRESETS.powerlifting })
     const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
     const count = plan => plan.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).length
-    expect(count(pb)).toBe(count(pl))
+    expect(count(pb)).toBeGreaterThan(count(pl))
+  })
+
+  it('accessory-count gradient: PL == athletic (lean) < PB < bodybuilding', () => {
+    // goalBias: PL/athletic -1 (baseDeficit 0), PB 0 (hyp-active), bodybuilding +1.
+    // athletic is power-dominant with hyp 0.20 → baseDeficit 0 → stays lean (NOT bumped),
+    // proving the bump keys on hyp share, not merely on being a mixed blend.
+    const count = q => generate({ ...base, qualities: q })
+      .weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).length
+    const pl = count(PRESETS.powerlifting)
+    const ath = count(PRESETS.athletic)
+    const pb = count(PRESETS.powerbuilding)
+    const bb = count(PRESETS.bodybuilding)
+    expect(ath).toBe(pl)          // power-dominant stays SBD-lean
+    expect(pb).toBeGreaterThan(pl)
+    expect(bb).toBeGreaterThan(pb) // full gradient
   })
 
   // §4.3 — PL bit-identical explicit array (GREEN before and after: PL dead-zone → 0 unchanged)
