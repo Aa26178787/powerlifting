@@ -453,20 +453,27 @@ describe('peaking × ledger tuning (Change A + B)', () => {
     expect(snap(generate(nonPeakProfile))).toEqual(snap(generate(nonPeakProfile)))
   })
 
-  // ── 6: pure-PL protection ─────────────────────────────────────────────────
-  it('pure-PL peaking: accessory names identical to non-peaking (minCap floor absorbs trim)', () => {
-    // str=0.70 → dom='strength' → goalBias=-1 → minCap=2, sharedCap=2
-    // Peak taper: Math.max(2, 2-1) = 2 (no change — already at floor)
-    // baseDeficit=0 (str-dom) → weekDeficitWeight=0 for all phases in both cases
-    // → same deficitWeight=0 → same accessory selection → bit-identical names
+  // ── 6: pure-PL peak accessory taper (floor=1 active) ──────────────────────
+  it('pure-PL peaking: peak-week accessories taper below accum weeks (floor=1, ≥1)', () => {
+    // str=0.70 → dom='strength' → goalBias=-1 → minCap=2, sharedCap=2.
+    // Peak taper floor=1: Math.max(1, 2-1)=1 → peak weeks drop 2→1 per session.
+    // baseDeficit=0 (str-dom) so deficit never alters names; only the count tapers,
+    // and the taper is peaking-gated (non-peaking plans are unchanged).
     const plPeakProfile = {
       ...hypPeakProfile,
       qualities: { power: 0.10, strength: 0.70, hypertrophy: 0.20, endurance: 0.00 },
     }
     const peakPlan    = generate(plPeakProfile)
     const nonPeakPlan = generate({ ...plPeakProfile, competition: { on: false, date: '' } })
-    const names = (p) => p.weeks.map(w => w.sessions.flatMap(s => s.accessories.map(a => a.name)))
-    expect(names(peakPlan)).toEqual(names(nonPeakPlan))
+    // Peaking: peak weeks (4,5) tapered below accum weeks (0,1); never wiped (≥1)
+    for (const wi of [4, 5]) {
+      expect(weekAccCount(peakPlan, wi)).toBeLessThan(weekAccCount(peakPlan, 0))
+      for (const s of peakPlan.weeks[wi].sessions) {
+        expect(s.accessories.length).toBeGreaterThanOrEqual(1)
+      }
+    }
+    // Non-peaking: no taper — peak-index week count equals accum-index week count
+    expect(weekAccCount(nonPeakPlan, 4)).toBe(weekAccCount(nonPeakPlan, 0))
   })
 })
 

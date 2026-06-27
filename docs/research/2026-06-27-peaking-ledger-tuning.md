@@ -2,6 +2,8 @@
 
 > 3관점(파워리프팅 피킹 코치·RP/근비대 과학자·엔지니어링 실용주의) 병렬 설계 → 피킹 디렉터 합성. 코드 라인·시그니처·테스트 단언·데드로드 index 오버플로우까지 Read로 검증. `docs/research/` 근거 3문서 정박.
 
+> **갱신 (2026-06-27):** 사용자 요청으로 **B floor를 `minCap`→`1`로 전환** — 순수 PL 피커도 peak 주 보조 2→1 taper(메인 이미 ×0.55라 코칭-완결적). 검증: 순수 PL {str0.70} 피킹 주별 보조 `8 8 8 8 4 4`(peak 2주만 절반), 비peaking·accum/intens 불변, 440 테스트 green. 아래 원 결정(floor=minCap, 보수적)은 **심의 기록으로 보존**하되 최종 상태는 floor=1.
+
 ## 충돌 (해소 대상)
 볼륨 taper(#2)가 peak 주 메인 세트를 낮춤 → per-muscle ledger(#1)가 그 근육들을 '미달'로 봄 → **deficit-fill 보조 가점이 미달근육으로 보조를 더 밀어** taper 역행(피크 주에 보조 볼륨↑).
 - **충돌 모집단 = `peaking && dom∈{hypertrophy,endurance}`** (이때만 baseDeficit=0.6). 순수 PL(strength/power dom)은 baseDeficit=0이라 무영향. powerbuilding(0.45/0.45)은 stable-sort 동률→dom='strength'라 이미 보호됨.
@@ -37,7 +39,7 @@
 > 피킹 시 보조의 deficit 보충 강도·개수는 대회 근접할수록 단계 감소(accum 유지→intens 절반→peak 차단, peak 보조 1개↓). 감량 *방향*은 블록 주기화 컨센서스(Issurin 2010; Mujika & Padilla 2003: 볼륨 41–60%↓·강도/빈도 유지)이나, 정확 계수(1.0/0.5/0.0)·감축폭(−1)·phase 임계는 **근거 약한 휴리스틱**(taper −45%·2/3·+0.20과 동급 추정치). floor 유지로 peak 주 보조 0화 안 함(근손실 경계).
 
 ## 미해결·후속
-- 순수 PL 피커 보조 taper(2→1) 미활성(보수적 minCap floor). 원하면 1줄 전환.
+- ~~순수 PL 피커 보조 taper(2→1) 미활성(보수적 minCap floor). 원하면 1줄 전환.~~ → **해소(상단 갱신)**: floor=1로 전환, 순수 PL도 peak주 taper 활성.
 - ACCESSORY_EST_SETS=3 평탄 추정(조향 한정, 보고는 실측) — 기존 한계 유지.
 
 ## 방법
