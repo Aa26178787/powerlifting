@@ -7,7 +7,7 @@ const REGIONS = [
   'hip', 'hamstring', 'pec', 'bicepsTendon', 'ankle',
 ]
 
-export default function CheckinPanel({ session, weekIndex, onApply }) {
+export default function CheckinPanel({ session, weekIndex, onApply, profile = {}, overreaching = false }) {
   const [sleepHours, setSleepHours] = useState(7)
   const [stress, setStress] = useState(2)
   const [systemicFatigue, setSystemicFatigue] = useState(2)
@@ -15,7 +15,7 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
 
   function handleApply() {
     const checkin = { sleepHours, stress, systemicFatigue, regionStatus }
-    const result = applyReadiness(session, checkin)
+    const result = applyReadiness(session, checkin, profile, overreaching)
     onApply({
       adjusted: result.session,
       readiness: result.readiness,

@@ -16,8 +16,3 @@ export function buildDeloadWeek(workingWeek, ctx) {
   return { index: workingWeek.index + 1, isDeload: true, sessions }
 }
 
-export function needsDeload(weekIndex, fatigue) {
-  if (weekIndex >= 4) return true
-  if (fatigue >= 5 && weekIndex >= 3) return true
-  return false
-}

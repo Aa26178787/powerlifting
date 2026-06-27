@@ -82,6 +82,7 @@ export default function RoutineView({ plan }) {
   const checkinLog = useProfileStore((s) => s.checkinLog)
   const logCheckin = useProfileStore((s) => s.logCheckin)
   const units = useProfileStore((s) => s.profile.units ?? 'kg')
+  const profile = useProfileStore((s) => s.profile)
   const [adjusted, setAdjusted] = useState({})
 
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
@@ -106,6 +107,8 @@ export default function RoutineView({ plan }) {
                 <CheckinPanel
                   session={s}
                   weekIndex={wk.index}
+                  profile={profile}
+                  overreaching={over.flag}
                   onApply={(r) => {
                     setAdjusted((m) => ({
                       ...m,

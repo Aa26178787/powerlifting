@@ -22,14 +22,6 @@ export function resolveModel(model) {
   return MODELS[model] ? model : 'adaptive'
 }
 
-export function recommendModel({ competition, blend, progressTrend = 'unknown' }) {
-  if (competition && competition.on && competition.date) return 'block'
-  if (progressTrend === 'stall') return 'block'
-  const n = normalizeBlend(blend)
-  if (n.strength >= 0.6) return 'linear'
-  return 'undulating'
-}
-
 function oneHot(quality) {
   const b = {}
   for (const q of QUALITIES) b[q] = q === quality ? 1 : 0

@@ -18,10 +18,6 @@ export function allEquipment() {
   return [...s]
 }
 
-export function stressesRegion(ex, region) {
-  return ex.stress.includes(region)
-}
-
 /**
  * Returns true if every equipment tag on an exercise is satisfiable by the
  * available set. Slash-joined tags (e.g. "db/kb", "barbell/ssb") are treated

@@ -13,6 +13,12 @@ describe('detectOverreaching', () => {
   it('no flag when healthy', () => {
     expect(detectOverreaching([{ readiness: 0.9 }, { readiness: 0.8 }, { readiness: 0.85 }]).flag).toBe(false)
   })
+  it('flags steep crash (0.7→0.45→0.3) via cumulative drop rule', () => {
+    expect(detectOverreaching([{ readiness: 0.7 }, { readiness: 0.45 }, { readiness: 0.3 }]).flag).toBe(true)
+  })
+  it('flags plateau-then-drop (0.4,0.4,0.3) via sustained-low rule', () => {
+    expect(detectOverreaching([{ readiness: 0.4 }, { readiness: 0.4 }, { readiness: 0.3 }]).flag).toBe(true)
+  })
   it('out-of-order check-ins: detects trend by {week,day} order, not insertion order', () => {
     // Logged week3 first, then week1, then week2 — out of training order.
     const log = [

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pctOf1RM, e1rmFrom, epley, brzycki, roundToIncrement, workingWeight, highRepCorrection, loadForRpe } from './e1rm.js'
+import { pctOf1RM, e1rmFrom, roundToIncrement, workingWeight, highRepCorrection, loadForRpe } from './e1rm.js'
 
 describe('pctOf1RM', () => {
   it('returns the Tuchscherer cell for 5 reps @ RPE 8', () => {
@@ -20,11 +20,6 @@ describe('e1rmFrom', () => {
   it('estimates 1RM from a weight x reps @ RPE', () => {
     expect(e1rmFrom(325, 5, 8)).toBeCloseTo(400.74, 1)
   })
-})
-
-describe('epley & brzycki', () => {
-  it('epley 100x5 = 116.67', () => { expect(epley(100, 5)).toBeCloseTo(116.67, 1) })
-  it('brzycki 100x5 = 112.5', () => { expect(brzycki(100, 5)).toBeCloseTo(112.5, 1) })
 })
 
 describe('roundToIncrement & workingWeight', () => {
