@@ -231,6 +231,38 @@ describe('recommendation quality (acceptance)', () => {
   })
 })
 
+// frequency: squat:2, bench:3, deadlift:1 at 5 days forces a combined session on day 2
+// (distinctDays: squat→[0,2], bench→[1,2,4], deadlift→[2] → day 2 has all 3 lifts)
+describe('multi-lift session accessories (Fix 1 + Fix 2)', () => {
+  const multiBase = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 5, fatigue: 1, mesoWeeks: 3, deloadEnabled: false,
+    qualities: { power:0, strength:1, hypertrophy:0, endurance:0 },
+    frequency: { squat: 2, bench: 3, deadlift: 1 },
+    equipment: ['barbell','rack','bench','cables','dumbbells'],
+  }
+  it('session with 2+ main lifts has accessories (secondary lift no longer zero)', () => {
+    const plan = generate(multiBase)
+    const multiSessions = plan.weeks[0].sessions.filter(s => new Set(s.exercises.map(e => e.baseLift)).size >= 2)
+    expect(multiSessions.length).toBeGreaterThan(0)
+    for (const s of multiSessions) expect(s.accessories.length).toBeGreaterThan(0)
+  })
+  it('combined session total accessories ≤ shared cap (not multiplied per lift)', () => {
+    const plan = generate(multiBase)
+    const multiSessions = plan.weeks[0].sessions.filter(s => new Set(s.exercises.map(e => e.baseLift)).size >= 2)
+    for (const s of multiSessions) expect(s.accessories.length).toBeLessThanOrEqual(5)
+  })
+  it('combined squat+bench session includes bench-specific accessories (targetLift)', () => {
+    const plan = generate(multiBase)
+    const combined = plan.weeks[0].sessions.find(s => {
+      const bases = new Set(s.exercises.map(e => e.baseLift))
+      return bases.has('squat') && bases.has('bench')
+    })
+    expect(combined).toBeTruthy()
+    expect(combined.accessories.some(a => a.targetLift === 'bench')).toBe(true)
+  })
+})
+
 describe('main lift volume floor + weekly ramp', () => {
   const base = {
     lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },

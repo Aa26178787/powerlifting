@@ -20,7 +20,7 @@ function prefBonus(type, pref) {
   return 0
 }
 
-export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, regionStatus, excluded = [], accessoryPreference = 'machine' }) {
+export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null }) {
   const weights = emphasis(lift, style)
   const pool = query({ category: 'accessory', equipmentAvailable, excludeAdvanced: true })
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
@@ -36,7 +36,25 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
     return s
   }
   const sorted = [...pool].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))
-  const cap = sessionTimeLimit ? Math.max(1, Math.floor(sessionTimeLimit / 15)) : 3
+
+  // Cap computation. If maxCount is provided (caller has pre-split a shared budget),
+  // use it directly. Otherwise derive from session time + goal bias.
+  // Time-limited: remaining = sessionTimeLimit − main-work minutes − 10 min buffer.
+  // Goal-scaled: hypertrophy +1 (more volume for growth), strength/power −1 (floor 2).
+  // Final cap always [1,5].
+  let cap
+  if (maxCount != null) {
+    cap = maxCount
+  } else if (sessionTimeLimit != null) {
+    const remaining = sessionTimeLimit - mainTimeMin - 10
+    const baseCap = Math.min(4, Math.max(1, Math.floor(remaining / 10)))
+    const minCap = goalBias < 0 ? 2 : 1
+    cap = Math.min(5, Math.max(minCap, baseCap + goalBias))
+  } else {
+    const minCap = goalBias < 0 ? 2 : 1
+    cap = Math.min(5, Math.max(minCap, 3 + goalBias))
+  }
+
   // Diversity guard: greedily pick, deferring repeats of already-chosen primaryMuscle.
   // Only allow a repeated muscle if the pool is exhausted before reaching cap.
   const chosen = []

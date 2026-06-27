@@ -16,8 +16,9 @@ describe('accessories.select', () => {
     expect(r.some((e) => e.primaryMuscle.includes('quads'))).toBe(true)
   })
   it('caps count by session time', () => {
+    // No main-work offset, no goal bias: remaining=30−0−10=20, cap=floor(20/10)=2
     const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 30, ...base })
-    expect(r.length).toBeLessThanOrEqual(2) // floor(30/15)=2
+    expect(r.length).toBeLessThanOrEqual(2)
   })
   it('drops accessories whose region is avoid (status 3)', () => {
     const r = select({ lift: 'deadlift', style: { stance: 'conventional' }, stickingPoint: 'none', sessionTimeLimit: null,
@@ -41,8 +42,11 @@ describe('movementTypeOf', () => {
 describe('accessoryPreference', () => {
   const eq = ['barbell','rack','bench','cables','dumbbells','leg press machine','machine','box','db']
   const ranks = (pref) => {
-    const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 999,
-      equipmentAvailable: eq, regionStatus: {}, accessoryPreference: pref })
+    // maxCount: 999 explicitly bypasses cap computation so all exercises are returned
+    // in ranked order (sessionTimeLimit:999 was the old "no cap" trick; new formula
+    // bounds baseCap at 4 regardless of time, so the explicit maxCount is needed here).
+    const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: null,
+      equipmentAvailable: eq, regionStatus: {}, accessoryPreference: pref, maxCount: 999 })
     return r.map((e) => e.name)
   }
   it('default machine preference ranks Leg Press above Box Step-Up', () => {
@@ -65,6 +69,23 @@ describe('accessoryPreference', () => {
     expect(names.length).toBeGreaterThan(0)
     // Box Step-Up (skill) must rank below Leg Press (machine) or be absent
     expect(bs === -1 || (lp !== -1 && lp < bs)).toBe(true)
+  })
+})
+
+describe('time-aware cap + goal-bias (Fix 2)', () => {
+  const eq = ['barbell','rack','bench','cables','dumbbells']
+  it('mainTimeMin reduces cap in time-limited sessions', () => {
+    // 60 min session: no main work → remaining=50 → cap=min(4,5)=4
+    // with 30 min main work → remaining=20 → cap=min(4,2)=2
+    const noMain   = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 60, mainTimeMin: 0,  goalBias: 0, equipmentAvailable: eq, regionStatus: {} })
+    const withMain = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 60, mainTimeMin: 30, goalBias: 0, equipmentAvailable: eq, regionStatus: {} })
+    expect(withMain.length).toBeLessThan(noMain.length)
+  })
+  it('hypertrophy goalBias (+1) yields more accessories than strength goalBias (−1)', () => {
+    // no sessionTimeLimit: hyper cap = min(5,max(1,3+1))=4; strength cap = min(5,max(2,3−1))=2
+    const hyper    = select({ lift: 'bench', style: { grip: 'medium' }, stickingPoint: 'none', sessionTimeLimit: null, goalBias:  1, equipmentAvailable: eq, regionStatus: {} })
+    const strength = select({ lift: 'bench', style: { grip: 'medium' }, stickingPoint: 'none', sessionTimeLimit: null, goalBias: -1, equipmentAvailable: eq, regionStatus: {} })
+    expect(hyper.length).toBeGreaterThan(strength.length)
   })
 })
 
