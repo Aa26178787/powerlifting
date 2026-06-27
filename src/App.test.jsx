@@ -13,7 +13,7 @@ beforeEach(() => {
 
 describe('App', () => {
   it('generates and displays a routine end to end via wizard', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     render(<App />)
 
     // Step 1 is shown first (기본) — click 다음 to go to step 2 (1RM)
@@ -34,7 +34,7 @@ describe('App', () => {
 
     expect(screen.getByText(/프로그램:/)).toBeInTheDocument()
     expect(screen.getByText(/1주차/)).toBeInTheDocument()
-  })
+  }, 15000) // E2E wizard: many sequential userEvents + generate() — wider timeout for CI/concurrency
 
   it('shows the evidence-limits disclosure', () => {
     render(<App />)
@@ -42,7 +42,7 @@ describe('App', () => {
   })
 
   it('shows 처음부터 button after routine generated; clears plan on click', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     render(<App />)
 
     // Navigate to step 2 and enter 1RMs
@@ -62,5 +62,5 @@ describe('App', () => {
 
     // Wizard should be back
     expect(screen.getByRole('button', { name: /다음/ })).toBeInTheDocument()
-  })
+  }, 15000) // E2E wizard: wider timeout for CI/concurrency (see above)
 })
