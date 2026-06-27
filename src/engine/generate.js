@@ -84,6 +84,7 @@ function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, re
 
 export function generate(profile) {
   const { years, daysPerWeek, fatigue, lifts } = profile
+  const ov = profile.volumeOverride
   const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
   const competition = profile.competition ?? { on: false, date: '' }
   const mesoWeeks = Math.max(3, Math.min(8, profile.mesoWeeks ?? 4))
@@ -113,19 +114,32 @@ export function generate(profile) {
   const layout = buildLayout({ daysPerWeek, frequency })
   const slotCounts = {}
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
+  // §3.2 Override branch: no-override path is byte-identical to old code.
+  const mainOv = ov?.main?.enabled ? ov.main : null
+  const fixed  = mainOv?.mode === 'fixed'
+  const volumeOverridden = new Set()
   const cappedSetsPerSession = {}
   for (const lift of MAIN_LIFTS) {
-    const sc = slotCounts[lift] || 1
+    const sc    = slotCounts[lift] || 1
     const absCap = PER_SESSION_CAP[lift] ?? 6
-    cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], absCap, Math.floor(mrv / sc)))
+    const o = mainOv?.setsPerSession?.[lift]
+    if (o != null) {
+      cappedSetsPerSession[lift] = fixed
+        ? Math.max(1, o)                                                      // Mode B: release caps
+        : Math.max(1, Math.min(o, absCap, Math.floor(mrv / sc)))              // Mode A: clamp
+      volumeOverridden.add(lift)
+    } else {
+      cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], absCap, Math.floor(mrv / sc)))
+    }
   }
   const priorityLift = profile.priorityLift
-  if (priorityLift && MAIN_LIFTS.includes(priorityLift)) {
-    const sc = slotCounts[priorityLift] || 1
+  // priorityLift +1 is skipped when that lift is overridden (override is the literal floor).
+  if (priorityLift && MAIN_LIFTS.includes(priorityLift) && !volumeOverridden.has(priorityLift)) {
+    const sc    = slotCounts[priorityLift] || 1
     const absCap = PER_SESSION_CAP[priorityLift] ?? 6
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, absCap, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
 
   const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
@@ -197,12 +211,17 @@ export function generate(profile) {
       const mainSets = kept.reduce((sum, e) => sum + e.sets, 0)
       const mainTimeMin = Math.round(mainSets * 3.5)
 
+      // §3.4 Accessory override: literal sharedCap, bypasses time/goal formula.
+      // Peak-trim skipped when override is active (literal value respected).
+      const accOv = ov?.accessory?.enabled ? ov.accessory.setsPerSession : null
       // Shared session cap (mirrors select's internal formula; derived once so the
       // budget is split across lifts rather than multiplied per lift).
       // minCap hoisted before both branches so the peak taper can use it as a floor.
       const minCap = goalBias < 0 ? 2 : 1
       let sharedCap
-      if (profile.sessionTimeLimit != null) {
+      if (accOv != null) {
+        sharedCap = Math.max(0, accOv)                                        // literal, bypass time/goal
+      } else if (profile.sessionTimeLimit != null) {
         const remaining = profile.sessionTimeLimit - mainTimeMin - 10
         const baseCap = Math.min(4, Math.max(1, Math.floor(remaining / 10)))
         sharedCap = Math.min(5, Math.max(minCap, baseCap + goalBias))
@@ -215,7 +234,8 @@ export function generate(profile) {
       // coaching-complete since mains are already ×0.55 in the peak phase.
       // !wk.isDeload guard: deload weeks already halve sets independently (deload.js:8);
       // stacking a count cut would double-reduce — skip it.
-      if (peaking && phase === 'peak' && !wk.isDeload) sharedCap = Math.max(1, sharedCap - 1)
+      // accOv != null: user literal is respected — peak trim is NOT applied.
+      if (accOv == null && peaking && phase === 'peak' && !wk.isDeload) sharedCap = Math.max(1, sharedCap - 1)
 
       // Run select for EACH distinct main lift; distribute the shared cap evenly
       // (primary gets any remainder slots), dedup by name.
