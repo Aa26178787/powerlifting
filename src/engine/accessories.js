@@ -1,6 +1,7 @@
 import { query } from './exercises.js'
 import { emphasis } from './style.js'
 import { shouldAvoid } from './regionStatus.js'
+import { muscleDeficit, isOverMrv, ACCESSORY_EST_SETS } from './muscleVolume.js'
 
 const MACHINE_EQUIP = ['machine', 'cables', 'smith', 'preacher']   // 'machine' substring catches "* machine"
 const SKILL_RX = /step-up|sled|yoke|sissy|dragon flag|kettlebell|kb swing|pistol|nordic|cossack|single-leg|single-arm|farmer|landmine twist|russian twist/i
@@ -20,7 +21,7 @@ function prefBonus(type, pref) {
   return 0
 }
 
-export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null }) {
+export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null, muscleLedger = null, muscleBands = null, deficitWeight = 0 }) {
   const weights = emphasis(lift, style)
   const pool = query({ category: 'accessory', equipmentAvailable, excludeAdvanced: true })
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
@@ -33,6 +34,8 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
     let s = matched.length ? Math.max(...matched) : 0.5
     if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) s += 0.5
     s += prefBonus(movementTypeOf(e), accessoryPreference)
+    if (muscleLedger && deficitWeight > 0)
+      s += deficitWeight * muscleDeficit(muscleLedger, e.primaryMuscle)
     return s
   }
   const sorted = [...pool].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))
@@ -56,13 +59,15 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
   }
 
   // Diversity guard: greedily pick, deferring repeats of already-chosen primaryMuscle.
-  // Only allow a repeated muscle if the pool is exhausted before reaching cap.
+  // Also defer exercises whose prime mover would exceed MRV in the weekly ledger.
+  // Only allow deferred exercises if the pool is exhausted before reaching cap.
   const chosen = []
   const deferred = []
   const seenMuscles = new Set()
   for (const ex of sorted) {
     if (chosen.length >= cap) break
-    if (seenMuscles.has(ex.primaryMuscle)) {
+    if (seenMuscles.has(ex.primaryMuscle) ||
+        (muscleLedger && isOverMrv(muscleLedger, ex.primaryMuscle, ACCESSORY_EST_SETS))) {
       deferred.push(ex)
     } else {
       chosen.push(ex)

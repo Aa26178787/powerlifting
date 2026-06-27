@@ -18,9 +18,10 @@
 - E: `generate.js` 2차메인 보조 버그 수정; `accessories.js` 시간/목표 cap + 다양성 가드(별도)
 - 정직고지: LimitsPanel + PROJECT_STATUS §3 (데드 0.6·보조 휴리스틱·피킹 강도·전달량 표기)
 
-## agent 토론서 떠오른 새 논점 (미구현 — 후속/대형)
-1. **per-muscle vs per-lift 회계**: BANDS가 종목당 적용·보조 세트 미합산 → 실제 근육군 볼륨 오계(이중지출/미달). 올바른 해결 = 근육→세트 ledger 대형 리팩터. 현재 per-muscle MRV 정직 보고 불가.
-2. **피킹 taper vs 근비대 ramp 충돌**: volumeRamp +35% 단조증가는 근비대용 — 근력/피크 블록선 마지막주가 최고볼륨이 되어 taper(볼륨↓강도↑) 원칙과 반대. blend/phase 의존 ramp 필요(직접근거 없어 자동변경 안 함).
+## agent 토론서 떠오른 새 논점
+
+1. **per-muscle vs per-lift 회계**: ~~BANDS가 종목당 적용·보조 세트 미합산 → 실제 근육군 볼륨 오계(이중지출/미달). 올바른 해결 = 근육→세트 ledger 대형 리팩터. 현재 per-muscle MRV 정직 보고 불가.~~ **구현됨 (consensus tier)** — `src/engine/muscleVolume.js` 신규(15군 taxonomy·MEV/MAV/MRV·0.5 협력근 신용·deficit-fill·overflow 가드). 주차별 `muscleVolume` 가산 보고 + 보조 조향; PL 사용자 deficit-fill OFF.
+2. **피킹 taper vs 근비대 ramp 충돌**: ~~volumeRamp +35% 단조증가는 근비대용 — 근력/피크 블록선 마지막주가 최고볼륨이 되어 taper(볼륨↓강도↑) 원칙과 반대. blend/phase 의존 ramp 필요(직접근거 없어 자동변경 안 함).~~ **구현됨 (consensus tier)** — `volumeRamp` 3-모드 확장(accumulate 1+0.35t / maintain 1+0.20t / taper 역V 1→1.15→0.55); taper는 `peaking`(대회) 전용, 방향=컨센서스·정확 수치=휴리스틱.
 3. **floor 상향 vs RP "MEV 시작" 도그마**: 머지된 높은 floor가 RP·sport-sci의 MEV-근처-시작과 충돌. 되돌리지 않되 ramp 여지 압축이라는 긴장 명시.
 4. **endurance 자질 계산 막다른 길**: loadForRpe 고반복 클램프 과보정 + 'endurance' 라벨이 고반복 근비대 오분류. PL/PB 프리셋선 가중≈0이라 영향 작음.
 

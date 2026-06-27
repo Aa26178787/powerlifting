@@ -103,6 +103,33 @@ describe('muscle-group diversity guard (fix 1)', () => {
   })
 })
 
+// ── Test 6: steering OFF regression ──────────────────────────────────────────
+describe('steering OFF regression (test 6)', () => {
+  it('muscleLedger=null → output bit-for-bit identical to no-opts baseline', () => {
+    const args = {
+      lift: 'bench', style: { grip: 'medium' }, stickingPoint: 'none',
+      sessionTimeLimit: null, mainTimeMin: 0, goalBias: 0,
+      equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+      regionStatus: {},
+    }
+    const baseline = select(args)
+    const nullOpts = select({ ...args, muscleLedger: null, muscleBands: null, deficitWeight: 0 })
+    expect(nullOpts.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+
+  it('squat null path identical (cross-lift regression)', () => {
+    const args = {
+      lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none',
+      sessionTimeLimit: null, mainTimeMin: 0, goalBias: 0,
+      equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+      regionStatus: {},
+    }
+    const baseline = select(args)
+    const nullOpts = select({ ...args, muscleLedger: null, muscleBands: null, deficitWeight: 0 })
+    expect(nullOpts.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+})
+
 describe('accessories score relevance priority (fix 4)', () => {
   it('bench:wide cap-3 result includes a triceps exercise before any biceps exercise', () => {
     // bench:wide emphasis = { chest: 1.3, triceps: 0.9 }

@@ -7,7 +7,7 @@ import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './qualit
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
-import { volumeRamp, loadRamp, PER_SESSION_CAP } from './volume.js'
+import { volumeRamp, volumeRampMode, loadRamp, PER_SESSION_CAP } from './volume.js'
 import { roundToIncrement } from './e1rm.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
@@ -101,18 +101,23 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
   ctx.totalWeeks = totalWeeks
 
+  // Ramp mode: derived from blend + peaking once per mesocycle (deterministic).
+  // taper (peaking) uses floor=2 to prevent single-set collapse in peak week.
+  const mode = volumeRampMode(ctx.blend, ctx.peaking)
+  const taperFloor = mode === 'taper' ? 2 : 1
+
   const weeks = []
   for (let w = 0; w < totalWeeks; w++) {
     ctx.weekIndex = w
     // Per-week volume ramp: scale the floor setsPerSession up toward MRV, capped
     // by MRV / sessions-per-lift so a lift never exceeds its weekly MRV.
-    const ramp = volumeRamp(w, totalWeeks)
+    const ramp = volumeRamp(w, totalWeeks, mode)
     ctx.weekSets = {}
     for (const lift of Object.keys(slotCounts)) {
       const base = ctx.setsPerSession[lift] ?? 0
       const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
       const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
-      ctx.weekSets[lift] = Math.max(1, Math.min(Math.round(base * ramp), mrvCap, absCap))
+      ctx.weekSets[lift] = Math.max(taperFloor, Math.min(Math.round(base * ramp), mrvCap, absCap))
     }
     const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
     // per-lift quality schedule for this week + a consuming index

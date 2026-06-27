@@ -12,6 +12,7 @@ import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
+import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS, ACCESSORY_EST_SETS } from './muscleVolume.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -96,9 +97,16 @@ export function generate(profile) {
   const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
 
-  const weeks = allWeeks.map((wk) => ({
-    ...wk,
-    sessions: wk.sessions.map((s) => {
+  // Blend classification is constant for the whole plan — compute once.
+  const { dom } = classifyBlend(blend)
+  const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
+  // Deficit-fill weight: gated to 0 for strength/power (SBD specificity protection).
+  // Overflow guard (isOverMrv) is always active regardless of gate.
+  const gatedWeight = (dom === 'strength' || dom === 'power') ? 0 : 0.6
+
+  const weeks = allWeeks.map((wk) => {
+    // ── Phase 1: collect kept exercises per session (deterministic main lifts) ──
+    const sessionData = wk.sessions.map((s) => {
       const notes = []
       const exercises = s.exercises
         .map((e) => {
@@ -117,12 +125,27 @@ export function generate(profile) {
         }
         return false
       })
-      // ── Accessory selection ─────────────────────────────────────────────────
+      return { s, notes, kept }
+    })
+
+    // ── Phase 2: seed steering ledger with all this week's main-lift volume ───
+    // Mains are deterministic; summing them first gives accessories full headroom info.
+    const steeringLedger = newLedger()
+    for (const { kept } of sessionData) {
+      for (const e of kept) {
+        const ex = byName(e.lift)
+        if (ex?.primaryMuscle) addToLedger(steeringLedger, ex.primaryMuscle, e.sets)
+      }
+    }
+
+    // ── Phase 3: assign accessories session by session in fixed order ──────────
+    // Each session sees mains + all prior sessions' estimated accessory volume.
+    // steeringLedger is updated with ACCESSORY_EST_SETS after each session.
+    const sessions = sessionData.map(({ s, notes, kept }) => {
+      // ── Accessory selection ───────────────────────────────────────────────
       // Compute main-work time budget consumed (≈ 3.5 min/set incl. rest).
       const mainSets = kept.reduce((sum, e) => sum + e.sets, 0)
       const mainTimeMin = Math.round(mainSets * 3.5)
-      const { dom } = classifyBlend(blend)
-      const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
 
       // Shared session cap (mirrors select's internal formula; derived once so the
       // budget is split across lifts rather than multiplied per lift).
@@ -158,6 +181,9 @@ export function generate(profile) {
           excluded: excludedExercises,
           accessoryPreference: profile.accessoryPreference,
           maxCount: liftCap,
+          muscleLedger: steeringLedger,
+          muscleBands: PER_MUSCLE_BANDS,
+          deficitWeight: gatedWeight,
         })
         for (const acc of liftAcc) {
           if (!seenAccNames.has(acc.name)) {
@@ -166,16 +192,38 @@ export function generate(profile) {
           }
         }
       }
-      const rawAccessories = allRaw
-      const accessories = withAccessoryScheme(rawAccessories, {
+
+      // Update steering ledger with estimated accessory volume so subsequent
+      // sessions in the same week see the accumulated load (ACCESSORY_EST_SETS is an
+      // estimate; reporting uses actual scheme.sets.length — see Phase 4 below).
+      for (const acc of allRaw) {
+        if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, ACCESSORY_EST_SETS)
+      }
+
+      const accessories = withAccessoryScheme(allRaw, {
         weekIndex: wk.index - 1,
         advanced,
         phase: phaseFor(wk.index - 1, mesoWeeks, peaking),
         isDeload: wk.isDeload,
       })
       return { ...s, exercises: kept, accessories, notes }
-    }),
-  }))
+    })
+
+    // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────
+    // Uses actual scheme.sets.length — independent of the steering estimate ledger.
+    const weekLedger = newLedger()
+    for (const s of sessions) {
+      for (const e of s.exercises) {
+        const ex = byName(e.lift)
+        if (ex?.primaryMuscle) addToLedger(weekLedger, ex.primaryMuscle, e.sets)
+      }
+      for (const a of s.accessories) {
+        if (a.primaryMuscle) addToLedger(weekLedger, a.primaryMuscle, a.scheme.sets.length)
+      }
+    }
+
+    return { ...wk, sessions, muscleVolume: summarize(weekLedger) }
+  })
 
   return { template: 'custom', model, weeks }
 }

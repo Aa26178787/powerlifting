@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate } from './generate.js'
 import { byName } from './exercises.js'
 import { PRESETS } from './quality.js'
+import { MUSCLES } from './muscleVolume.js'
 
 const profile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
@@ -9,6 +10,44 @@ const profile = {
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
   periodizationModel: 'auto',
 }
+
+// ── Test 8: muscleVolume reporting field ──────────────────────────────────────
+describe('muscleVolume reporting (test 8)', () => {
+  it('every week carries a muscleVolume field with all 15 canonical groups', () => {
+    const plan = generate(profile)
+    for (const wk of plan.weeks) {
+      expect(wk.muscleVolume).toBeTruthy()
+      for (const group of MUSCLES) {
+        const entry = wk.muscleVolume[group]
+        expect(entry, `missing group ${group}`).toBeTruthy()
+        expect(typeof entry.sets).toBe('number')
+        expect(['under', 'in', 'over']).toContain(entry.status)
+        expect(typeof entry.mev).toBe('number')
+        expect(typeof entry.mrv).toBe('number')
+      }
+    }
+  })
+
+  it('4-day powerbuilding: quads/erectors well-represented, biceps lower (sanity)', () => {
+    const plan = generate(profile)
+    const wk1 = plan.weeks[0].muscleVolume
+    // SBD-heavy → quads and erectors should accumulate meaningful volume
+    expect(wk1.quads.sets).toBeGreaterThan(0)
+    expect(wk1.erectors.sets).toBeGreaterThan(0)
+    // Biceps is not a primary in SBD main lifts → remains zero or very low from mains
+    // (accessories may contribute, but at most a few sets from curls)
+    expect(wk1.quads.sets).toBeGreaterThan(wk1.biceps.sets)
+  })
+
+  it('muscleVolume field does not break existing plan shape ({template, model, weeks})', () => {
+    const plan = generate(profile)
+    expect(plan.template).toBe('custom')
+    expect(typeof plan.model).toBe('string')
+    expect(Array.isArray(plan.weeks)).toBe(true)
+    // muscleVolume is additive — sessions and exercises still present
+    expect(plan.weeks[0].sessions[0].exercises.length).toBeGreaterThan(0)
+  })
+})
 
 describe('resolveE1rm', () => {
   it('uses a direct 1RM when provided', () => {
@@ -287,5 +326,86 @@ describe('main lift volume floor + weekly ramp', () => {
     const wk1 = r.weeks[0].sessions.flatMap(s=>s.exercises).filter(e=>e.baseLift==='squat')
     // at least one squat session with >= 5 working sets (old default was ~4)
     expect(Math.max(...wk1.map(e=>e.sets))).toBeGreaterThanOrEqual(5)
+  })
+})
+
+// ── Test 9: steering layer gating ────────────────────────────────────────────
+describe('steering layer gating (test 9)', () => {
+  const base = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    equipment: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+  }
+  const countMuscle = (plan, muscle) =>
+    plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.accessories)
+      .filter((a) => a.primaryMuscle === muscle).length
+
+  it('balanced/hyp blend picks more biceps accessories than powerlifting blend (deficit fill ON vs gated)', () => {
+    // balanced: dom='hypertrophy' → gatedWeight=0.6 → biceps deficit-boosted
+    // powerlifting: dom='strength' → gatedWeight=0 → no deficit fill
+    const balanced = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    expect(countMuscle(balanced, 'biceps')).toBeGreaterThan(countMuscle(pl, 'biceps'))
+  })
+
+  it('accessory count per session stays within cap (≤5) for both blends', () => {
+    const balanced = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    for (const plan of [balanced, pl]) {
+      for (const wk of plan.weeks) {
+        for (const s of wk.sessions) {
+          expect(s.accessories.length).toBeLessThanOrEqual(5)
+        }
+      }
+    }
+  })
+
+  it('reporting muscleVolume still uses actual scheme.sets (not steering estimate)', () => {
+    // The steering ledger uses ACCESSORY_EST_SETS=3; actual schemes may differ.
+    // Reporting must reflect realized sets, not the estimate.
+    const plan = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    for (const wk of plan.weeks) {
+      expect(wk.muscleVolume).toBeTruthy()
+      for (const group of Object.keys(wk.muscleVolume)) {
+        expect(typeof wk.muscleVolume[group].sets).toBe('number')
+        expect(wk.muscleVolume[group].sets).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
+})
+
+describe('peaking (competition) taper mode integration', () => {
+  // 6-week powerlifting meso with competition on + date → peaking=true → taper mode
+  const peakProfile = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 6, deloadEnabled: false,
+    qualities: { power: 0.10, strength: 0.70, hypertrophy: 0.20, endurance: 0.00 },
+    competition: { on: true, date: '2026-09-01' },
+  }
+  // sum all main lift sets in a given working-week index (0-based)
+  const mainSetsInWeek = (plan, w) =>
+    plan.weeks[w].sessions
+      .flatMap(s => s.exercises)
+      .filter(e => ['squat','bench','deadlift'].includes(e.baseLift))
+      .reduce((a, e) => a + e.sets, 0)
+
+  it('last working week main volume < peak-boundary week (taper is non-monotonic)', () => {
+    const plan = generate(peakProfile)
+    // For 6-week meso: PEAK_AT=2/3 → t≈2/3 near w=3 (t=3/5=0.6); last working = w=5.
+    // Peak-boundary ramp ≈1.135 at w=3; last ramp=0.55 at w=5 → last < mid.
+    const midSets  = mainSetsInWeek(plan, 3)   // w=3 is last ascending week
+    const lastSets = mainSetsInWeek(plan, 5)   // w=5 is last working week
+    expect(lastSets).toBeLessThan(midSets)
+  })
+
+  it('every working week main lift has >= 2 sets per session (taper floor=2)', () => {
+    const plan = generate(peakProfile)
+    for (const wk of plan.weeks) {
+      for (const s of wk.sessions) {
+        for (const e of s.exercises.filter(ex => ['squat','bench','deadlift'].includes(ex.baseLift))) {
+          expect(e.sets).toBeGreaterThanOrEqual(2)
+        }
+      }
+    }
   })
 })

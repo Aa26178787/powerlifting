@@ -48,4 +48,30 @@ describe('LimitsPanel disclosures', () => {
       })
     ).toBeInTheDocument()
   })
+  it('discloses volume taper direction is consensus but exact numbers are heuristic', () => {
+    render(<LimitsPanel />)
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName === 'LI' &&
+          /볼륨 테이퍼/.test(element.textContent) &&
+          /피크주/.test(element.textContent) &&
+          /근거 약함/.test(element.textContent)
+        )
+      })
+    ).toBeInTheDocument()
+  })
+  it('discloses per-muscle volume ledger is derived reporting not measured physiology', () => {
+    render(<LimitsPanel />)
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName === 'LI' &&
+          /근육별 볼륨 요약/.test(element.textContent) &&
+          /15근육군/.test(element.textContent) &&
+          /근거 약함/.test(element.textContent)
+        )
+      })
+    ).toBeInTheDocument()
+  })
 })
