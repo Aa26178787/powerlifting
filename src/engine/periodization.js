@@ -3,7 +3,7 @@ import { compVariant } from './style.js'
 import { pick } from './variations.js'
 import { volumeScale } from './regionStatus.js'
 import { byName, equipmentSatisfies } from './exercises.js'
-import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './quality.js'
+import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend, strengthShare } from './quality.js'
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
@@ -69,10 +69,14 @@ function buildExercise(slot, quality, ctx) {
   const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
   const cls = ctx.blend ? classifyBlend(ctx.blend) : null
   const concurrent = !!(cls && cls.isMixed && cls.n.hypertrophy >= 0.25 && (ctx.years == null || ctx.years >= 1))
+  // ss = strength share of the (str+hyp) pool; hypShare = complement passed to pickScheme.
+  // All expanders receive heavyShare but only strengthHypertrophy destructures it →
+  // topSetBackoff/straight/etc. ignore it → PL path bit-identical.
+  const ss = ctx.blend ? strengthShare(ctx.blend) : 0.5
   const seed = schemeSeed(slot.lift, slot.role)
-  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent })
+  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent, hypShare: 1 - ss })
   const scheme = SCHEMES[key]
-  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0, phase, totalWeeks: ctx.totalWeeks ?? 3 })
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0, phase, totalWeeks: ctx.totalWeeks ?? 3, heavyShare: ss })
   const clampedSets = clampSets(expanded.sets, ceiling)
   const displayReps = key === 'strengthHypertrophy'
     ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]

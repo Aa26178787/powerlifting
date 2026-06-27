@@ -176,6 +176,76 @@ describe('strengthHypertrophy scheme', () => {
   })
 })
 
+describe('strengthHypertrophy — heavyShare split (TDD cases 5-9)', () => {
+  // Case 5: heavyShare=null (default) → bit-identical to current 1:(N-1) behavior
+  it('heavyShare omitted → 1 top + (N-1) backoff, bit-identical (case 5)', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 3 })
+    expect(sets.length).toBe(3)
+    expect(sets[0].reps).toBe(ZONES.strength.reps[0])
+    expect(sets[1].reps).toBe(ZONES.hypertrophy.repAnchor)
+    expect(sets[2].reps).toBe(ZONES.hypertrophy.repAnchor)
+  })
+  // Case 6: heavyShare=0.5, baseSets=4 → 2 heavy + 2 moderate
+  it('heavyShare:0.5 baseSets:4 → 2 strength-reps + 2 hyp-reps (case 6)', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 4, heavyShare: 0.5 })
+    expect(sets.length).toBe(4)
+    const heavy   = sets.filter(s => s.reps === ZONES.strength.reps[0])
+    const moderate = sets.filter(s => s.reps === ZONES.hypertrophy.repAnchor)
+    expect(heavy.length).toBe(2)
+    expect(moderate.length).toBe(2)
+  })
+  // Case 7: heavyShare=1.0, baseSets=4 → heavyN clamped to N-1=3 (moderate≥1)
+  it('heavyShare:1.0 baseSets:4 → heavyN clamped to 3 (moderate ≥1 guaranteed) (case 7)', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 4, heavyShare: 1.0 })
+    expect(sets.length).toBe(4)
+    const heavy = sets.filter(s => s.reps === ZONES.strength.reps[0])
+    expect(heavy.length).toBe(3)
+    const mod = sets.filter(s => s.reps === ZONES.hypertrophy.repAnchor)
+    expect(mod.length).toBe(1)
+  })
+  // Case 8: heavyShare=0.0, baseSets=4 → heavyN clamped to 1 (top-end≥1)
+  it('heavyShare:0.0 baseSets:4 → heavyN clamped to 1 (top-end ≥1 guaranteed) (case 8)', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 4, heavyShare: 0.0 })
+    expect(sets.length).toBe(4)
+    const heavy = sets.filter(s => s.reps === ZONES.strength.reps[0])
+    expect(heavy.length).toBe(1)
+    const mod = sets.filter(s => s.reps === ZONES.hypertrophy.repAnchor)
+    expect(mod.length).toBe(3)
+  })
+  // Case 9: top weight invariant — sets[0].weight === r(e1rm*0.92) for all heavyShare
+  it('sets[0].weight === r(e1rm*0.92) regardless of heavyShare (case 9)', () => {
+    const e1rm = 200
+    const expectedTop = Math.round(e1rm * 0.92 / 2.5) * 2.5  // roundToIncrement(184)
+    for (const hs of [null, 0, 0.25, 0.5, 0.75, 1.0]) {
+      const args = hs == null ? { e1rm, baseSets: 4 } : { e1rm, baseSets: 4, heavyShare: hs }
+      const { sets } = SCHEMES.strengthHypertrophy.expand(args)
+      expect(sets[0].weight, `heavyShare=${hs}`).toBe(expectedTop)
+    }
+  })
+})
+
+describe('pickScheme — dilution replacement (TDD cases 10-12)', () => {
+  // Case 10: concurrent:true, hypShare omitted → week0 fires strengthHypertrophy (existing test preserved)
+  it('concurrent:true hypShare omitted → weekIndex 0 returns strengthHypertrophy (case 10)', () => {
+    const k = pickScheme({ quality: 'strength', role: 'comp', phase: 'accumulation', advanced: false, weekIndex: 0, concurrent: true })
+    expect(k).toBe('strengthHypertrophy')
+  })
+  // Case 11: concurrent:true, hypShare:0.5, hits=2 → 2/3 weeks get SH (weeks 0,1 fire; week 2 does not)
+  it('concurrent:true hypShare:0.5 → weekIndex 0,1 return strengthHypertrophy; 2 does not (case 11)', () => {
+    const args = { quality: 'strength', role: 'comp', phase: 'accumulation', advanced: false, concurrent: true, hypShare: 0.5, seed: 0 }
+    expect(pickScheme({ ...args, weekIndex: 0 })).toBe('strengthHypertrophy')
+    expect(pickScheme({ ...args, weekIndex: 1 })).toBe('strengthHypertrophy')
+    expect(pickScheme({ ...args, weekIndex: 2 })).not.toBe('strengthHypertrophy')
+  })
+  // Case 12: non-concurrent → straight; accessory with concurrent → straight (both preserved)
+  it('non-concurrent keeps default candidate; concurrent accessory unaffected (case 12)', () => {
+    const nonConc = pickScheme({ quality: 'strength', role: 'comp', phase: 'accumulation', advanced: false, weekIndex: 0 })
+    expect(nonConc).toBe('straight')
+    const accConc = pickScheme({ quality: 'strength', role: 'accessory', phase: 'accumulation', advanced: false, weekIndex: 0, concurrent: true })
+    expect(accConc).toBe('straight')
+  })
+})
+
 describe('topSingleBackoff — RPE-derived loads (Fix A)', () => {
   it('top single equals loadForRpe(e1rm,1,8.5) not e1rm*0.90', () => {
     const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3 })

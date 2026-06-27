@@ -86,3 +86,15 @@ export function classifyBlend(blend) {
   const isMixed = gap <= MIX_GAP || n[dom] < MIX_MAX
   return { dom, second, gap, isMixed, n }
 }
+
+// Direction (PL heavy-share > PB) = META/consensus; exact ratio + FLOOR = heuristic
+// (research doc A/C). Power excluded from denominator: separate zone (55-70% dynamic
+// effort), PL/PB equal share → cancels. HEAVY_FLOOR ensures even hyp-heavy blends
+// retain ≥40% strength-zone top sets in the concurrent path.
+export const HEAVY_FLOOR = 0.40
+export function strengthShare(blend) {
+  const n = normalizeBlend(blend)
+  const d = n.strength + n.hypertrophy
+  if (d <= 0) return 0.5
+  return Math.max(HEAVY_FLOOR, Math.min(1, n.strength / d))
+}
