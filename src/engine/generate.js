@@ -181,11 +181,12 @@ export function generate(profile) {
         sharedCap = Math.min(5, Math.max(minCap, 3 + goalBias))
       }
       // Peak accessory-count taper (Change B): trim one slot in peak weeks to reduce
-      // accessory fatigue alongside the main-lift volume taper. Floor = minCap (not 1)
-      // so pure PL pickers (minCap=2, already at floor) are bit-identical.
+      // accessory fatigue alongside the main-lift volume taper. Floor = 1 (not minCap)
+      // so pure PL pickers (minCap=2) also taper their peak-week accessories 2→1 —
+      // coaching-complete since mains are already ×0.55 in the peak phase.
       // !wk.isDeload guard: deload weeks already halve sets independently (deload.js:8);
       // stacking a count cut would double-reduce — skip it.
-      if (peaking && phase === 'peak' && !wk.isDeload) sharedCap = Math.max(minCap, sharedCap - 1)
+      if (peaking && phase === 'peak' && !wk.isDeload) sharedCap = Math.max(1, sharedCap - 1)
 
       // Run select for EACH distinct main lift; distribute the shared cap evenly
       // (primary gets any remainder slots), dedup by name.
