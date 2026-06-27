@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate, deficitBaseWeight } from './generate.js'
 import { byName } from './exercises.js'
-import { PRESETS } from './quality.js'
+import { PRESETS, ZONES } from './quality.js'
 import { MUSCLES } from './muscleVolume.js'
 
 const profile = {
@@ -189,6 +189,66 @@ describe('input coupling: powerbuilding vs powerlifting', () => {
   it('novice (years<1) does NOT get concurrent scheme even with mixed blend', () => {
     const r = generate({ ...base, years: 0.5, qualities: PRESETS.powerbuilding })
     expect(schemes(r)).not.toContain('strengthHypertrophy')
+  })
+
+  // Case 13: PB SH frequency ≥ 50% of strength-quality main slots (after dilution removal)
+  it('PB strengthHypertrophy frequency: ≥50% of main strength-quality slots (case 13)', () => {
+    const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const strengthExs = pb.weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+    const shCount = strengthExs.filter(e => e.scheme.type === 'strengthHypertrophy').length
+    expect(shCount / strengthExs.length).toBeGreaterThanOrEqual(0.50)
+  })
+
+  // Case 16: PB strength floor guard — heavy-set share ≥ 30% in main strength slots
+  it('PB strength floor guard: heavy-set share (reps<=5) ≥ 0.30 in all main strength slots (case 16)', () => {
+    const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const mainStrSets = pb.weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+      .flatMap(e => e.scheme.sets)
+      .filter(s => Number.isFinite(s.reps))
+    const heavy = mainStrSets.filter(s => s.reps <= 5)
+    expect(heavy.length / mainStrSets.length).toBeGreaterThanOrEqual(0.30)
+  })
+
+  // Case 17: differentiation assertion — heavyRatio(PB) < heavyRatio(PL), top preserved
+  it('differentiation: heavyRatio(PB) < heavyRatio(PL); SH top sets have strength reps (case 17)', () => {
+    const plPlan = generate({ ...base, qualities: PRESETS.powerlifting })
+    const pbPlan = generate({ ...base, qualities: PRESETS.powerbuilding })
+
+    function heavyRatioByReps(plan) {
+      const sets = plan.weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
+        .filter(e => e.quality === 'strength')
+        .flatMap(e => e.scheme.sets)
+        .filter(s => Number.isFinite(s.reps))
+      const heavy = sets.filter(s => s.reps <= 5)
+      if (sets.length === 0) return 1
+      return heavy.length / sets.length
+    }
+
+    const plRatio = heavyRatioByReps(plPlan)
+    const pbRatio = heavyRatioByReps(pbPlan)
+    expect(pbRatio, `PB heavy ratio ${pbRatio} should be < PL ${plRatio}`).toBeLessThan(plRatio)
+
+    // Top-end invariant: SH exercises always have strength-reps top set (92%)
+    const pbSHExs = pbPlan.weeks.flatMap(w => w.sessions).flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength' && e.scheme.type === 'strengthHypertrophy')
+    expect(pbSHExs.length, 'PB must have SH exercises to test top invariant').toBeGreaterThan(0)
+    for (const ex of pbSHExs) {
+      expect(ex.scheme.sets[0].reps, 'SH top set must have strength zone reps').toBe(ZONES.strength.reps[0])
+      // PL also preserves top: check PL top-set weight ≥ 90% of base e1rm (week-0, loadRamp≈1)
+    }
+    // PL: no SH → top verified via its own scheme (topSetBackoff top = e1rm*0.92 = heavy)
+    // We only need to check that the top exercise in PL is still heavy (not degraded)
+    const plTopWeights = plPlan.weeks[0].sessions.flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+      .map(e => Math.max(...e.scheme.sets.map(s => s.weight)))
+    const BASE_E1RM = { squat: 200, bench: 140, deadlift: 240 }
+    for (const ex of plPlan.weeks[0].sessions.flatMap(s => s.exercises).filter(e => e.quality === 'strength')) {
+      const top = Math.max(...ex.scheme.sets.map(s => s.weight))
+      const base_e1rm = BASE_E1RM[ex.baseLift]
+      expect(top / base_e1rm, `PL top% should be ≥ 85% for ${ex.baseLift}`).toBeGreaterThanOrEqual(0.85)
+    }
   })
 })
 

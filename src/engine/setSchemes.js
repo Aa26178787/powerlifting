@@ -116,15 +116,23 @@ function widowmaker({ e1rm }) {
 function contrastPAP(ctx) {
   return { sets: topSingleBackoff(ctx).sets, note: '폭발 종목과 세트 교대 (180s, ≥48h 회복)', group: 'contrast' }
 }
-function strengthHypertrophy({ e1rm, baseSets }) {
+function strengthHypertrophy({ e1rm, baseSets, heavyShare = null }) {
   const sZ = ZONES.strength, hZ = ZONES.hypertrophy
-  const top = r(e1rm * sZ.pct[1])                 // ~0.92
-  const sets = [{ weight: top, reps: sZ.reps[0], rpe: sZ.rpeTarget, label: '탑(근력)' }]
+  const top  = r(e1rm * sZ.pct[1])                        // ~0.92 — preserved for all heavyShare
   // RPE-derived (not a fixed pct): the backoff must actually BE its labeled
   // RPE 8.5 at 9 reps (chart 72.8% + high-rep correction ≈ 75%), not the old
   // ~0.67 that was a full RPE light. See research doc (A, C).
   const back = loadForRpe(e1rm, hZ.repAnchor, hZ.rpeTarget)
-  for (let i = 1; i < Math.max(2, baseSets); i++)
+  const N = Math.max(2, baseSets)
+  // heavyShare=null → current 1:(N-1) behavior BIT-IDENTICAL (direct-call tests pass).
+  // When passed (concurrent/PB path) → blend-faithful split.
+  // Lower clamp 1: top-end + PB strength preserved. Upper clamp N-1: moderate ≥1 always.
+  const heavyN = heavyShare == null ? 1
+    : Math.max(1, Math.min(N - 1, Math.round(N * heavyShare)))
+  const sets = []
+  for (let i = 0; i < heavyN; i++)
+    sets.push({ weight: top,  reps: sZ.reps[0],    rpe: sZ.rpeTarget, label: '탑(근력)' })
+  for (let i = heavyN; i < N; i++)
     sets.push({ weight: back, reps: hZ.repAnchor, rpe: hZ.rpeTarget, label: '백오프(근비대)' })
   return { sets }
 }
@@ -175,15 +183,21 @@ export function schemeSeed(baseLift, role) {
   return liftIdx + roleIdx
 }
 
-export function pickScheme({ quality, role, phase, advanced, weekIndex = 0, seed = 0, concurrent = false }) {
-  let cands = role === 'accessory'
+export function pickScheme({ quality, role, phase, advanced, weekIndex = 0, seed = 0, concurrent = false, hypShare = 0 }) {
+  const base = role === 'accessory'
     ? (ACCESSORY[quality] ?? ['straight'])
     : (CANDIDATES[`${quality}|${phase}`] ?? ['straight'])
+  // Concurrent (mixed-blend, PB) path: deterministic dilution replacement.
+  // CONC_DENOM=3 (heuristic, per research doc C). hits=max(1,round(hypShare×3)) ≥1
+  // preserves the existing test (concurrent+hypShare omitted → hits=1 → week0 fires).
+  // PB hypShare=0.5 → hits=2 → 2/3 weeks get strengthHypertrophy (fidelity recovery).
   if (concurrent && role !== 'accessory' && (quality === 'strength' || quality === 'power')) {
-    cands = ['strengthHypertrophy', ...cands]
+    const CONC_DENOM = 3
+    const hits = Math.max(1, Math.round(hypShare * CONC_DENOM))
+    if (((weekIndex + seed) % CONC_DENOM) < hits) return 'strengthHypertrophy'
   }
-  cands = cands.filter((k) => !SCHEMES[k].advancedOnly || advanced)
-  cands = cands.filter((k) => role === 'accessory' || !SCHEMES[k].accessoryOnly)
+  let cands = base.filter((k) => !SCHEMES[k].advancedOnly || advanced)
+                  .filter((k) => role === 'accessory' || !SCHEMES[k].accessoryOnly)
   if (!cands.length) cands = ['straight']
   return cands[(weekIndex + seed) % cands.length]
 }

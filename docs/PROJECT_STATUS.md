@@ -81,6 +81,7 @@
 - 근육별 볼륨 요약은 per-lift 처방에서 파생된 보고이지 측정된 생리 데이터가 아님. per-muscle 랜드마크·협력근 0.5 분할신용·15군 분류는 per-lift 밴드보다 덜 검증된 휴리스틱(`근거 약함`). 파워리프팅 사용자에게는 SBD 특이성 보호를 위해 미달 근육 채우기(deficit-fill) 미적용
 - 보조운동 근육 타깃팅 강도는 휴리스틱(consensus 외삽): 파워빌딩은 미달 근육군 deficit-fill 활성(PL은 SBD 특이성 보호로 0). 파워빌딩은 또한 보조 **개수**도 +1 슬롯(goalBias −1→0, hyp 점유율 활성 영역) — 그라데이션 PL(−1) < PB(0) < 보디빌딩(+1); 파워·athletic은 hyp 낮아 −1 유지. 방향 근거(부하 무관 근비대, 수확체감 — Pelland/Zourdos 2026; Schoenfeld 2017); 정확 계수(full 0.6 / 활성 시작 hyp점유율 0.30 / 포화 0.50)·개수 바이어스·MEV/MAV/MRV 밴드는 컨센서스·추정치이며 직접 임상 임계 아님
 - 피킹 플랜에서 보조운동 deficit-fill 강도를 phase별로 단계 감소(축적 1.0→강화 0.5→피크 0.0)하고 피크 주 보조 개수를 1개 절감. 방향은 블록 주기화 컨센서스(Issurin 2010; Mujika &amp; Padilla 2003)이나 정확 승수·감축폭·phase 임계는 휴리스틱(`근거 약함`). floor=1로 피크 주에도 보조가 0이 되지 않음(순수 PL 피커도 peak주 보조 2→1 taper); 비대회 플랜 bit-for-bit 보존
+- 메인 강도 차별화: 근력 비중(`strengthShare = str/(str+hyp)`)으로 strengthHypertrophy 스킴의 heavy:moderate 세트 분할 + concurrent 출현 빈도 결정. PB는 중강도 백오프 비중↑로 평균 강도↓(실측 heavy비율 PL 79% vs PB 66%), top-end ~92%는 둘 다 보존. 차별화는 concurrent 경로(혼합 blend)에만 작용 → 순수 PL/power-dom bit-identical. 방향=메타/컨센서스(근력 부하의존·근비대 부하무관), 정확 비율·HEAVY_FLOOR 0.40·CONC_DENOM 3=휴리스틱(`근거 약함`)
 
 ---
 

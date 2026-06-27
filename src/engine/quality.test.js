@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule, classifyBlend } from './quality.js'
+import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule, classifyBlend, HEAVY_FLOOR, strengthShare } from './quality.js'
 
 describe('constants', () => {
   it('four qualities and zone shapes', () => {
@@ -58,6 +58,27 @@ describe('weeklyQualitySchedule', () => {
     expect(s.filter((q) => q === 'strength')).toHaveLength(3)
     expect(s.filter((q) => q === 'hypertrophy')).toHaveLength(3)
     expect(s[0]).toBe('strength') // strength first
+  })
+})
+
+describe('strengthShare (TDD cases 1-4)', () => {
+  // Case 1: PL → 0.778
+  it('PL blend → strengthShare ≈ 0.778 (str 0.70 / (str 0.70 + hyp 0.20))', () => {
+    expect(strengthShare(PRESETS.powerlifting)).toBeCloseTo(0.778, 2)
+  })
+  // Case 2: PB → 0.50
+  it('PB blend → strengthShare === 0.5 (balanced str/hyp)', () => {
+    expect(strengthShare(PRESETS.powerbuilding)).toBe(0.5)
+  })
+  // Case 3: hyp-heavy → clamped to HEAVY_FLOOR 0.40
+  it('hyp-dominant blend (str 0.1/hyp 0.9) → clamped at HEAVY_FLOOR', () => {
+    expect(strengthShare({ strength: 0.1, hypertrophy: 0.9, power: 0, endurance: 0 })).toBe(HEAVY_FLOOR)
+  })
+  // Case 4: determinism
+  it('deterministic: same input produces same output on two calls', () => {
+    const a = strengthShare(PRESETS.powerbuilding)
+    const b = strengthShare(PRESETS.powerbuilding)
+    expect(a).toBe(b)
   })
 })
 
