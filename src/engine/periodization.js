@@ -72,7 +72,7 @@ function buildExercise(slot, quality, ctx) {
   const seed = schemeSeed(slot.lift, slot.role)
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent })
   const scheme = SCHEMES[key]
-  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0 })
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0, phase, totalWeeks: ctx.totalWeeks ?? 3 })
   const clampedSets = clampSets(expanded.sets, ceiling)
   const displayReps = key === 'strengthHypertrophy'
     ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]

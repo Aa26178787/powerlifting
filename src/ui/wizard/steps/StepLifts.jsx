@@ -15,7 +15,7 @@ export default function StepLifts() {
     <div>
       {['squat', 'bench', 'deadlift'].map((l) => (
         <label key={l}>{liftLabel(l)} 1RM ({unitLabel(u)})
-          <input type="number" value={p.lifts[l]?.oneRM == null ? '' : toDisplay(p.lifts[l].oneRM, u, false)} onChange={(e) => setLift(l, { oneRM: fromInput(e.target.value, u) })} />
+          <input type="number" min="0" value={p.lifts[l]?.oneRM == null ? '' : toDisplay(p.lifts[l].oneRM, u, false)} onChange={(e) => setLift(l, { oneRM: fromInput(e.target.value, u) })} />
         </label>
       ))}
       <StrengthAssessment oneRMs={oneRMs} bodyweight={p.bodyweight} sex={p.sex} />

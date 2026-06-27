@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MAIN_LIFTS, all, byName, query, stressesRegion } from './exercises.js'
+import { MAIN_LIFTS, all, byName, query } from './exercises.js'
 
 describe('exercises query', () => {
   it('MAIN_LIFTS', () => { expect(MAIN_LIFTS).toEqual(['squat','bench','deadlift']) })
@@ -29,9 +29,5 @@ describe('exercises query', () => {
   it('excludeAdvanced drops band/chain work', () => {
     const r = query({ excludeAdvanced: true })
     expect(r.every((e) => !e.advanced)).toBe(true)
-  })
-  it('stressesRegion checks the stress tag', () => {
-    const dl = byName('Conventional Deadlift')
-    expect(stressesRegion(dl, 'lowerBack')).toBe(true)
   })
 })

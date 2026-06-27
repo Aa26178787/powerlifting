@@ -31,4 +31,21 @@ describe('LimitsPanel disclosures', () => {
     render(<LimitsPanel />)
     expect(screen.getByText(/종목별 빈도는 요일에 균등 간격/)).toBeInTheDocument()
   })
+  it('discloses that RPE judgment accuracy is lower for novices', () => {
+    render(<LimitsPanel />)
+    expect(screen.getByText(/RPE 판단 정확도는/)).toBeInTheDocument()
+    expect(screen.getByText(/입문자일수록 낮습니다/)).toBeInTheDocument()
+  })
+  it('discloses deadlift weekly volume reduced to ~60% of other lifts', () => {
+    render(<LimitsPanel />)
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName === 'LI' &&
+          /데드리프트 주간 볼륨/.test(element.textContent) &&
+          /~60%/.test(element.textContent)
+        )
+      })
+    ).toBeInTheDocument()
+  })
 })

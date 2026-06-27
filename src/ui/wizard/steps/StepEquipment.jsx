@@ -19,6 +19,7 @@ export default function StepEquipment() {
       <label>1회 운동 시간 제한 (분)
         <input
           type="number"
+          min="0"
           value={p.sessionTimeLimit ?? ''}
           onChange={(e) => {
             const n = parseFloat(e.target.value)

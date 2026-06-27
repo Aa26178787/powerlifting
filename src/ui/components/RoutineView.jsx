@@ -82,6 +82,7 @@ export default function RoutineView({ plan }) {
   const checkinLog = useProfileStore((s) => s.checkinLog)
   const logCheckin = useProfileStore((s) => s.logCheckin)
   const units = useProfileStore((s) => s.profile.units ?? 'kg')
+  const profile = useProfileStore((s) => s.profile)
   const [adjusted, setAdjusted] = useState({})
 
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
@@ -103,17 +104,22 @@ export default function RoutineView({ plan }) {
             return (
               <div key={s.day} className="session">
                 <h4>{s.day}일차</h4>
-                <CheckinPanel
-                  session={s}
-                  weekIndex={wk.index}
-                  onApply={(r) => {
-                    setAdjusted((m) => ({
-                      ...m,
-                      [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
-                    }))
-                    logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
-                  }}
-                />
+                <details>
+                  <summary>오늘 컨디션 반영</summary>
+                  <CheckinPanel
+                    session={s}
+                    weekIndex={wk.index}
+                    profile={profile}
+                    overreaching={over.flag}
+                    onApply={(r) => {
+                      setAdjusted((m) => ({
+                        ...m,
+                        [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
+                      }))
+                      logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
+                    }}
+                  />
+                </details>
                 {adjusted[key] && (
                   <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
                 )}

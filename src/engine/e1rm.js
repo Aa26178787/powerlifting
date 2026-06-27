@@ -16,14 +16,6 @@ export function e1rmFrom(weight, reps, rpe) {
   return weight / (pctOf1RM(reps, rpe) / 100)
 }
 
-export function epley(weight, reps) {
-  return weight * (1 + reps / 30)
-}
-
-export function brzycki(weight, reps) {
-  return weight * 36 / (37 - reps)
-}
-
 export function roundToIncrement(x, inc = 2.5) {
   return Math.round(x / inc) * inc
 }

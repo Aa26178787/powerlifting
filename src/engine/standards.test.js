@@ -39,10 +39,18 @@ describe('glPoints', () => {
 })
 
 describe('levelBand', () => {
-  it('maps fractions to bands', () => {
-    expect(levelBand(0.3)).toBe('입문')
-    expect(levelBand(0.5)).toBe('초중급')
-    expect(levelBand(0.95)).toBe('엘리트급')
+  // GL point cutoffs: <50 입문, <70 초중급, <90 중상급, <110 고급, ≥110 엘리트급
+  it('maps GL points to bands', () => {
+    expect(levelBand(30)).toBe('입문')
+    expect(levelBand(60)).toBe('초중급')
+    expect(levelBand(80)).toBe('중상급')
+    expect(levelBand(100)).toBe('고급')
+    expect(levelBand(115)).toBe('엘리트급')
+  })
+  it('same GL points → same levelBand (bodyweight-independence contract)', () => {
+    // GL already normalises for bodyweight; any two lifters with the same GL get the same band
+    expect(levelBand(75)).toBe('중상급')
+    expect(levelBand(75)).toBe('중상급')
   })
 })
 

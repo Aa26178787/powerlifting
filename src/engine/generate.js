@@ -6,7 +6,7 @@ import { MAIN_LIFTS, byName } from './exercises.js'
 import { select } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
-import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
+import { normalizeBlend, DEFAULT_BLEND, classifyBlend } from './quality.js'
 import { bandForBlend, BANDS, PER_SESSION_CAP } from './volume.js'
 import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency } from './frequency.js'
@@ -117,8 +117,56 @@ export function generate(profile) {
         }
         return false
       })
-      const primary = kept[0]?.baseLift ?? 'squat'
-      const rawAccessories = select({ lift: primary, style: style[primary], stickingPoint: stickingPoint[primary], equipmentAvailable: equipment, sessionTimeLimit: profile.sessionTimeLimit, regionStatus, excluded: excludedExercises, accessoryPreference: profile.accessoryPreference })
+      // ── Accessory selection ─────────────────────────────────────────────────
+      // Compute main-work time budget consumed (≈ 3.5 min/set incl. rest).
+      const mainSets = kept.reduce((sum, e) => sum + e.sets, 0)
+      const mainTimeMin = Math.round(mainSets * 3.5)
+      const { dom } = classifyBlend(blend)
+      const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
+
+      // Shared session cap (mirrors select's internal formula; derived once so the
+      // budget is split across lifts rather than multiplied per lift).
+      let sharedCap
+      if (profile.sessionTimeLimit != null) {
+        const remaining = profile.sessionTimeLimit - mainTimeMin - 10
+        const baseCap = Math.min(4, Math.max(1, Math.floor(remaining / 10)))
+        const minCap = goalBias < 0 ? 2 : 1
+        sharedCap = Math.min(5, Math.max(minCap, baseCap + goalBias))
+      } else {
+        const minCap = goalBias < 0 ? 2 : 1
+        sharedCap = Math.min(5, Math.max(minCap, 3 + goalBias))
+      }
+
+      // Run select for EACH distinct main lift; distribute the shared cap evenly
+      // (primary gets any remainder slots), dedup by name.
+      const distinctLifts = [...new Set(kept.map((e) => e.baseLift))]
+      const N = distinctLifts.length
+      const seenAccNames = new Set()
+      const allRaw = []
+      for (let i = 0; i < N; i++) {
+        const lft = distinctLifts[i]
+        const liftCap = Math.floor(sharedCap / N) + (i < sharedCap % N ? 1 : 0)
+        const liftAcc = select({
+          lift: lft,
+          style: style[lft],
+          stickingPoint: stickingPoint[lft],
+          equipmentAvailable: equipment,
+          sessionTimeLimit: profile.sessionTimeLimit,
+          mainTimeMin,
+          goalBias,
+          regionStatus,
+          excluded: excludedExercises,
+          accessoryPreference: profile.accessoryPreference,
+          maxCount: liftCap,
+        })
+        for (const acc of liftAcc) {
+          if (!seenAccNames.has(acc.name)) {
+            seenAccNames.add(acc.name)
+            allRaw.push(acc)
+          }
+        }
+      }
+      const rawAccessories = allRaw
       const accessories = withAccessoryScheme(rawAccessories, {
         weekIndex: wk.index - 1,
         advanced,

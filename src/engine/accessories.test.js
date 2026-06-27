@@ -16,8 +16,9 @@ describe('accessories.select', () => {
     expect(r.some((e) => e.primaryMuscle.includes('quads'))).toBe(true)
   })
   it('caps count by session time', () => {
+    // No main-work offset, no goal bias: remaining=30−0−10=20, cap=floor(20/10)=2
     const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 30, ...base })
-    expect(r.length).toBeLessThanOrEqual(2) // floor(30/15)=2
+    expect(r.length).toBeLessThanOrEqual(2)
   })
   it('drops accessories whose region is avoid (status 3)', () => {
     const r = select({ lift: 'deadlift', style: { stance: 'conventional' }, stickingPoint: 'none', sessionTimeLimit: null,
@@ -41,8 +42,11 @@ describe('movementTypeOf', () => {
 describe('accessoryPreference', () => {
   const eq = ['barbell','rack','bench','cables','dumbbells','leg press machine','machine','box','db']
   const ranks = (pref) => {
-    const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 999,
-      equipmentAvailable: eq, regionStatus: {}, accessoryPreference: pref })
+    // maxCount: 999 explicitly bypasses cap computation so all exercises are returned
+    // in ranked order (sessionTimeLimit:999 was the old "no cap" trick; new formula
+    // bounds baseCap at 4 regardless of time, so the explicit maxCount is needed here).
+    const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: null,
+      equipmentAvailable: eq, regionStatus: {}, accessoryPreference: pref, maxCount: 999 })
     return r.map((e) => e.name)
   }
   it('default machine preference ranks Leg Press above Box Step-Up', () => {
@@ -68,25 +72,56 @@ describe('accessoryPreference', () => {
   })
 })
 
+describe('time-aware cap + goal-bias (Fix 2)', () => {
+  const eq = ['barbell','rack','bench','cables','dumbbells']
+  it('mainTimeMin reduces cap in time-limited sessions', () => {
+    // 60 min session: no main work → remaining=50 → cap=min(4,5)=4
+    // with 30 min main work → remaining=20 → cap=min(4,2)=2
+    const noMain   = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 60, mainTimeMin: 0,  goalBias: 0, equipmentAvailable: eq, regionStatus: {} })
+    const withMain = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none', sessionTimeLimit: 60, mainTimeMin: 30, goalBias: 0, equipmentAvailable: eq, regionStatus: {} })
+    expect(withMain.length).toBeLessThan(noMain.length)
+  })
+  it('hypertrophy goalBias (+1) yields more accessories than strength goalBias (−1)', () => {
+    // no sessionTimeLimit: hyper cap = min(5,max(1,3+1))=4; strength cap = min(5,max(2,3−1))=2
+    const hyper    = select({ lift: 'bench', style: { grip: 'medium' }, stickingPoint: 'none', sessionTimeLimit: null, goalBias:  1, equipmentAvailable: eq, regionStatus: {} })
+    const strength = select({ lift: 'bench', style: { grip: 'medium' }, stickingPoint: 'none', sessionTimeLimit: null, goalBias: -1, equipmentAvailable: eq, regionStatus: {} })
+    expect(hyper.length).toBeGreaterThan(strength.length)
+  })
+})
+
+describe('muscle-group diversity guard (fix 1)', () => {
+  it('no primaryMuscle string repeats in cap-3 result when alternatives exist', () => {
+    const r = select({
+      lift: 'squat', style: { bar: 'high' }, stickingPoint: 'none',
+      sessionTimeLimit: null, // cap = 3 (default)
+      equipmentAvailable: ['barbell','rack','bench','cables','dumbbells','leg press machine','machine'],
+      regionStatus: {}, accessoryPreference: 'any',
+    })
+    expect(r).toHaveLength(3)
+    const muscles = r.map((e) => e.primaryMuscle)
+    expect(new Set(muscles).size).toBe(muscles.length) // all unique primaryMuscle strings
+  })
+})
+
 describe('accessories score relevance priority (fix 4)', () => {
-  it('a low-emphasis matched accessory (triceps 0.9 for bench:wide) outranks an irrelevant general accessory (biceps, unmatched)', () => {
+  it('bench:wide cap-3 result includes a triceps exercise before any biceps exercise', () => {
     // bench:wide emphasis = { chest: 1.3, triceps: 0.9 }
-    // Skull Crusher (barbell) → triceps → matched at 0.9
-    // Barbell Curl → biceps → unmatched (was 1.0, now 0.5)
+    // Diversity guard (fix 1) may defer later triceps exercises in favour of variety,
+    // but the FIRST triceps representative (score 0.9) should still win a slot before
+    // unmatched biceps exercises (score 0.5) at a realistic session cap.
     const r = select({
       lift: 'bench',
       style: { grip: 'wide' },
       stickingPoint: 'none',
-      sessionTimeLimit: 999, // return all so relative rank is visible
+      sessionTimeLimit: null, // cap = 3 (default)
       equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
       regionStatus: {},
       accessoryPreference: 'any',
       excluded: [],
     })
-    const skullIdx = r.findIndex((e) => e.name === 'Skull Crusher (barbell)')
-    const curlIdx = r.findIndex((e) => e.name === 'Barbell Curl')
-    expect(skullIdx).toBeGreaterThanOrEqual(0)
-    expect(curlIdx).toBeGreaterThanOrEqual(0)
-    expect(skullIdx).toBeLessThan(curlIdx)
+    const tricepsIdx = r.findIndex((e) => e.primaryMuscle.includes('triceps'))
+    const bicepsIdx  = r.findIndex((e) => e.primaryMuscle === 'biceps')
+    expect(tricepsIdx).toBeGreaterThanOrEqual(0)                        // at least one triceps exercise
+    expect(bicepsIdx === -1 || tricepsIdx < bicepsIdx).toBe(true)       // triceps before biceps (if biceps present)
   })
 })

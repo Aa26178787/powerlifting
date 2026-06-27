@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useProfileStore, selectIsValid } from '../store/profileStore.js'
 import { stepLabel } from '../i18n.js'
 import StepBasics from './steps/StepBasics.jsx'
@@ -18,10 +18,15 @@ export default function Wizard({ onComplete }) {
   const last = 8
   const liftsValid = selectIsValid(profile)
   const canNext = step !== 2 || liftsValid
+  const h2Ref = useRef(null)
+
+  useEffect(() => {
+    h2Ref.current?.focus()
+  }, [step])
 
   return (
     <div className="wizard">
-      <ol className="stepper">
+      <ol className="stepper" aria-live="polite">
         {Array.from({ length: last }, (_, i) => i + 1).map((n) => (
           <li key={n} className="stepper-item" aria-current={n === step ? 'step' : undefined}
               data-state={n < step ? 'done' : n === step ? 'current' : 'todo'}>
@@ -30,7 +35,7 @@ export default function Wizard({ onComplete }) {
           </li>
         ))}
       </ol>
-      <h2>{step}. {stepLabel(step)}</h2>
+      <h2 ref={h2Ref} tabIndex={-1}>{step}. {stepLabel(step)}</h2>
       <div className="wizard-body" data-step={step}>
         {(() => { const Body = BODY[step]; return Body ? <Body /> : <p className="wizard-step-stub">{stepLabel(step)}</p> })()}
       </div>

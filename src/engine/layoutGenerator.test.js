@@ -39,3 +39,54 @@ describe('buildLayout', () => {
     expect(buildLayout({ daysPerWeek: 4, frequency: { squat: 0, bench: 0, deadlift: 0 } })).toEqual([])
   })
 })
+
+describe('axial-fatigue stack guard', () => {
+  // heavy squat and heavy deadlift must not share a day when alternative days exist.
+  // With PHASE={squat:0,deadlift:2} and D>=3, heavies land on day 0 and day 2 — never the same.
+  // Guard is a safety net; property must hold for any D that has room.
+  function hasAxialConflict(layout) {
+    return layout.some(
+      (day) =>
+        day.some((s) => s.lift === 'squat' && s.role === 'heavy') &&
+        day.some((s) => s.lift === 'deadlift' && s.role === 'heavy')
+    )
+  }
+
+  it('no day has both heavy squat and heavy deadlift — 4-day canvas', () => {
+    const layout = buildLayout({
+      daysPerWeek: 4,
+      frequency: { squat: 2, bench: 0, deadlift: 2 },
+    })
+    expect(hasAxialConflict(layout)).toBe(false)
+  })
+
+  it('no day has both heavy squat and heavy deadlift — 5-day canvas', () => {
+    const layout = buildLayout({
+      daysPerWeek: 5,
+      frequency: { squat: 2, bench: 0, deadlift: 2 },
+    })
+    expect(hasAxialConflict(layout)).toBe(false)
+  })
+
+  it('per-lift session counts unchanged after guard — 4-day canvas', () => {
+    const layout = buildLayout({
+      daysPerWeek: 4,
+      frequency: { squat: 2, bench: 1, deadlift: 2 },
+    })
+    const slots = layout.flat()
+    expect(slots.filter((s) => s.lift === 'squat')).toHaveLength(2)
+    expect(slots.filter((s) => s.lift === 'bench')).toHaveLength(1)
+    expect(slots.filter((s) => s.lift === 'deadlift')).toHaveLength(2)
+  })
+
+  it('guard allows unavoidable conflict on 2-day canvas (no alternative)', () => {
+    // D=2, both heavies land on day 0 — guard cannot fix, must not throw or corrupt counts
+    const layout = buildLayout({
+      daysPerWeek: 2,
+      frequency: { squat: 2, bench: 0, deadlift: 2 },
+    })
+    const slots = layout.flat()
+    expect(slots.filter((s) => s.lift === 'squat')).toHaveLength(2)
+    expect(slots.filter((s) => s.lift === 'deadlift')).toHaveLength(2)
+  })
+})

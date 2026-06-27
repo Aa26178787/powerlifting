@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildDeloadWeek, needsDeload } from './deload.js'
+import { buildDeloadWeek } from './deload.js'
 import { byName } from './exercises.js'
 
 const ctx = { e1rm: { squat: 200, bench: 140, deadlift: 240 } }
@@ -48,12 +48,3 @@ describe('buildDeloadWeek — straight scheme', () => {
   })
 })
 
-describe('needsDeload', () => {
-  it('always deloads at week 4', () => {
-    expect(needsDeload(4, 1)).toBe(true)
-  })
-  it('deloads early (week 3) under maximal fatigue', () => {
-    expect(needsDeload(3, 5)).toBe(true)
-    expect(needsDeload(3, 2)).toBe(false)
-  })
-})

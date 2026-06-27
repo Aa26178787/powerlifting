@@ -127,6 +127,12 @@ describe('expandAccessory (reps + RPE, no weight)', () => {
   })
 })
 
+describe('contrastPAP evidenceTier (fix 3)', () => {
+  it('contrastPAP evidenceTier is consensus not rct (full explosive pairing not yet implemented)', () => {
+    expect(SCHEMES.contrastPAP.evidenceTier).toBe('consensus')
+  })
+})
+
 describe('pickScheme concurrent + seed', () => {
   it('concurrent strength prepends strengthHypertrophy', () => {
     const k = pickScheme({ quality:'strength', role:'comp', phase:'accumulation', advanced:false, weekIndex:0, concurrent:true })
@@ -167,5 +173,72 @@ describe('strengthHypertrophy scheme', () => {
     // and heavier than the old fixed 0.67*e1rm it replaced
     expect(back.weight).toBeGreaterThan(200 * 0.67)
     expect(back.weight).toBeLessThan(sets[0].weight) // still a backoff
+  })
+})
+
+describe('topSingleBackoff — RPE-derived loads (Fix A)', () => {
+  it('top single equals loadForRpe(e1rm,1,8.5) not e1rm*0.90', () => {
+    const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3 })
+    expect(sets[0].weight).toBe(loadForRpe(200, 1, 8.5))
+    // 0.90×200=180 (old hardcoded); chart-based 93.9%=187.5 (new)
+    expect(sets[0].weight).not.toBe(Math.round(200 * 0.90 / 2.5) * 2.5)
+  })
+  it('backoff equals loadForRpe(e1rm,3,8.0) not top×0.85', () => {
+    const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3 })
+    expect(sets[1].weight).toBe(loadForRpe(200, 3, 8.0))
+  })
+  it('top single > backoff (top+backoff structure preserved)', () => {
+    const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3 })
+    expect(sets[0].weight).toBeGreaterThan(sets[1].weight)
+  })
+})
+
+describe('topSetBackoff — RPE-derived backoff (Fix B)', () => {
+  it('backoff equals loadForRpe(e1rm, zone.reps[1], zone.rpeTarget-1)', () => {
+    const { sets } = SCHEMES.topSetBackoff.expand(ctx())
+    const expected = loadForRpe(200, ZONES.strength.reps[1], ZONES.strength.rpeTarget - 1)
+    expect(sets[1].weight).toBe(expected)
+  })
+  it('top > backoff after RPE-derived change', () => {
+    const { sets } = SCHEMES.topSetBackoff.expand(ctx())
+    expect(sets[0].weight).toBeGreaterThan(sets[1].weight)
+  })
+  it('backoff rpe is zone.rpeTarget - 1', () => {
+    const { sets } = SCHEMES.topSetBackoff.expand(ctx())
+    expect(sets[1].rpe).toBe(ZONES.strength.rpeTarget - 1)
+  })
+})
+
+describe('topSingleBackoff — peak phase RPE ramp (Fix C)', () => {
+  it('peak top single is heavier than accumulation top single', () => {
+    const accum = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3, phase: 'accumulation', weekIndex: 0, totalWeeks: 8 })
+    const peakLast = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3, phase: 'peak', weekIndex: 7, totalWeeks: 8 })
+    expect(peakLast.sets[0].weight).toBeGreaterThan(accum.sets[0].weight)
+  })
+  it('top single never exceeds 100% 1RM (RPE capped at 9.5 → chart 97.8% < 100%)', () => {
+    const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3, phase: 'peak', weekIndex: 7, totalWeeks: 8 })
+    expect(sets[0].weight).toBeLessThan(200)
+  })
+  it('8-week meso numeric proof: top-single ramps in peak, flat elsewhere, bounded', () => {
+    // phaseFor(w,8,true): idx 0-2→accum, 3-4→intensification, 5-7→peak
+    // peakStart=ceil(0.67*7)=5, peakLen=3 → peakFrac 0, 0.5, 1.0 → topRpe 8.5, 9.0, 9.5
+    const phases = ['accumulation','accumulation','accumulation','intensification','intensification','peak','peak','peak']
+    const rows = phases.map((phase, w) => {
+      const { sets } = SCHEMES.topSingleBackoff.expand({ e1rm: 200, baseSets: 3, phase, weekIndex: w, totalWeeks: 8 })
+      return { week: w + 1, phase, weight: sets[0].weight, rpe: sets[0].rpe }
+    })
+    // Accumulation + intensification: flat at RPE 8.5
+    expect(rows[0].weight).toBe(loadForRpe(200, 1, 8.5))   // 187.5 kg (93.75%)
+    expect(rows[4].weight).toBe(loadForRpe(200, 1, 8.5))   // intensification unchanged
+    // Peak weeks ramp: 8.5 → 9.0 → 9.5
+    expect(rows[5].weight).toBe(loadForRpe(200, 1, 8.5))   // week 6: RPE 8.5  → 187.5
+    expect(rows[6].weight).toBe(loadForRpe(200, 1, 9.0))   // week 7: RPE 9.0  → 190.0
+    expect(rows[7].weight).toBe(loadForRpe(200, 1, 9.5))   // week 8: RPE 9.5  → 195.0
+    // All < 100% 1RM
+    for (const row of rows) expect(row.weight).toBeLessThan(200)
+    // Confirm the ramp within peak
+    expect(rows[5].weight).toBeLessThanOrEqual(rows[6].weight)
+    expect(rows[6].weight).toBeLessThanOrEqual(rows[7].weight)
+    expect(rows[7].weight).toBeGreaterThan(rows[5].weight)
   })
 })

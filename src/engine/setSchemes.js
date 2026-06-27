@@ -19,14 +19,34 @@ function straight({ quality, e1rm, zone, baseSets }) {
 }
 function topSetBackoff({ e1rm, zone, baseSets }) {
   const top = r(e1rm * zone.pct[1])
+  // Fix B: backoff is RPE-derived (consistent with its rpe label) rather than a
+  // fixed 0.88× multiplier. Null-safe: pct-loaded zones fall back to the old multiplier.
+  const backoffRpe = zone.rpeTarget == null ? null : zone.rpeTarget - 1
   const sets = [{ weight: top, reps: zone.reps[0], rpe: zone.rpeTarget, label: '탑' }]
-  for (let i = 1; i < baseSets; i++) sets.push({ weight: r(top * 0.88), reps: zone.reps[1], rpe: zone.rpeTarget == null ? null : zone.rpeTarget - 1, label: '백오프' })
+  for (let i = 1; i < baseSets; i++) {
+    const backW = backoffRpe == null
+      ? r(top * 0.88)
+      : loadForRpe(e1rm, zone.reps[1], backoffRpe)
+    sets.push({ weight: backW, reps: zone.reps[1], rpe: backoffRpe, label: '백오프' })
+  }
   return { sets }
 }
-function topSingleBackoff({ e1rm, baseSets }) {
-  const top = r(e1rm * 0.90)
-  const sets = [{ weight: top, reps: 1, rpe: 8.5, label: '탑싱글' }]
-  for (let i = 1; i < baseSets; i++) sets.push({ weight: r(top * 0.85), reps: 3, rpe: 8, label: '백오프' })
+function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3 }) {
+  // Fix A: RPE-derived top single (chart-accurate, same helper as strengthHypertrophy).
+  // Fix C: In peak phase, ramp the top-single RPE 8.5→9.5 over peak weeks, rounded
+  //   to 0.5 steps and capped at 9.5 (never 100% 1RM; ceiling clamp in periodization
+  //   provides a second layer of protection). Accumulation + intensification stay at 8.5.
+  let topRpe = 8.5
+  if (phase === 'peak') {
+    const peakStart = totalWeeks <= 1 ? 0 : Math.ceil(0.67 * (totalWeeks - 1))
+    const peakLen = Math.max(1, totalWeeks - peakStart)
+    const peakFrac = peakLen <= 1 ? 0 : (weekIndex - peakStart) / (peakLen - 1)
+    topRpe = Math.min(9.5, Math.round((8.5 + Math.max(0, peakFrac)) * 2) / 2)
+  }
+  const top = loadForRpe(e1rm, 1, topRpe)
+  const sets = [{ weight: top, reps: 1, rpe: topRpe, label: '탑싱글' }]
+  // Fix A: backoff also RPE-derived (3 reps @ RPE 8.0) instead of top×0.85.
+  for (let i = 1; i < baseSets; i++) sets.push({ weight: loadForRpe(e1rm, 3, 8.0), reps: 3, rpe: 8, label: '백오프' })
   return { sets }
 }
 function ascendingPyramid({ e1rm, zone, baseSets }) {
@@ -123,7 +143,7 @@ export const SCHEMES = {
   dropSet:          { labelKey: 'dropSet',          evidenceTier: 'rct',       fatigue: 4, accessoryOnly: true, expand: dropSet },
   myoReps:          { labelKey: 'myoReps',          evidenceTier: 'consensus', fatigue: 4, accessoryOnly: true, expand: myoReps },
   widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, accessoryOnly: true, expand: widowmaker },
-  contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
+  contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'consensus', fatigue: 4, advancedOnly: true, expand: contrastPAP },
   strengthHypertrophy: { labelKey: 'strengthHypertrophy', evidenceTier: 'consensus', fatigue: 3, expand: strengthHypertrophy },
 }
 
