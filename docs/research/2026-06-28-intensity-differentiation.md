@@ -43,8 +43,8 @@ PL{str0.70/hyp0.20}·PB{str0.45/hyp0.45} 메인 평균 강도 **동일(80.8%1RM)
 > 메인 평균 강도는 근력 비중 높을수록 heavy 세트 비중↑. PB는 동일 top(~92%) 유지하되 일부를 중강도 백오프로 → 평균↓. 방향(근력 부하의존/근비대 부하무관)은 메타근거이나, 정확 heavy:moderate 비율·HEAVY_FLOOR 0.40·CONC_DENOM 3·분할 라운딩은 휴리스틱(`근거 약함`). 최고 강도 세트(특이성)는 양 목표 보존. 실현 착지점은 emergent → probe 실측값.
 
 ## 미해결·후속
-- **Phase 2(opt-in)**: PL topSetBackoff 분할로 PL heavy 비중 추가 상향(PL 골든 재baseline 필요) — 부분 정당, 보류.
-- App.test.jsx flaky 안정화(별도).
+- ~~**Phase 2(opt-in)**: PL topSetBackoff 분할로 PL heavy 비중 추가 상향(PL 골든 재baseline 필요) — 부분 정당, 보류.~~ → **검토 후 정당한 no-op 결정**: 3관점 만장일치, 원 Phase 2는 오조준(topSetBackoff가 wk1 accumulation에 부재)+미존재 문제+안전위반(PL heavyN=5/6 @92% 그라인더). PL 67-78% 작업은 정당한 변형종목 근비대 볼륨(부하무관). 상세 [[2026-06-28-pl-intensity-noop]]. **코드 무변경.**
+- ~~App.test.jsx flaky 안정화(별도).~~ → **해소**(commit 525f5d8: delay:null + 15s 타임아웃, 470/470 안정).
 
 ## 방법
 3관점 병렬 설계(opus, 코드 라인 전수 검증) → 합성(opus high-effort). ~223k token.
