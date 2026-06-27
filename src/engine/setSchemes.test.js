@@ -127,6 +127,12 @@ describe('expandAccessory (reps + RPE, no weight)', () => {
   })
 })
 
+describe('contrastPAP evidenceTier (fix 3)', () => {
+  it('contrastPAP evidenceTier is consensus not rct (full explosive pairing not yet implemented)', () => {
+    expect(SCHEMES.contrastPAP.evidenceTier).toBe('consensus')
+  })
+})
+
 describe('pickScheme concurrent + seed', () => {
   it('concurrent strength prepends strengthHypertrophy', () => {
     const k = pickScheme({ quality:'strength', role:'comp', phase:'accumulation', advanced:false, weekIndex:0, concurrent:true })

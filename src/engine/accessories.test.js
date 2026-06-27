@@ -68,25 +68,39 @@ describe('accessoryPreference', () => {
   })
 })
 
+describe('muscle-group diversity guard (fix 1)', () => {
+  it('no primaryMuscle string repeats in cap-3 result when alternatives exist', () => {
+    const r = select({
+      lift: 'squat', style: { bar: 'high' }, stickingPoint: 'none',
+      sessionTimeLimit: null, // cap = 3 (default)
+      equipmentAvailable: ['barbell','rack','bench','cables','dumbbells','leg press machine','machine'],
+      regionStatus: {}, accessoryPreference: 'any',
+    })
+    expect(r).toHaveLength(3)
+    const muscles = r.map((e) => e.primaryMuscle)
+    expect(new Set(muscles).size).toBe(muscles.length) // all unique primaryMuscle strings
+  })
+})
+
 describe('accessories score relevance priority (fix 4)', () => {
-  it('a low-emphasis matched accessory (triceps 0.9 for bench:wide) outranks an irrelevant general accessory (biceps, unmatched)', () => {
+  it('bench:wide cap-3 result includes a triceps exercise before any biceps exercise', () => {
     // bench:wide emphasis = { chest: 1.3, triceps: 0.9 }
-    // Skull Crusher (barbell) → triceps → matched at 0.9
-    // Barbell Curl → biceps → unmatched (was 1.0, now 0.5)
+    // Diversity guard (fix 1) may defer later triceps exercises in favour of variety,
+    // but the FIRST triceps representative (score 0.9) should still win a slot before
+    // unmatched biceps exercises (score 0.5) at a realistic session cap.
     const r = select({
       lift: 'bench',
       style: { grip: 'wide' },
       stickingPoint: 'none',
-      sessionTimeLimit: 999, // return all so relative rank is visible
+      sessionTimeLimit: null, // cap = 3 (default)
       equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
       regionStatus: {},
       accessoryPreference: 'any',
       excluded: [],
     })
-    const skullIdx = r.findIndex((e) => e.name === 'Skull Crusher (barbell)')
-    const curlIdx = r.findIndex((e) => e.name === 'Barbell Curl')
-    expect(skullIdx).toBeGreaterThanOrEqual(0)
-    expect(curlIdx).toBeGreaterThanOrEqual(0)
-    expect(skullIdx).toBeLessThan(curlIdx)
+    const tricepsIdx = r.findIndex((e) => e.primaryMuscle.includes('triceps'))
+    const bicepsIdx  = r.findIndex((e) => e.primaryMuscle === 'biceps')
+    expect(tricepsIdx).toBeGreaterThanOrEqual(0)                        // at least one triceps exercise
+    expect(bicepsIdx === -1 || tricepsIdx < bicepsIdx).toBe(true)       // triceps before biceps (if biceps present)
   })
 })

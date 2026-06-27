@@ -123,7 +123,7 @@ export const SCHEMES = {
   dropSet:          { labelKey: 'dropSet',          evidenceTier: 'rct',       fatigue: 4, accessoryOnly: true, expand: dropSet },
   myoReps:          { labelKey: 'myoReps',          evidenceTier: 'consensus', fatigue: 4, accessoryOnly: true, expand: myoReps },
   widowmaker:       { labelKey: 'widowmaker',       evidenceTier: 'consensus', fatigue: 5, accessoryOnly: true, expand: widowmaker },
-  contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'rct',       fatigue: 4, advancedOnly: true, expand: contrastPAP },
+  contrastPAP:         { labelKey: 'contrastPAP',         evidenceTier: 'consensus', fatigue: 4, advancedOnly: true, expand: contrastPAP },
   strengthHypertrophy: { labelKey: 'strengthHypertrophy', evidenceTier: 'consensus', fatigue: 3, expand: strengthHypertrophy },
 }
 

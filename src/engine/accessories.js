@@ -37,5 +37,22 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
   }
   const sorted = [...pool].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))
   const cap = sessionTimeLimit ? Math.max(1, Math.floor(sessionTimeLimit / 15)) : 3
-  return sorted.slice(0, cap)
+  // Diversity guard: greedily pick, deferring repeats of already-chosen primaryMuscle.
+  // Only allow a repeated muscle if the pool is exhausted before reaching cap.
+  const chosen = []
+  const deferred = []
+  const seenMuscles = new Set()
+  for (const ex of sorted) {
+    if (chosen.length >= cap) break
+    if (seenMuscles.has(ex.primaryMuscle)) {
+      deferred.push(ex)
+    } else {
+      chosen.push(ex)
+      seenMuscles.add(ex.primaryMuscle)
+    }
+  }
+  // Fill from deferred only if pool is under-filled (exhausted without hitting cap)
+  let di = 0
+  while (chosen.length < cap && di < deferred.length) chosen.push(deferred[di++])
+  return chosen
 }

@@ -38,11 +38,16 @@ export function glPoints(total, bodyweight, sex) {
   return Number.isFinite(gl) ? Math.round(gl * 100) / 100 : null
 }
 
-export function levelBand(avg) {
-  if (avg < 0.45) return '입문'
-  if (avg < 0.6) return '초중급'
-  if (avg < 0.75) return '중상급'
-  if (avg < 0.9) return '고급'
+// GL-point cutoffs for levelBand.  GL points already normalise for bodyweight
+// (via the IPF Goodlift formula), so two lifters with the same GL always receive
+// the same band regardless of body-mass — fixing the old relStandard-avg bias.
+// Approximate real-world anchors (100 kg male): 50 GL ≈ 40 % of elite total,
+// 70 ≈ 56 %, 90 ≈ 72 %, 110 ≈ 88 %.
+export function levelBand(gl) {
+  if (gl == null || gl < 50)  return '입문'
+  if (gl < 70)  return '초중급'
+  if (gl < 90)  return '중상급'
+  if (gl < 110) return '고급'
   return '엘리트급'
 }
 
@@ -55,8 +60,8 @@ export function assess(oneRMs, bodyweight, sex) {
     perLift[l] = v
   }
   const total = MAIN.reduce((a, l) => a + oneRMs[l], 0)
-  const avg = (perLift.squat + perLift.bench + perLift.deadlift) / 3
-  return { perLift, weakLift: weakLift(oneRMs, bodyweight, sex), glPoints: glPoints(total, bodyweight, sex), level: levelBand(avg) }
+  const gl = glPoints(total, bodyweight, sex)
+  return { perLift, weakLift: weakLift(oneRMs, bodyweight, sex), glPoints: gl, level: levelBand(gl) }
 }
 
 export function recommendBlend(years) {
