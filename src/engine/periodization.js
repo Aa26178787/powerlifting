@@ -29,7 +29,7 @@ function resolveName(slot, ctx) {
   // A motor-cue deficit prescribes its teaching variation (unless overridden/excluded).
   const cue = cueVariation(slot.lift, ctx.cueNeed?.[slot.lift])
   if (cue && !excluded.includes(cue) && feasible(cue, ctx)) return cue
-  const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced, excluded)
+  const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced, excluded, ctx.stickingCause?.[slot.lift])
   return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
 }
 

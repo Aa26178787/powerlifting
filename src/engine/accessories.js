@@ -2,6 +2,7 @@ import { query } from './exercises.js'
 import { emphasis } from './style.js'
 import { shouldAvoid } from './regionStatus.js'
 import { muscleDeficit, isOverMrv, ACCESSORY_EST_SETS } from './muscleVolume.js'
+import { stickTier } from './stickingPoint.js'
 
 const MACHINE_EQUIP = ['machine', 'cables', 'smith', 'preacher']   // 'machine' substring catches "* machine"
 const SKILL_RX = /step-up|sled|yoke|sissy|dragon flag|kettlebell|kb swing|pistol|nordic|cossack|single-leg|single-arm|farmer|landmine twist|russian twist/i
@@ -21,7 +22,9 @@ function prefBonus(type, pref) {
   return 0
 }
 
-export function select({ lift, style, stickingPoint, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null, muscleLedger = null, muscleBands = null, deficitWeight = 0 }) {
+const STICK_W_ACC = { full: 0.75, position: 0.5, causeMiss: 0.35, none: 0 }   // heuristic
+
+export function select({ lift, style, stickingPoint, cause = undefined, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null, muscleLedger = null, muscleBands = null, deficitWeight = 0 }) {
   const weights = emphasis(lift, style)
   const pool = query({ category: 'accessory', equipmentAvailable, excludeAdvanced: true })
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
@@ -32,7 +35,7 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
       .filter(([muscle]) => e.primaryMuscle.includes(muscle))
       .map(([, w]) => w)
     let s = matched.length ? Math.max(...matched) : 0.5
-    if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) s += 0.5
+    s += STICK_W_ACC[stickTier(e, stickingPoint, cause)]
     s += prefBonus(movementTypeOf(e), accessoryPreference)
     if (muscleLedger && deficitWeight > 0)
       s += deficitWeight * muscleDeficit(muscleLedger, e.primaryMuscle)

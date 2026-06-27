@@ -152,3 +152,54 @@ describe('accessories score relevance priority (fix 4)', () => {
     expect(bicepsIdx === -1 || tricepsIdx < bicepsIdx).toBe(true)       // triceps before biceps (if biceps present)
   })
 })
+
+// ── Case 6: 2D cause matching — full(0.75) > causeMiss(0.35) ─────────────────
+describe('2D cause matching (case 6)', () => {
+  const eq = ['barbell', 'rack', 'cables', 'dumbbells', 'ssb', 'bands',
+              'leg press machine', 'machine', 'ez bar', 'db', 'box']
+
+  it('cause-match accessory ranks above wrong-cause same-position accessory', () => {
+    // squat midrange, cause='hip':
+    // Good Morning (narrow): pm='hamstrings/erectors' → causeOf=['hip'] → full(0.75)
+    // Good Morning (seated): pm='erectors/QL'        → causeOf=['back'] → causeMiss(0.35)
+    // Diversity guard picks one 'hamstrings/erectors' rep first; 'erectors/QL' is a
+    // distinct PM string so it goes in separately at its lower score (0.35+base).
+    // → narrowIdx(0) < seatedIdx(4)
+    const r = select({
+      lift: 'squat', style: { bar: 'low' }, stickingPoint: 'midrange', cause: 'hip',
+      sessionTimeLimit: null, maxCount: 999, equipmentAvailable: eq, regionStatus: {},
+    })
+    const narrowIdx = r.findIndex((e) => e.name === 'Good Morning (narrow)')
+    const seatedIdx = r.findIndex((e) => e.name === 'Good Morning (seated)')
+    expect(narrowIdx).toBeGreaterThanOrEqual(0)
+    expect(seatedIdx).toBeGreaterThanOrEqual(0)
+    expect(narrowIdx).toBeLessThan(seatedIdx)
+  })
+})
+
+// ── Case 7: cause=undefined regression guard ──────────────────────────────────
+describe('cause=undefined regression (case 7)', () => {
+  it('cause omitted → output bit-for-bit identical to no-cause baseline (bench lockout)', () => {
+    const base = {
+      lift: 'bench', style: { grip: 'close' }, stickingPoint: 'lockout',
+      sessionTimeLimit: null,
+      equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+      regionStatus: {},
+    }
+    const baseline    = select(base)
+    const withUndef   = select({ ...base, cause: undefined })
+    expect(withUndef.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+
+  it('cause=null → same as omitted', () => {
+    const base = {
+      lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none',
+      sessionTimeLimit: null,
+      equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+      regionStatus: {},
+    }
+    const baseline  = select(base)
+    const withNull  = select({ ...base, cause: null })
+    expect(withNull.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+})

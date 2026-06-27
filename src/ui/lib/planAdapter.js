@@ -11,6 +11,7 @@ export function toEngineProfile(form) {
     periodizationModel: form.periodizationModel,
     style: form.style,
     stickingPoint: form.stickingPoint,
+    stickingCause: form.stickingCause ?? {},
     regionStatus: form.regionStatus,
     equipment: form.equipment,
     sessionTimeLimit: form.sessionTimeLimit,

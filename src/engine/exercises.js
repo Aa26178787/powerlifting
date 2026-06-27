@@ -1,4 +1,5 @@
 import db from '../data/exercises.json' with { type: 'json' }
+import { causeOf } from './stickingPoint.js'
 
 export const MAIN_LIFTS = ['squat', 'bench', 'deadlift']
 
@@ -29,7 +30,7 @@ export function equipmentSatisfies(exEquip, have) {
   return exEquip.every((tag) => tag.split('/').some((opt) => haveSet.has(opt)))
 }
 
-export function query({ category, targetLift, stickingPoint, primaryMuscle, equipmentAvailable, excludeAdvanced } = {}) {
+export function query({ category, targetLift, stickingPoint, primaryMuscle, equipmentAvailable, excludeAdvanced, cause } = {}) {
   const have = equipmentAvailable ? new Set(equipmentAvailable) : null
   return db.exercises.filter((e) => {
     if (category && e.category !== category) return false
@@ -38,6 +39,7 @@ export function query({ category, targetLift, stickingPoint, primaryMuscle, equi
     if (primaryMuscle && e.primaryMuscle !== primaryMuscle) return false
     if (excludeAdvanced && e.advanced) return false
     if (have && !equipmentSatisfies(e.equipment, have)) return false
+    if (cause && !causeOf(e).includes(cause)) return false
     return true
   })
 }

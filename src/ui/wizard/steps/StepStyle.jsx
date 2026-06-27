@@ -1,13 +1,15 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { liftLabel, styleLabel, stickingLabel, cueLabel } from '../../i18n.js'
+import { liftLabel, styleLabel, stickingLabel, causeLabel, cueLabel } from '../../i18n.js'
 import { query, allEquipment } from '../../../engine/exercises.js'
 import { CUE_KEYS } from '../../../engine/cueVariation.js'
+import { POSITION_CAUSES } from '../../../engine/stickingPoint.js'
 
 export default function StepStyle() {
   const p = useProfileStore((s) => s.profile)
   const setStyle = useProfileStore((s) => s.setStyle)
   const setStickingPoint = useProfileStore((s) => s.setStickingPoint)
+  const setStickingCause = useProfileStore((s) => s.setStickingCause)
   const toggleExcludedExercise = useProfileStore((s) => s.toggleExcludedExercise)
   const setVariationOverride = useProfileStore((s) => s.setVariationOverride)
   const setCueNeed = useProfileStore((s) => s.setCueNeed)
@@ -47,15 +49,29 @@ export default function StepStyle() {
 
       <fieldset>
         <legend>스티킹포인트 (가장 안 올라가는 구간)</legend>
-        {['squat', 'bench', 'deadlift'].map((lift) => (
-          <label key={lift}>{liftLabel(lift)}
-            <select value={p.stickingPoint[lift]} onChange={(e) => setStickingPoint(lift, e.target.value)}>
-              {['none', 'bottom', 'midrange', 'lockout'].map((v) => (
-                <option key={v} value={v}>{stickingLabel(v)}</option>
-              ))}
-            </select>
-          </label>
-        ))}
+        {['squat', 'bench', 'deadlift'].map((lift) => {
+          const pos = p.stickingPoint[lift]
+          const causes = POSITION_CAUSES[lift]?.[pos] ?? []
+          return (
+            <label key={lift}>{liftLabel(lift)}
+              <select value={pos} onChange={(e) => setStickingPoint(lift, e.target.value)}>
+                {['none', 'bottom', 'midrange', 'lockout'].map((v) => (
+                  <option key={v} value={v}>{stickingLabel(v, lift)}</option>
+                ))}
+              </select>
+              <select
+                value={p.stickingCause[lift] ?? ''}
+                disabled={!causes.length}
+                onChange={(e) => setStickingCause(lift, e.target.value || null)}
+              >
+                <option value="">{causes.length ? '자동(위치만)' : '—'}</option>
+                {causes.map((c) => (
+                  <option key={c} value={c}>{causeLabel(c)}</option>
+                ))}
+              </select>
+            </label>
+          )
+        })}
       </fieldset>
 
       <fieldset>

@@ -67,6 +67,7 @@ function withAccessoryScheme(accessories, { weekIndex, advanced, phase, isDeload
 
 const DEFAULT_STYLE = { squat: { bar: 'low' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } }
 const DEFAULT_STICK = { squat: 'none', bench: 'none', deadlift: 'none' }
+const DEFAULT_CAUSE = { squat: null, bench: null, deadlift: null }
 
 export function resolveE1rm(liftInput) {
   if (liftInput && typeof liftInput.oneRM === 'number') return liftInput.oneRM
@@ -74,9 +75,9 @@ export function resolveE1rm(liftInput) {
   return e1rmFrom(weight, reps, rpe)
 }
 
-function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, regionStatus, excluded = []) {
+function sparingSwap(ex, baseLift, style, stickingPoint, equipment, advanced, regionStatus, excluded = [], cause = undefined) {
   const bad = new Set(Object.entries(regionStatus).filter(([, v]) => v >= 2).map(([k]) => k))
-  const candidate = pick(baseLift, stickingPoint, style, equipment, advanced, excluded)
+  const candidate = pick(baseLift, stickingPoint, style, equipment, advanced, excluded, cause)
   if (candidate && !candidate.stress.some((r) => bad.has(r))) return candidate.name
   return ex
 }
@@ -96,6 +97,7 @@ export function generate(profile) {
     : profile.periodizationModel
   const style = profile.style ?? DEFAULT_STYLE
   const stickingPoint = profile.stickingPoint ?? DEFAULT_STICK
+  const stickingCause = profile.stickingCause ?? DEFAULT_CAUSE
   const regionStatus = profile.regionStatus ?? {}
   const equipment = profile.equipment ?? ['barbell', 'rack', 'bench']
   const advanced = years >= 3
@@ -123,7 +125,7 @@ export function generate(profile) {
     const absCap = PER_SESSION_CAP[priorityLift] ?? 6
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, absCap, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
 
   const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
@@ -160,7 +162,7 @@ export function generate(profile) {
         .map((e) => {
           const ex = byName(e.lift)
           if (ex && shouldSwap(ex, regionStatus)) {
-            return { ...e, lift: sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus, excludedExercises) }
+            return { ...e, lift: sparingSwap(e.lift, e.baseLift, style[e.baseLift], stickingPoint[e.baseLift], equipment, advanced, regionStatus, excludedExercises, stickingCause[e.baseLift]) }
           }
           return e
         })
@@ -228,6 +230,7 @@ export function generate(profile) {
           lift: lft,
           style: style[lft],
           stickingPoint: stickingPoint[lft],
+          cause: stickingCause[lft],
           equipmentAvailable: equipment,
           sessionTimeLimit: profile.sessionTimeLimit,
           mainTimeMin,

@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import db from '../data/exercises.json' with { type: 'json' }
-import { canonicalToken } from './muscleVolume.js'
+import { canonicalToken, creditMuscles } from './muscleVolume.js'
+import { causeOf, CAUSE_VOCAB, POSITION_CAUSES, CANON_TO_CAUSE } from './stickingPoint.js'
+
+// Reverse mapping: cause → set of canonical muscle groups (for contradiction check)
+const CAUSE_TO_CANONS = {}
+for (const [canon, cause] of Object.entries(CANON_TO_CAUSE)) {
+  if (!CAUSE_TO_CANONS[cause]) CAUSE_TO_CANONS[cause] = new Set()
+  CAUSE_TO_CANONS[cause].add(canon)
+}
 
 const CATEGORY = ['competition', 'variation', 'accessory']
 const TARGET = ['squat', 'bench', 'deadlift', 'general']
@@ -55,6 +63,46 @@ describe('muscle token coverage (test 7)', () => {
     }
     if (unmapped.length > 0) console.error('Unmapped tokens:', unmapped)
     expect(unmapped).toHaveLength(0)
+  })
+})
+
+describe('stickingPoint 2D integrity (cases 9-10)', () => {
+  // Case 9: causeOf elements ∈ CAUSE_VOCAB AND don't contradict primaryMuscle credit
+  it('every causeOf element is in CAUSE_VOCAB and shares a canon group with primaryMuscle', () => {
+    for (const ex of db.exercises) {
+      const causes = causeOf(ex)
+      if (causes.length === 0) continue
+      const credits = creditMuscles(ex.primaryMuscle)
+      for (const c of causes) {
+        expect(
+          CAUSE_VOCAB,
+          `${ex.name}: cause "${c}" not in CAUSE_VOCAB`,
+        ).toContain(c)
+        const possibleCanons = CAUSE_TO_CANONS[c] ?? new Set()
+        const intersection = [...possibleCanons].filter((can) => credits.has(can))
+        expect(
+          intersection.length,
+          `${ex.name}: cause "${c}" contradicts primaryMuscle "${ex.primaryMuscle}" — no shared canon group`,
+        ).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  // Case 10: main-lift non-none exercises: causeOf ⊆ POSITION_CAUSES[targetLift][stickingPoint]
+  it('main-lift non-none exercises have causeOf within valid POSITION_CAUSES', () => {
+    const mainLifts = ['squat', 'bench', 'deadlift']
+    for (const ex of db.exercises) {
+      if (!mainLifts.includes(ex.targetLift)) continue
+      if (!ex.stickingPoint || ex.stickingPoint === 'none') continue
+      const causes = causeOf(ex)
+      const valid = POSITION_CAUSES[ex.targetLift]?.[ex.stickingPoint] ?? []
+      for (const c of causes) {
+        expect(
+          valid,
+          `${ex.name}: cause "${c}" not in POSITION_CAUSES.${ex.targetLift}.${ex.stickingPoint} = [${valid}]`,
+        ).toContain(c)
+      }
+    }
   })
 })
 
