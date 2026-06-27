@@ -119,9 +119,14 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
     ctx.weekSets = {}
     for (const lift of Object.keys(slotCounts)) {
       const base = ctx.setsPerSession[lift] ?? 0
-      const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
-      const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
-      ctx.weekSets[lift] = Math.max(taperFloor, Math.min(Math.round(base * ramp), mrvCap, absCap))
+      // §3.3 Mode B guard: ctx.volumeOverridden undefined (direct-call tests) → falsy → current path.
+      if (ctx.volumeOverridden?.has(lift) && ctx.volumeMode === 'fixed') {
+        ctx.weekSets[lift] = Math.max(taperFloor, base)   // flat, caps released (warn-only via volumeWarnings)
+      } else {
+        const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
+        const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
+        ctx.weekSets[lift] = Math.max(taperFloor, Math.min(Math.round(base * ramp), mrvCap, absCap))
+      }
     }
     const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
     // per-lift quality schedule for this week + a consuming index

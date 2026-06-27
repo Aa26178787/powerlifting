@@ -66,7 +66,39 @@ const STEP = { 1:'기본', 2:'현재 1RM', 3:'경력', 4:'목표', 5:'주기화'
 const ASSESS = { weakLift:'약점 종목', level:'강도 수준', gl:'GL 점수', standard:'표준 대비' }
 
 const SCHEME = { straight:'스트레이트', topSetBackoff:'탑세트+백오프', topSingleBackoff:'탑싱글+백오프', ascendingPyramid:'어센딩 피라미드', reversePyramid:'역피라미드', wave:'웨이브(3-2-1)', amrapTop:'AMRAP·PR세트', ramping:'램핑(데일리맥스)', cluster:'클러스터', restPause:'레스트포즈', dropSet:'드롭세트', myoReps:'마이오렙', widowmaker:'위도우메이커(20회)', contrastPAP:'콘트라스트(PAP)', strengthHypertrophy:'근력+근비대' }
-const EVIDENCE = { rct:'검증', consensus:'근거 약함' }
+const EVIDENCE = { rct:'검증', consensus:'근거 약함', heuristic:'근거 약함' }
+
+// ── Volume override UI labels (§5.4, §6)
+export const VOL = {
+  title: '볼륨 직접 설정 (선택 — 비우면 자동)',
+  disclaimer: '직접 입력은 본인 책임. 경고는 차단이 아닌 안내입니다.',
+  mainEnable: '볼륨 직접 설정 사용',
+  mode_rampFromFloor: '시작주 기준(권장, 주기화 유지)',
+  mode_fixed: '고정(매주 동일)',
+  setsPerSession: '세션당',
+  weekly: '주간',
+  autoRecommend: '자동추천 채우기',
+  clearAuto: '지우기(자동)',
+  freqZeroHint: '빈도 0',
+  accessoryEnable: '보조 개수 직접 설정',
+  accessoryLabel: '세션당 보조 운동 수',
+  timeWarning: '시간 제한 설정 시 실제 보조 개수는 더 적을 수 있음',
+}
+
+export function volumeWarningLabel(code, values = {}) {
+  switch (code) {
+    case 'underMev':    return `시작주 주간 ${values.weekly ?? ''}세트 < MEV(${values.mev ?? ''})`
+    case 'overMrv':     return `피크주 주간 ${values.peakWeekly ?? ''}세트 > MRV(${values.mrv ?? ''})`
+    case 'overCap':     return '세션당 세트가 상한을 초과'
+    case 'taperDefeat': return '고정 볼륨이 대회 테이퍼를 무력화 — 시작주기준(ramp) 모드 권장'
+    case 'deadInfo':    return '데드리프트 직접 입력: 0.6× 감쇄 미적용 (입력값 literal)'
+    case 'freqZero':    return '종목 빈도=0이므로 볼륨 override가 적용되지 않음'
+    case 'regionTrim':  return 'regionStatus에 의해 일부 운동이 볼륨 감소 가능'
+    case 'accZero':     return '보조 운동 없음 (accessory=0)'
+    case 'accHigh':     return `세션당 보조 ${values.count ?? ''}개 > 권장 상한(5)`
+    default:            return code
+  }
+}
 const PHASE = { accumulation:'축적', intensification:'강화', peak:'피킹' }
 // 스티킹포인트 원인(제한 근육) 라벨
 const CAUSE = {

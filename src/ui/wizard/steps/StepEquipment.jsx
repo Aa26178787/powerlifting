@@ -1,12 +1,23 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { regionLabel, statusLabel } from '../../i18n.js'
+import { regionLabel, statusLabel, VOL } from '../../i18n.js'
+import { volumeWarnings } from '../../../engine/volumeOverride.js'
+import VolumeWarnings from '../../components/VolumeWarnings.jsx'
 
 export default function StepEquipment() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
   const setRegionStatus = useProfileStore((s) => s.setRegionStatus)
   const setFrequency = useProfileStore((s) => s.setFrequency)
+  const setVolumeOverrideEnabled = useProfileStore((s) => s.setVolumeOverrideEnabled)
+  const setMainVolumeMode = useProfileStore((s) => s.setMainVolumeMode)
+  const setMainSetsPerSession = useProfileStore((s) => s.setMainSetsPerSession)
+  const setAccessorySetsPerSession = useProfileStore((s) => s.setAccessorySetsPerSession)
+  const applyVolumeRecommendation = useProfileStore((s) => s.applyVolumeRecommendation)
+  const clearVolumeOverride = useProfileStore((s) => s.clearVolumeOverride)
+
+  const ov = p.volumeOverride
+  const warnings = volumeWarnings(p)
 
   return (
     <div>
@@ -46,6 +57,136 @@ export default function StepEquipment() {
           </label>
         ))}
       </fieldset>
+
+      <details className="volume-advanced">
+        <summary>{VOL.title}</summary>
+        <p style={{ fontSize: '0.9em', color: '#888' }}>{VOL.disclaimer}</p>
+
+        <label>
+          <input
+            type="checkbox"
+            checked={ov.main.enabled}
+            onChange={(e) => setVolumeOverrideEnabled('main', e.target.checked)}
+          />
+          {' '}{VOL.mainEnable}
+        </label>
+
+        {ov.main.enabled && (
+          <div>
+            <div role="radiogroup" aria-label="볼륨 모드">
+              <label>
+                <input
+                  type="radio"
+                  name="volumeMode"
+                  value="rampFromFloor"
+                  checked={ov.main.mode === 'rampFromFloor'}
+                  onChange={() => setMainVolumeMode('rampFromFloor')}
+                />
+                {' '}{VOL.mode_rampFromFloor}
+              </label>
+              {' '}
+              <label>
+                <input
+                  type="radio"
+                  name="volumeMode"
+                  value="fixed"
+                  checked={ov.main.mode === 'fixed'}
+                  onChange={() => setMainVolumeMode('fixed')}
+                />
+                {' '}{VOL.mode_fixed}
+              </label>
+            </div>
+
+            {[['squat', '스쿼트'], ['bench', '벤치'], ['deadlift', '데드리프트']].map(([lift, ko]) => {
+              const freq = p.frequency[lift] ?? 0
+              const sps = ov.main.setsPerSession[lift]
+              const weekly = sps != null && freq > 0 ? sps * freq : null
+              return (
+                <div key={lift} style={{ display: 'flex', alignItems: 'center', gap: '0.5em', margin: '0.25em 0' }}>
+                  <label style={{ minWidth: '6em' }}>{ko} {VOL.setsPerSession}
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={sps ?? ''}
+                      disabled={freq === 0}
+                      aria-label={`${ko} ${VOL.setsPerSession}`}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10)
+                        setMainSetsPerSession(lift, Number.isNaN(n) ? null : n)
+                      }}
+                      onBlur={(e) => {
+                        const n = parseInt(e.target.value, 10)
+                        if (!Number.isNaN(n)) setMainSetsPerSession(lift, n)
+                      }}
+                      style={{ width: '4em', marginLeft: '0.3em' }}
+                    />
+                  </label>
+                  {freq > 0
+                    ? <span aria-label={`${ko} 주간 세트`}>× {freq} = {weekly ?? '—'} {VOL.weekly}</span>
+                    : <span style={{ color: '#aaa' }}>({VOL.freqZeroHint})</span>
+                  }
+                  {freq > 0 && (
+                    <label style={{ marginLeft: '0.5em' }}>{VOL.weekly} 직접입력
+                      <input
+                        type="number"
+                        min="1"
+                        max={12 * freq}
+                        value={weekly ?? ''}
+                        disabled={freq === 0}
+                        aria-label={`${ko} 주간 직접입력`}
+                        onChange={(e) => {
+                          const n = parseInt(e.target.value, 10)
+                          if (!Number.isNaN(n) && freq > 0) setMainSetsPerSession(lift, Math.round(n / freq))
+                        }}
+                        style={{ width: '4em', marginLeft: '0.3em' }}
+                      />
+                    </label>
+                  )}
+                </div>
+              )
+            })}
+
+            <label>
+              <input
+                type="checkbox"
+                checked={ov.accessory.enabled}
+                onChange={(e) => setVolumeOverrideEnabled('accessory', e.target.checked)}
+              />
+              {' '}{VOL.accessoryEnable}
+            </label>
+
+            {ov.accessory.enabled && (
+              <label style={{ marginLeft: '1em' }}>{VOL.accessoryLabel}
+                <input
+                  type="number"
+                  min="0"
+                  max="8"
+                  value={ov.accessory.setsPerSession ?? ''}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10)
+                    setAccessorySetsPerSession(Number.isNaN(n) ? null : n)
+                  }}
+                  style={{ width: '4em', marginLeft: '0.3em' }}
+                />
+              </label>
+            )}
+            <p style={{ fontSize: '0.85em', color: '#888', margin: '0.25em 0' }}>{VOL.timeWarning}</p>
+          </div>
+        )}
+
+        <div style={{ margin: '0.5em 0' }}>
+          <button type="button" onClick={applyVolumeRecommendation}>
+            {VOL.autoRecommend}
+          </button>
+          {' '}
+          <button type="button" onClick={clearVolumeOverride}>
+            {VOL.clearAuto}
+          </button>
+        </div>
+
+        <VolumeWarnings list={warnings} />
+      </details>
 
       <fieldset>
         <legend>부위 상태 (0 정상 ~ 3 심한 통증/부상)</legend>
