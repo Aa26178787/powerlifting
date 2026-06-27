@@ -68,6 +68,17 @@ const ASSESS = { weakLift:'약점 종목', level:'강도 수준', gl:'GL 점수'
 const SCHEME = { straight:'스트레이트', topSetBackoff:'탑세트+백오프', topSingleBackoff:'탑싱글+백오프', ascendingPyramid:'어센딩 피라미드', reversePyramid:'역피라미드', wave:'웨이브(3-2-1)', amrapTop:'AMRAP·PR세트', ramping:'램핑(데일리맥스)', cluster:'클러스터', restPause:'레스트포즈', dropSet:'드롭세트', myoReps:'마이오렙', widowmaker:'위도우메이커(20회)', contrastPAP:'콘트라스트(PAP)', strengthHypertrophy:'근력+근비대' }
 const EVIDENCE = { rct:'검증', consensus:'근거 약함' }
 const PHASE = { accumulation:'축적', intensification:'강화', peak:'피킹' }
+// 스티킹포인트 원인(제한 근육) 라벨
+const CAUSE = {
+  quads:   '대퇴사두(무릎 폄)',
+  hip:     '고관절·둔근(엉덩이 폄)',
+  back:    '척추기립근·상부등(상체 각도)',
+  chest:   '가슴(대흉근)',
+  shoulder:'어깨(전면 삼각근)',
+  triceps: '삼두(락아웃)',
+  lats:    '광배(바 붙이기)',
+}
+
 // 모터 큐(느낌) 약점 → 교정 변형
 const CUE = {
   floorDrive: '지면 미는 힘', upright: '상체 세우기', hipShoot: '힙 슈팅(엉덩이 먼저 솟음)', balance: '무게중심·균형',
@@ -86,7 +97,9 @@ export const styleLabel = (group, v) => (STYLE[group] && STYLE[group][v]) ?? v
 export const qualityLabel = (k) => QUALITY[k] ?? k
 export const presetLabel = (k) => PRESET[k] ?? k
 export const modelLabel = (k) => MODEL[k] ?? k
-export const stickingLabel = (k) => STICKING[k] ?? k
+export const stickingLabel = (k, lift) =>
+  (lift === 'deadlift' && k === 'bottom') ? '바닥에서 떼기 (off-floor)' : (STICKING[k] ?? k)
+export const causeLabel = (k) => CAUSE[k] ?? k
 export const stepLabel = (n) => STEP[n] ?? String(n)
 export const assessLabel = (k) => ASSESS[k] ?? k
 export const schemeLabel = (k) => SCHEME[k] ?? k

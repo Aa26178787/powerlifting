@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { presetBlend } from '../../engine/quality.js'
+import { POSITION_CAUSES } from '../../engine/stickingPoint.js'
 
 export const DEFAULT_PROFILE = {
   lifts: {
@@ -20,6 +21,7 @@ export const DEFAULT_PROFILE = {
   equipment: ['barbell', 'rack', 'bench'],
   style: { squat: { bar: 'low', stance: 'medium' }, bench: { grip: 'medium' }, deadlift: { stance: 'conventional' } },
   stickingPoint: { squat: 'none', bench: 'none', deadlift: 'none' },
+  stickingCause: { squat: null, bench: null, deadlift: null },
   regionStatus: { lowerBack: 0, knee: 0, shoulder: 0, elbow: 0, wrist: 0, hip: 0, hamstring: 0, pec: 0, ankle: 0, bicepsTendon: 0 },
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.4, endurance: 0.1 },
   periodizationModel: 'adaptive',
@@ -63,7 +65,19 @@ export const useProfileStore = create(
       setStyle: (lift, patch) =>
         set((s) => ({ profile: { ...s.profile, style: { ...s.profile.style, [lift]: { ...s.profile.style[lift], ...patch } } } })),
       setStickingPoint: (lift, value) =>
-        set((s) => ({ profile: { ...s.profile, stickingPoint: { ...s.profile.stickingPoint, [lift]: value } } })),
+        set((s) => {
+          const valid = POSITION_CAUSES[lift]?.[value] ?? []
+          const cur = s.profile.stickingCause[lift]
+          return {
+            profile: {
+              ...s.profile,
+              stickingPoint: { ...s.profile.stickingPoint, [lift]: value },
+              stickingCause: { ...s.profile.stickingCause, [lift]: valid.includes(cur) ? cur : null },
+            },
+          }
+        }),
+      setStickingCause: (lift, value) =>
+        set((s) => ({ profile: { ...s.profile, stickingCause: { ...s.profile.stickingCause, [lift]: value } } })),
       setFrequency: (lift, value) =>
         set((s) => ({ profile: { ...s.profile, frequency: { ...s.profile.frequency, [lift]: value } } })),
       setRegionStatus: (region, value) =>
@@ -126,6 +140,7 @@ export const useProfileStore = create(
             competition: { ...current.profile.competition, ...(p.competition || {}) },
             style: { ...current.profile.style, ...(p.style || {}) },
             stickingPoint: { ...current.profile.stickingPoint, ...(p.stickingPoint || {}) },
+            stickingCause: { ...current.profile.stickingCause, ...(p.stickingCause || {}) },
             frequency: { ...current.profile.frequency, ...(p.frequency || {}) },
             regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
             qualities: { ...current.profile.qualities, ...(p.qualities || {}) },

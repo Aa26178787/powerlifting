@@ -229,3 +229,67 @@ describe('checkinLog', () => {
     expect(useProfileStore.getState().checkinLog).toEqual([])
   })
 })
+
+describe('stickingCause (spec §4.1 case 11)', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('defaults stickingCause to nulls for all lifts', () => {
+    expect(useProfileStore.getState().profile.stickingCause).toEqual({ squat: null, bench: null, deadlift: null })
+  })
+
+  it('setStickingCause updates the cause for a lift', () => {
+    useProfileStore.getState().setStickingCause('squat', 'quads')
+    expect(useProfileStore.getState().profile.stickingCause.squat).toBe('quads')
+  })
+
+  it('setStickingPoint resets a now-invalid cause to null', () => {
+    // Set position to bottom (valid causes: quads, hip for squat)
+    useProfileStore.getState().setStickingPoint('squat', 'bottom')
+    useProfileStore.getState().setStickingCause('squat', 'quads')
+    expect(useProfileStore.getState().profile.stickingCause.squat).toBe('quads')
+
+    // Change to lockout (valid causes: hip, back — quads is now invalid)
+    useProfileStore.getState().setStickingPoint('squat', 'lockout')
+    expect(useProfileStore.getState().profile.stickingCause.squat).toBeNull()
+  })
+
+  it('setStickingPoint keeps a still-valid cause when position changes', () => {
+    // bottom → ['quads','hip'], midrange → ['quads','hip','back']
+    useProfileStore.getState().setStickingPoint('squat', 'bottom')
+    useProfileStore.getState().setStickingCause('squat', 'hip')
+    // hip is still valid in midrange
+    useProfileStore.getState().setStickingPoint('squat', 'midrange')
+    expect(useProfileStore.getState().profile.stickingCause.squat).toBe('hip')
+  })
+
+  it('setStickingPoint to none resets cause (no valid causes for none)', () => {
+    useProfileStore.getState().setStickingPoint('bench', 'lockout')
+    useProfileStore.getState().setStickingCause('bench', 'triceps')
+    useProfileStore.getState().setStickingPoint('bench', 'none')
+    expect(useProfileStore.getState().profile.stickingCause.bench).toBeNull()
+  })
+
+  it('merge injects stickingCause default into an old profile lacking it', async () => {
+    localStorage.clear()
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+          stickingPoint: { squat: 'bottom', bench: 'none', deadlift: 'none' },
+          // stickingCause intentionally absent (old profile)
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    // stickingCause should be filled with defaults (all null)
+    expect(p.stickingCause).toEqual({ squat: null, bench: null, deadlift: null })
+    // existing user data preserved
+    expect(p.stickingPoint.squat).toBe('bottom')
+    expect(p.lifts.squat.oneRM).toBe(100)
+  })
+})
