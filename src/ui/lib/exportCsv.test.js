@@ -83,4 +83,124 @@ describe('planToCsv', () => {
     expect(lines.length).toBe(3) // header + 2 accessory sets
     expect(lines[1]).toBe('1,아니오,1,레그 프레스,근비대,1,체감,10,8,')
   })
+  it('escapes notes containing commas', () => {
+    const withComma = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [
+          {
+            lift: 'squat', sets: 1, reps: [2, 5], repAnchor: 3, quality: 'strength',
+            pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+            scheme: {
+              type: 'topSetBackoff',
+              evidenceTier: 'consensus',
+              sets: [{ weight: 162.5, reps: 3, rpe: 9, note: 'pause, 3s hold' }],
+            },
+          },
+        ], accessories: [] },
+      ] }],
+    }
+    const csv = planToCsv(withComma)
+    const lines = csv.trim().split('\n')
+    expect(lines[1]).toBe('1,아니오,1,스쿼트,근력,1,162.5,3,9,"pause, 3s hold"')
+    // Verify columns don't break: split should have 10 fields when parsing as CSV properly
+    const csvParse = (line) => {
+      const result = []
+      let current = '', inQuotes = false
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i]
+        if (c === '"' && line[i+1] === '"') { current += '"'; i++; }
+        else if (c === '"') { inQuotes = !inQuotes }
+        else if (c === ',' && !inQuotes) { result.push(current); current = '' }
+        else { current += c }
+      }
+      result.push(current)
+      return result
+    }
+    expect(csvParse(lines[1]).length).toBe(10)
+  })
+  it('escapes fields with double-quotes', () => {
+    const withQuote = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [
+          {
+            lift: 'squat', sets: 1, reps: [2, 5], repAnchor: 3, quality: 'strength',
+            pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+            scheme: {
+              type: 'topSetBackoff',
+              evidenceTier: 'consensus',
+              sets: [{ weight: 162.5, reps: 3, rpe: 9, note: 'PR "personal record"' }],
+            },
+          },
+        ], accessories: [] },
+      ] }],
+    }
+    const csv = planToCsv(withQuote)
+    const lines = csv.trim().split('\n')
+    expect(lines[1]).toBe('1,아니오,1,스쿼트,근력,1,162.5,3,9,"PR ""personal record"""')
+  })
+  it('prevents formula injection with = prefix', () => {
+    const withFormula = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [
+          {
+            lift: 'squat', sets: 1, reps: [2, 5], repAnchor: 3, quality: 'strength',
+            pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+            scheme: {
+              type: 'topSetBackoff',
+              evidenceTier: 'consensus',
+              sets: [{ weight: 162.5, reps: 3, rpe: 9, note: '=1+1' }],
+            },
+          },
+        ], accessories: [] },
+      ] }],
+    }
+    const csv = planToCsv(withFormula)
+    const lines = csv.trim().split('\n')
+    expect(lines[1]).toBe("1,아니오,1,스쿼트,근력,1,162.5,3,9,'=1+1")
+  })
+  it('prevents formula injection with + prefix', () => {
+    const withPlus = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [
+          {
+            lift: 'squat', sets: 1, reps: [2, 5], repAnchor: 3, quality: 'strength',
+            pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+            scheme: {
+              type: 'topSetBackoff',
+              evidenceTier: 'consensus',
+              sets: [{ weight: 162.5, reps: 3, rpe: 9, note: '+1+1' }],
+            },
+          },
+        ], accessories: [] },
+      ] }],
+    }
+    const csv = planToCsv(withPlus)
+    const lines = csv.trim().split('\n')
+    expect(lines[1]).toBe("1,아니오,1,스쿼트,근력,1,162.5,3,9,'+1+1")
+  })
+  it('handles rpe: null correctly', () => {
+    const withNullRpe = {
+      template: 'dup',
+      weeks: [{ index: 1, isDeload: false, sessions: [
+        { day: 1, exercises: [
+          {
+            lift: 'squat', sets: 1, reps: [2, 5], repAnchor: 3, quality: 'strength',
+            pct: 87, rpeTarget: 9, weight: 162.5, autoregulate: true,
+            scheme: {
+              type: 'topSetBackoff',
+              evidenceTier: 'consensus',
+              sets: [{ weight: 162.5, reps: 3, rpe: null }],
+            },
+          },
+        ], accessories: [] },
+      ] }],
+    }
+    const csv = planToCsv(withNullRpe)
+    const lines = csv.trim().split('\n')
+    expect(lines[1]).toBe('1,아니오,1,스쿼트,근력,1,162.5,3,,')
+  })
 })
