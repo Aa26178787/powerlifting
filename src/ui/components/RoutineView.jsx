@@ -32,7 +32,7 @@ function ExerciseRow({ ex, units }) {
               {scheme.sets.map((s, i) => (
                 <tr key={i}>
                   <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
-                  <td className="num">{toDisplay(s.weight, units)}{unitLabel(units)}</td>
+                  <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
                   <td className="num">{s.reps}</td>
                   <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
                   <td>{s.note ?? ''}</td>
@@ -92,11 +92,11 @@ export default function RoutineView({ plan }) {
     <section className="routine-view">
       <h2>프로그램: {templateLabel(plan.template)}</h2>
       {over.flag && (
-        <div className="overreaching-banner">⚠️ {over.reason} · 디로드를 고려하세요</div>
+        <div className="overreaching-banner" role="alert">경고: ⚠️ {over.reason} · 디로드를 고려하세요</div>
       )}
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
-          <h3>{wk.index}주차{wk.isDeload ? ' (디로드)' : ''}</h3>
+          <h3>{wk.index}주차</h3>
           {wk.sessions.map((s) => {
             const key = `${wk.index}-${s.day}`
             const view = adjusted[key]?.session ?? s

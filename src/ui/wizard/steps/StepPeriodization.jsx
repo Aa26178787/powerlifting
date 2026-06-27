@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
 import { normalizeBlend, QUALITIES } from '../../../engine/quality.js'
 import { qualityLabel } from '../../i18n.js'
@@ -6,6 +6,7 @@ import { qualityLabel } from '../../i18n.js'
 export default function StepPeriodization() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
+  const [mesoRaw, setMesoRaw] = useState(String(p.mesoWeeks))
 
   const n = normalizeBlend(p.qualities)
   const dominant = QUALITIES.reduce((best, q) => (n[q] > n[best] ? q : best), QUALITIES[0])
@@ -28,8 +29,13 @@ export default function StepPeriodization() {
           type="number"
           min={3}
           max={8}
-          value={p.mesoWeeks}
-          onChange={(e) => setField('mesoWeeks', Math.max(3, Math.min(8, Number(e.target.value) || 4)))}
+          value={mesoRaw}
+          onChange={(e) => setMesoRaw(e.target.value)}
+          onBlur={(e) => {
+            const clamped = Math.max(3, Math.min(8, Number(e.target.value) || 4))
+            setMesoRaw(String(clamped))
+            setField('mesoWeeks', clamped)
+          }}
         />
       </label>
       <label>

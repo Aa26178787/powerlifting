@@ -7,6 +7,7 @@ export default function StrengthAssessment({ oneRMs, bodyweight, sex }) {
   if (!a) return <p className="assess-placeholder">1RM과 체중을 입력하면 강도 진단이 표시됩니다.</p>
   return (
     <div className="assessment">
+      {sex === '' && <p className="assess-sex-note">남성 기준 (성별 미입력)</p>}
       <p>{assessLabel('level')}: <strong>{a.level}</strong> · {assessLabel('gl')}: <strong>{a.glPoints}</strong></p>
       <ul>
         {['squat', 'bench', 'deadlift'].map((l) => (

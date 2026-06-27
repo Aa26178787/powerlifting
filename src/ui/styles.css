@@ -80,10 +80,10 @@ label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { display:
 .ex-lift { font-weight:600; font-size:var(--f2); }
 .acc-name { font-weight:600; }
 .badge { font-size:var(--f0); padding:1px var(--s2); border-radius:999px; background:var(--accent-weak); color:var(--accent); white-space:nowrap; }
-.badge.q[data-quality="strength"] { background:#eaf1fe; color:var(--q-strength); }
-.badge.q[data-quality="power"] { background:#f0ecff; color:var(--q-power); }
-.badge.q[data-quality="hypertrophy"] { background:#e7f6ee; color:var(--q-hypertrophy); }
-.badge.q[data-quality="endurance"] { background:#fdf1df; color:var(--q-endurance); }
+.badge.q[data-quality="strength"] { background:#eaf1fe; color:#1a4eb8; }
+.badge.q[data-quality="power"] { background:#f0ecff; color:#5a3dd4; }
+.badge.q[data-quality="hypertrophy"] { background:#e7f6ee; color:#166f4a; }
+.badge.q[data-quality="endurance"] { background:#fdf1df; color:#9a5a00; }
 .badge.scheme { background:#eef1f5; color:var(--text-muted); }
 .tag.evidence { font-size:var(--f0); color:var(--text-muted); }
 .ex-autoregulate, .acc-feel { font-size:var(--f0); color:var(--text-muted); }

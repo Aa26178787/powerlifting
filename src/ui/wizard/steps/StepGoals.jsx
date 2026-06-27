@@ -15,6 +15,7 @@ export default function StepGoals() {
         ))}
         <button type="button" className="chip" onClick={applyRec}>추천 적용</button>
       </div>
+      <p className="goals-normalize-note">상대 비중으로 자동 정규화됩니다</p>
       {['power','strength','hypertrophy','endurance'].map((q) => (
         <label key={q} className="blend-row">
           <span className="blend-name">{qualityLabel(q)}</span>

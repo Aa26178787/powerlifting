@@ -25,7 +25,7 @@ const minimalSession = {
 }
 
 describe('CheckinPanel', () => {
-  it('calls onApply with readiness in [0,1] and adjusted.exercises array, then shows % badge', async () => {
+  it('calls onApply with readiness in [0,1] and adjusted.exercises array', async () => {
     const onApply = vi.fn()
     render(<CheckinPanel session={minimalSession} weekIndex={1} onApply={onApply} />)
 
@@ -38,7 +38,13 @@ describe('CheckinPanel', () => {
     expect(arg.readiness).toBeGreaterThanOrEqual(0)
     expect(arg.readiness).toBeLessThanOrEqual(1)
     expect(Array.isArray(arg.adjusted.exercises)).toBe(true)
+  })
 
-    expect(screen.getByText(/%/)).toBeInTheDocument()
+  it('does not render a readiness badge internally (badge lives in RoutineView)', async () => {
+    const onApply = vi.fn()
+    render(<CheckinPanel session={minimalSession} weekIndex={1} onApply={onApply} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '컨디션 반영' }))
+    expect(document.querySelector('.readiness-badge')).toBeNull()
   })
 })
