@@ -19,6 +19,20 @@ function accessoryQuality(ex) {
   return /core|ab|oblique/i.test(ex.primaryMuscle ?? '') ? 'endurance' : 'hypertrophy'
 }
 
+// Deficit-fill suppression curve for peaking plans.
+// Non-peaking always returns 1 (bit-for-bit identical to pre-peak behaviour).
+// Peaking: taper deficit-fill as the meet nears — accumulation keeps full fill,
+// intensification halves it, peak blocks it entirely (prevents accessories from
+// back-filling intentionally reduced main-lift volume, which would reverse the taper).
+// Direction is consensus (Issurin 2010; Mujika & Padilla 2003); exact multipliers
+// (1.0 / 0.5 / 0.0) are heuristics.
+function deficitPhaseScale(phase, peaking) {
+  if (!peaking) return 1
+  if (phase === 'accumulation')    return 1.0
+  if (phase === 'intensification') return 0.5
+  return 0.0 // peak — block deficit-fill entirely
+}
+
 function withAccessoryScheme(accessories, { weekIndex, advanced, phase, isDeload }) {
   return accessories.map((a, i) => {
     const quality = accessoryQuality(a)
@@ -100,11 +114,18 @@ export function generate(profile) {
   // Blend classification is constant for the whole plan — compute once.
   const { dom } = classifyBlend(blend)
   const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
-  // Deficit-fill weight: gated to 0 for strength/power (SBD specificity protection).
+  // Deficit-fill base weight: gated to 0 for strength/power (SBD specificity protection).
   // Overflow guard (isOverMrv) is always active regardless of gate.
-  const gatedWeight = (dom === 'strength' || dom === 'power') ? 0 : 0.6
+  // During peaking the effective weight is further scaled by deficitPhaseScale() per-week.
+  const baseDeficit = (dom === 'strength' || dom === 'power') ? 0 : 0.6
 
   const weeks = allWeeks.map((wk) => {
+    // Hoist phase and per-week deficit weight once — shared by all three consumers
+    // (sharedCap peak taper, select deficitWeight, withAccessoryScheme) so we have
+    // a single source of truth per week.
+    const phase = phaseFor(wk.index - 1, mesoWeeks, peaking)
+    const weekDeficitWeight = baseDeficit * deficitPhaseScale(phase, peaking)
+
     // ── Phase 1: collect kept exercises per session (deterministic main lifts) ──
     const sessionData = wk.sessions.map((s) => {
       const notes = []
@@ -149,16 +170,22 @@ export function generate(profile) {
 
       // Shared session cap (mirrors select's internal formula; derived once so the
       // budget is split across lifts rather than multiplied per lift).
+      // minCap hoisted before both branches so the peak taper can use it as a floor.
+      const minCap = goalBias < 0 ? 2 : 1
       let sharedCap
       if (profile.sessionTimeLimit != null) {
         const remaining = profile.sessionTimeLimit - mainTimeMin - 10
         const baseCap = Math.min(4, Math.max(1, Math.floor(remaining / 10)))
-        const minCap = goalBias < 0 ? 2 : 1
         sharedCap = Math.min(5, Math.max(minCap, baseCap + goalBias))
       } else {
-        const minCap = goalBias < 0 ? 2 : 1
         sharedCap = Math.min(5, Math.max(minCap, 3 + goalBias))
       }
+      // Peak accessory-count taper (Change B): trim one slot in peak weeks to reduce
+      // accessory fatigue alongside the main-lift volume taper. Floor = minCap (not 1)
+      // so pure PL pickers (minCap=2, already at floor) are bit-identical.
+      // !wk.isDeload guard: deload weeks already halve sets independently (deload.js:8);
+      // stacking a count cut would double-reduce — skip it.
+      if (peaking && phase === 'peak' && !wk.isDeload) sharedCap = Math.max(minCap, sharedCap - 1)
 
       // Run select for EACH distinct main lift; distribute the shared cap evenly
       // (primary gets any remainder slots), dedup by name.
@@ -183,7 +210,7 @@ export function generate(profile) {
           maxCount: liftCap,
           muscleLedger: steeringLedger,
           muscleBands: PER_MUSCLE_BANDS,
-          deficitWeight: gatedWeight,
+          deficitWeight: weekDeficitWeight,
         })
         for (const acc of liftAcc) {
           if (!seenAccNames.has(acc.name)) {
@@ -203,7 +230,7 @@ export function generate(profile) {
       const accessories = withAccessoryScheme(allRaw, {
         weekIndex: wk.index - 1,
         advanced,
-        phase: phaseFor(wk.index - 1, mesoWeeks, peaking),
+        phase,
         isDeload: wk.isDeload,
       })
       return { ...s, exercises: kept, accessories, notes }

@@ -74,4 +74,17 @@ describe('LimitsPanel disclosures', () => {
       })
     ).toBeInTheDocument()
   })
+  it('discloses peaking×ledger interaction: phase-scaled deficit-fill and count taper are heuristic', () => {
+    render(<LimitsPanel />)
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName === 'LI' &&
+          /피킹.*플랜에서/.test(element.textContent) &&
+          /피크.*차단/.test(element.textContent) &&
+          /휴리스틱/.test(element.textContent)
+        )
+      })
+    ).toBeInTheDocument()
+  })
 })
