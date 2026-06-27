@@ -30,7 +30,7 @@ export function select({ lift, style, stickingPoint, equipmentAvailable, session
     const matched = Object.entries(weights)
       .filter(([muscle]) => e.primaryMuscle.includes(muscle))
       .map(([, w]) => w)
-    let s = matched.length ? Math.max(...matched) : 1.0
+    let s = matched.length ? Math.max(...matched) : 0.5
     if (stickingPoint && stickingPoint !== 'none' && e.stickingPoint === stickingPoint) s += 0.5
     s += prefBonus(movementTypeOf(e), accessoryPreference)
     return s

@@ -11,7 +11,7 @@ const EMPHASIS = {
   'deadlift:sumo': { quads: 1.3, glutes: 1.2, adductors: 1.2, hamstrings: 0.9 },
   'bench:close': { triceps: 1.4, chest: 0.9 },
   'bench:wide': { chest: 1.3, triceps: 0.9 },
-  'bench:medium': {},
+  'bench:medium': { chest: 1.1, triceps: 1.1, shoulders: 1.0 },
 }
 
 export function compVariant(lift, style) {

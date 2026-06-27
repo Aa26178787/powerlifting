@@ -27,4 +27,11 @@ describe('emphasis', () => {
   it('close-grip bench biases triceps', () => {
     expect(emphasis('bench', { grip: 'close' }).triceps).toBeGreaterThan(1)
   })
+  it('medium bench grip returns non-empty emphasis with baseline muscle weights', () => {
+    const e = emphasis('bench', { grip: 'medium' })
+    expect(Object.keys(e).length).toBeGreaterThan(0)
+    expect(e.chest).toBeCloseTo(1.1)
+    expect(e.triceps).toBeCloseTo(1.1)
+    expect(e.shoulders).toBeCloseTo(1.0)
+  })
 })

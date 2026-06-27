@@ -2,7 +2,7 @@ import { slotTypeForRole } from './templates.js'
 import { compVariant } from './style.js'
 import { pick } from './variations.js'
 import { volumeScale } from './regionStatus.js'
-import { byName } from './exercises.js'
+import { byName, equipmentSatisfies } from './exercises.js'
 import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './quality.js'
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
@@ -11,14 +11,23 @@ import { volumeRamp } from './volume.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
+/** Returns true when a named exercise is equipment-feasible and advanced-appropriate for ctx. */
+function feasible(name, ctx) {
+  const ex = byName(name)
+  if (!ex) return false
+  if (!equipmentSatisfies(ex.equipment, ctx.equipment)) return false
+  if (!ctx.advanced && ex.advanced) return false
+  return true
+}
+
 function resolveName(slot, ctx) {
   if (slotTypeForRole(slot.role) === 'comp') return compVariant(slot.lift, ctx.style[slot.lift])
   const excluded = ctx.excludedExercises ?? []
   const override = ctx.variationOverride?.[slot.lift]
-  if (override && byName(override) && !excluded.includes(override)) return override
+  if (override && !excluded.includes(override) && feasible(override, ctx)) return override
   // A motor-cue deficit prescribes its teaching variation (unless overridden/excluded).
   const cue = cueVariation(slot.lift, ctx.cueNeed?.[slot.lift])
-  if (cue && byName(cue) && !excluded.includes(cue)) return cue
+  if (cue && !excluded.includes(cue) && feasible(cue, ctx)) return cue
   const v = pick(slot.lift, ctx.stickingPoint[slot.lift], ctx.style[slot.lift], ctx.equipment, ctx.advanced, excluded)
   return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
 }
