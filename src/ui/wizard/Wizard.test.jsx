@@ -47,4 +47,10 @@ describe('Wizard', () => {
     const btn = screen.getByRole('button', { name: /다음/ })
     expect(btn.getAttribute('aria-describedby')).toBe('lifts-hint')
   })
+
+  it('step h2 has tabIndex=-1 for programmatic focus', () => {
+    render(<Wizard onComplete={() => {}} />)
+    const h2 = screen.getByRole('heading', { level: 2 })
+    expect(h2.getAttribute('tabindex')).toBe('-1')
+  })
 })

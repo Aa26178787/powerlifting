@@ -104,19 +104,22 @@ export default function RoutineView({ plan }) {
             return (
               <div key={s.day} className="session">
                 <h4>{s.day}일차</h4>
-                <CheckinPanel
-                  session={s}
-                  weekIndex={wk.index}
-                  profile={profile}
-                  overreaching={over.flag}
-                  onApply={(r) => {
-                    setAdjusted((m) => ({
-                      ...m,
-                      [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
-                    }))
-                    logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
-                  }}
-                />
+                <details>
+                  <summary>오늘 컨디션 반영</summary>
+                  <CheckinPanel
+                    session={s}
+                    weekIndex={wk.index}
+                    profile={profile}
+                    overreaching={over.flag}
+                    onApply={(r) => {
+                      setAdjusted((m) => ({
+                        ...m,
+                        [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
+                      }))
+                      logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
+                    }}
+                  />
+                </details>
                 {adjusted[key] && (
                   <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
                 )}

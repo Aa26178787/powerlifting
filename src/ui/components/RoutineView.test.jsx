@@ -159,4 +159,17 @@ describe('RoutineView', () => {
     expect(badges.length).toBe(1)
     expect(badges[0].textContent).toMatch(/%/)
   })
+
+  it('CheckinPanel is wrapped in a <details> element (collapsed by default)', () => {
+    const { container } = render(<RoutineView plan={plan} />)
+    const details = container.querySelector('details')
+    expect(details).toBeTruthy()
+    // no `open` attribute — collapsed by default
+    expect(details.hasAttribute('open')).toBe(false)
+    // summary text is visible
+    expect(details.querySelector('summary')).toBeTruthy()
+    expect(details.querySelector('summary').textContent).toMatch(/컨디션 반영/)
+    // CheckinPanel lives inside the details
+    expect(details.querySelector('.checkin-panel')).toBeTruthy()
+  })
 })

@@ -20,10 +20,10 @@ export default function StepBasics() {
         </select>
       </label>
       <label>체중 ({unitLabel(u)})
-        <input type="number" value={p.bodyweight == null ? '' : toDisplay(p.bodyweight, u, false)} onChange={(e) => setField('bodyweight', fromInput(e.target.value, u))} />
+        <input type="number" min="0" max="400" value={p.bodyweight == null ? '' : toDisplay(p.bodyweight, u, false)} onChange={(e) => setField('bodyweight', fromInput(e.target.value, u))} />
       </label>
       <label>나이
-        <input type="number" value={p.age ?? ''} onChange={(e) => setField('age', numOrNull(e.target.value))} />
+        <input type="number" min="0" max="100" value={p.age ?? ''} onChange={(e) => setField('age', numOrNull(e.target.value))} />
       </label>
     </div>
   )

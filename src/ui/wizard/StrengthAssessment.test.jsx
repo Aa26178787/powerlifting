@@ -24,4 +24,22 @@ describe('StrengthAssessment', () => {
     render(<StrengthAssessment oneRMs={{ squat: 200, bench: 120, deadlift: 240 }} bodyweight={90} sex="M" />)
     expect(screen.queryByText(/성별 미입력/)).toBeNull()
   })
+
+  it('shows bodyweight-specific message when bodyweight is missing', () => {
+    render(<StrengthAssessment oneRMs={{ squat: 0, bench: 0, deadlift: 0 }} bodyweight={null} sex="M" />)
+    expect(screen.getByText(/체중을 입력하면/)).toBeInTheDocument()
+  })
+
+  it('shows partial % for entered lifts when some 1RMs are present but not all', () => {
+    const { container } = render(<StrengthAssessment oneRMs={{ squat: 200, bench: 120, deadlift: 0 }} bodyweight={90} sex="M" />)
+    // Entered lifts show their relative % vs elite standard
+    expect(screen.getByText(/스쿼트/)).toBeInTheDocument()
+    expect(screen.getByText(/벤치/)).toBeInTheDocument()
+    // Full assessment summary paragraph (level + GL points) should NOT appear
+    expect(container.querySelector('.assessment p:not(.assess-placeholder):not(.assess-sex-note)')).toBeNull()
+    // Weak lift badge should not appear
+    expect(screen.queryByText(/약점 종목/)).toBeNull()
+    // Prompt to enter all lifts
+    expect(screen.getByText(/모든 종목을 입력하면/)).toBeInTheDocument()
+  })
 })

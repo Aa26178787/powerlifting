@@ -31,4 +31,9 @@ describe('LimitsPanel disclosures', () => {
     render(<LimitsPanel />)
     expect(screen.getByText(/종목별 빈도는 요일에 균등 간격/)).toBeInTheDocument()
   })
+  it('discloses that RPE judgment accuracy is lower for novices', () => {
+    render(<LimitsPanel />)
+    expect(screen.getByText(/RPE 판단 정확도는/)).toBeInTheDocument()
+    expect(screen.getByText(/입문자일수록 낮습니다/)).toBeInTheDocument()
+  })
 })
