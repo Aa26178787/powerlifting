@@ -12,12 +12,10 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
   const [stress, setStress] = useState(2)
   const [systemicFatigue, setSystemicFatigue] = useState(2)
   const [regionStatus, setRegionStatus] = useState({})
-  const [readiness, setReadiness] = useState(null)
 
   function handleApply() {
     const checkin = { sleepHours, stress, systemicFatigue, regionStatus }
     const result = applyReadiness(session, checkin)
-    setReadiness(result.readiness)
     onApply({
       adjusted: result.session,
       readiness: result.readiness,
@@ -83,10 +81,6 @@ export default function CheckinPanel({ session, weekIndex, onApply }) {
       </div>
 
       <button className="btn checkin-apply" onClick={handleApply}>컨디션 반영</button>
-
-      {readiness !== null && (
-        <div className="readiness-badge">오늘 readiness {Math.round(readiness * 100)}%</div>
-      )}
     </div>
   )
 }

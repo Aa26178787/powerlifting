@@ -10,7 +10,7 @@ const MAIN = ['squat', 'bench', 'deadlift']
 const sexKey = (sex) => (sex === 'F' || sex === 'female' ? 'female' : 'male')
 
 export function relStandard(lift, oneRM, bodyweight, sex) {
-  if (!oneRM || !bodyweight) return null
+  if (!(oneRM > 0) || !(bodyweight > 0)) return null
   return (oneRM / bodyweight) / ELITE_REL[sexKey(sex)][lift]
 }
 
@@ -28,11 +28,14 @@ export function weakLift(oneRMs, bodyweight, sex) {
   return best
 }
 
+// Below this bodyweight the Goodlift denominator can go negative for female coefficients.
+const GL_BW_FLOOR = 20 // kg
+
 export function glPoints(total, bodyweight, sex) {
-  if (!total || !bodyweight) return 0
+  if (!(total > 0) || !(bodyweight > 0) || bodyweight < GL_BW_FLOOR) return null
   const { A, B, C } = GL_COEF[sexKey(sex)]
   const gl = total * 100 / (A - B * Math.exp(-C * bodyweight))
-  return Math.round(gl * 100) / 100
+  return Number.isFinite(gl) ? Math.round(gl * 100) / 100 : null
 }
 
 export function levelBand(avg) {

@@ -6,6 +6,8 @@ describe('relStandard', () => {
     expect(relStandard('squat', 283, 100, 'M')).toBeCloseTo(1.0, 3)
   })
   it('null when 1RM missing', () => { expect(relStandard('bench', 0, 100, 'M')).toBeNull() })
+  it('null for negative oneRM', () => { expect(relStandard('squat', -200, 100, 'M')).toBeNull() })
+  it('null for negative bodyweight', () => { expect(relStandard('squat', 200, -100, 'M')).toBeNull() })
 })
 
 describe('weakLift', () => {
@@ -28,6 +30,12 @@ describe('glPoints', () => {
     expect(gl).toBeGreaterThan(40)
     expect(gl).toBeLessThan(120)
   })
+  it('null for zero bodyweight', () => { expect(glPoints(500, 0, 'M')).toBeNull() })
+  it('null for negative bodyweight', () => { expect(glPoints(500, -50, 'F')).toBeNull() })
+  it('null for sub-floor bodyweight where denominator goes negative (female, 10 kg)', () => {
+    expect(glPoints(500, 10, 'F')).toBeNull()
+  })
+  it('null for negative total', () => { expect(glPoints(-100, 80, 'M')).toBeNull() })
 })
 
 describe('levelBand', () => {

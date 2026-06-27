@@ -1,6 +1,31 @@
 import { liftLabel, qualityLabel } from '../i18n.js'
 import { toDisplay, unitLabel } from './units.js'
 
+/**
+ * RFC 4180 CSV field escaping.
+ * - If the field starts with =, +, -, or @, prefix with ' to prevent formula injection.
+ * - If the field contains comma, double-quote, CR, or LF, wrap in double-quotes and escape inner quotes by doubling.
+ * - Otherwise return as-is.
+ */
+function csvField(v) {
+  const s = String(v ?? '')
+
+  // Check if needs quoting: contains comma, quote, CR, or LF
+  const needsQuoting = /[,"\r\n]/.test(s)
+
+  if (needsQuoting) {
+    // Escape inner double-quotes by doubling, then wrap in quotes
+    return '"' + s.replace(/"/g, '""') + '"'
+  }
+
+  // Check for formula injection: starts with =, +, -, or @
+  if (/^[=+\-@]/.test(s)) {
+    return "'" + s
+  }
+
+  return s
+}
+
 export function planToCsv(plan, units = 'kg') {
   const rows = [`주차,디로드,일차,종목,목표,세트번호,중량(${unitLabel(units)}),반복,RPE,비고`]
   for (const wk of plan.weeks) {
@@ -19,7 +44,7 @@ export function planToCsv(plan, units = 'kg') {
             set.reps,
             set.rpe ?? '',
             set.note ?? '',
-          ].join(','))
+          ].map(csvField).join(','))
         })
       }
       for (const acc of s.accessories ?? []) {
@@ -36,7 +61,7 @@ export function planToCsv(plan, units = 'kg') {
             set.reps,
             set.rpe ?? '',
             set.note ?? '',
-          ].join(','))
+          ].map(csvField).join(','))
         })
       }
     }

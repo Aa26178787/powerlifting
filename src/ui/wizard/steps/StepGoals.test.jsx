@@ -15,4 +15,9 @@ describe('StepGoals', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: /추천 적용/ }))
     expect(useProfileStore.getState().profile.qualities.strength).toBe(0.6)
   })
+
+  it('shows normalization notice near sliders', () => {
+    render(<StepGoals />)
+    expect(screen.getByText(/상대 비중으로 자동 정규화됩니다/)).toBeInTheDocument()
+  })
 })

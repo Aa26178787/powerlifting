@@ -37,7 +37,18 @@ export default function Wizard({ onComplete }) {
       <div className="wizard-nav">
         <button type="button" className="btn btn-secondary" disabled={step === 1} onClick={() => setStep((n) => Math.max(1, n - 1))}>이전</button>
         {step < last
-          ? <button type="button" className="btn" disabled={!canNext} onClick={() => setStep((n) => Math.min(last, n + 1))}>다음</button>
+          ? <>
+              <button
+                type="button"
+                className="btn"
+                disabled={!canNext}
+                aria-describedby={step === 2 && !liftsValid ? 'lifts-hint' : undefined}
+                onClick={() => setStep((n) => Math.min(last, n + 1))}
+              >다음</button>
+              {step === 2 && !liftsValid && (
+                <span id="lifts-hint" className="wizard-hint">세 종목의 1RM을 모두 입력해야 진행됩니다</span>
+              )}
+            </>
           : <button type="button" className="btn" onClick={onComplete}>루틴 생성</button>}
       </div>
     </div>

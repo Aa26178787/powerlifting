@@ -31,4 +31,20 @@ describe('Wizard', () => {
     await user.click(screen.getByRole('button', { name: /루틴 생성/ }))
     expect(done).toBe(true)
   })
+
+  it('shows inline help text when step 2 and lifts are invalid', async () => {
+    render(<Wizard onComplete={() => {}} />)
+    const user = userEvent.setup()
+    // advance to step 2 (lifts step) without setting lifts
+    await user.click(screen.getByRole('button', { name: /다음/ }))
+    expect(screen.getByText(/세 종목의 1RM을 모두 입력해야 진행됩니다/)).toBeInTheDocument()
+  })
+
+  it('다음 button at step 2 has aria-describedby pointing to hint when lifts invalid', async () => {
+    render(<Wizard onComplete={() => {}} />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /다음/ }))
+    const btn = screen.getByRole('button', { name: /다음/ })
+    expect(btn.getAttribute('aria-describedby')).toBe('lifts-hint')
+  })
 })

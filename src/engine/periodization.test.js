@@ -131,6 +131,27 @@ describe('set schemes + overrides in working weeks', () => {
     const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
     expect(names).not.toContain('Front Squat')
   })
+  it('variationOverride requiring missing equipment falls back to pick()', () => {
+    // Pin Squat needs ["barbell","rack","pins"] but equipment has no "pins"
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], {
+      ...ctx,
+      equipment: ['barbell', 'rack'],
+      variationOverride: { squat: 'Pin Squat (below parallel)', bench: null, deadlift: null },
+    }, 3)
+    const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
+    expect(names).not.toContain('Pin Squat (below parallel)')
+  })
+  it('advanced variationOverride for non-advanced ctx falls back to pick()', () => {
+    // Banded Squat is advanced=true; ctx has advanced:false
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[3], {
+      ...ctx,
+      equipment: ['barbell', 'rack', 'bench', 'box', 'pins', 'deficit', 'blocks', 'bands'],
+      advanced: false,
+      variationOverride: { squat: 'Banded Squat', bench: null, deadlift: null },
+    }, 3)
+    const names = weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises).map((e) => e.lift)
+    expect(names).not.toContain('Banded Squat')
+  })
 })
 
 describe('buildWorkingWeeks concurrent (mixed blend)', () => {

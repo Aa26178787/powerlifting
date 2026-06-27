@@ -40,4 +40,13 @@ describe('applyReadiness', () => {
     expect(acc.scheme.sets.length).toBeLessThan(3)
     expect(acc.scheme.sets[0].weight).toBeUndefined()
   })
+  it('topSetBackoff low readiness drops heaviest (top) set, keeps backoff', () => {
+    // mk() sets: [{weight:160},{weight:140},{weight:140}]. readiness=0 → drop=2 → keep 1.
+    // Correct: drops top (160), keeps a backoff (140 → *0.9=126 → round2.5=125).
+    // Broken old behavior: kept top (160→*0.9=144→145). This test distinguishes.
+    const out = applyReadiness(mk(), { sleepHours: 4, stress: 5, systemicFatigue: 5, regionStatus: {} })
+    const sets = out.session.exercises[0].scheme.sets
+    expect(sets).toHaveLength(1)
+    expect(sets[0].weight).toBe(125) // backoff weight (140*0.9→125), not top-set weight (160*0.9→145)
+  })
 })

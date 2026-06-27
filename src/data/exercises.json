@@ -138,13 +138,12 @@
     },
     {
       "name": "SSB Good Morning",
-      "category": "variation",
+      "category": "accessory",
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
       "equipment": ["ssb", "rack"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "e1rmModifier": 0.90
+      "stress": ["lowerBack", "shoulder", "hamstring"]
     },
     {
       "name": "SSB Front Squat",
@@ -225,7 +224,7 @@
       "primaryMuscle": "quads/upper-back",
       "equipment": ["barbell", "rack"],
       "stress": ["knee", "shoulder"],
-      "e1rmModifier": 0.92
+      "e1rmModifier": 0.80
     },
     {
       "name": "Belt Squat",
@@ -283,7 +282,7 @@
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/upper-back/core",
       "equipment": ["barbell"],
-      "stress": ["knee", "shoulder", "wrist"],
+      "stress": ["knee", "shoulder", "elbow"],
       "e1rmModifier": 0.80
     },
     {
@@ -880,7 +879,7 @@
       "stickingPoint": "bottom",
       "primaryMuscle": "lats/upper-back",
       "equipment": ["barbell"],
-      "stress": ["shoulder"]
+      "stress": ["lowerBack", "shoulder"]
     },
     {
       "name": "Barbell Bent-Over Row (overhand)",
@@ -898,7 +897,7 @@
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
       "equipment": ["barbell"],
-      "stress": ["shoulder", "elbow"]
+      "stress": ["lowerBack", "shoulder", "elbow"]
     },
     {
       "name": "Dumbbell Row (single-arm)",
@@ -1243,15 +1242,6 @@
       "stress": ["shoulder", "elbow"]
     },
     {
-      "name": "Weighted Dips",
-      "category": "accessory",
-      "targetLift": "bench",
-      "stickingPoint": "bottom",
-      "primaryMuscle": "triceps/chest",
-      "equipment": ["dip station", "belt"],
-      "stress": ["shoulder", "elbow"]
-    },
-    {
       "name": "Dumbbell Floor Press",
       "category": "accessory",
       "targetLift": "bench",
@@ -1396,15 +1386,6 @@
       "stress": ["lowerBack", "shoulder"]
     },
     {
-      "name": "Romanian Deadlift",
-      "category": "accessory",
-      "targetLift": "deadlift",
-      "stickingPoint": "midrange",
-      "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
-    },
-    {
       "name": "Glute-Ham Raise (GHR)",
       "category": "accessory",
       "targetLift": "squat",
@@ -1420,7 +1401,7 @@
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
       "equipment": ["ghr/partner"],
-      "stress": ["hamstring", "bicepsTendon"]
+      "stress": ["hamstring"]
     },
     {
       "name": "Hip Thrust (barbell)",
@@ -1512,7 +1493,7 @@
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
       "equipment": ["machine"],
-      "stress": ["hamstring", "bicepsTendon"]
+      "stress": ["hamstring"]
     },
     {
       "name": "Lying Leg Curl",
@@ -1521,7 +1502,7 @@
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
       "equipment": ["machine"],
-      "stress": ["hamstring", "bicepsTendon"]
+      "stress": ["hamstring"]
     },
     {
       "name": "Nordic-Leg Curl Machine",
@@ -1681,7 +1662,7 @@
       "category": "accessory",
       "targetLift": "squat",
       "stickingPoint": "bottom",
-      "primaryMuscle": "quads (VMO)",
+      "primaryMuscle": "quads",
       "equipment": ["hack squat machine"],
       "stress": ["knee"]
     },

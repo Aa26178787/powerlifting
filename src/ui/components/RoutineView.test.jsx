@@ -57,10 +57,11 @@ describe('RoutineView', () => {
     render(<RoutineView plan={null} />)
     expect(screen.getByText(/아직 루틴이 없습니다/)).toBeInTheDocument()
   })
-  it('renders the template name and a deload badge', () => {
-    render(<RoutineView plan={plan} />)
+  it('renders the template name and marks the deload week with the deload CSS class', () => {
+    const { container } = render(<RoutineView plan={plan} />)
     expect(screen.getByText(/DUP/)).toBeInTheDocument()
-    expect(screen.getByText(/디로드/)).toBeInTheDocument()
+    // CSS ::after adds the 디로드 pin — verify via the class, not DOM text
+    expect(container.querySelector('.week.deload')).toBeTruthy()
   })
   it('renders per-set weight in exercise list', () => {
     render(<RoutineView plan={plan} />)
@@ -108,5 +109,54 @@ describe('RoutineView', () => {
     useProfileStore.setState({ checkinLog: [{ readiness: 0.49 }, { readiness: 0.4 }, { readiness: 0.3 }] })
     render(<RoutineView plan={plan} />)
     expect(screen.getAllByText(/과피로|디로드/).length).toBeGreaterThan(0)
+  })
+
+  it('overreaching banner has role="alert" and 경고: prefix', () => {
+    useProfileStore.setState({ checkinLog: [{ readiness: 0.49 }, { readiness: 0.4 }, { readiness: 0.3 }] })
+    render(<RoutineView plan={plan} />)
+    const alert = document.querySelector('[role="alert"]')
+    expect(alert).toBeTruthy()
+    expect(alert.textContent).toMatch(/경고:/)
+  })
+
+  it('renders — for a missing weight set cell', () => {
+    const planWithMissingWeight = {
+      template: 'dup',
+      weeks: [
+        { index: 1, isDeload: false, sessions: [
+          { day: 1, exercises: [
+            {
+              lift: 'squat', quality: 'strength',
+              scheme: {
+                type: 'straight', evidenceTier: 'rct',
+                sets: [{ weight: null, reps: 3, rpe: 8 }],
+              },
+            },
+          ], accessories: [] },
+        ] },
+      ],
+    }
+    render(<RoutineView plan={planWithMissingWeight} />)
+    expect(screen.getByText('—')).toBeInTheDocument()
+  })
+
+  it('deload week h3 does not contain (디로드) text in JSX (CSS pin only)', () => {
+    render(<RoutineView plan={plan} />)
+    const headings = screen.getAllByRole('heading', { level: 3 })
+    const deloadHeading = headings.find((h) => h.textContent.includes('4주차'))
+    expect(deloadHeading).toBeTruthy()
+    // The text from JSX should NOT include (디로드) — CSS ::after adds the pin
+    expect(deloadHeading.textContent).not.toMatch(/\(디로드\)/)
+  })
+
+  it('readiness badge appears in RoutineView after checkin, not in CheckinPanel', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event')
+    render(<RoutineView plan={plan} />)
+    const user = userEvent.setup()
+    await user.click(screen.getAllByRole('button', { name: '컨디션 반영' })[0])
+    // badge in RoutineView (span.readiness-badge)
+    const badges = document.querySelectorAll('.readiness-badge')
+    expect(badges.length).toBe(1)
+    expect(badges[0].textContent).toMatch(/%/)
   })
 })

@@ -67,3 +67,26 @@ describe('accessoryPreference', () => {
     expect(bs === -1 || (lp !== -1 && lp < bs)).toBe(true)
   })
 })
+
+describe('accessories score relevance priority (fix 4)', () => {
+  it('a low-emphasis matched accessory (triceps 0.9 for bench:wide) outranks an irrelevant general accessory (biceps, unmatched)', () => {
+    // bench:wide emphasis = { chest: 1.3, triceps: 0.9 }
+    // Skull Crusher (barbell) → triceps → matched at 0.9
+    // Barbell Curl → biceps → unmatched (was 1.0, now 0.5)
+    const r = select({
+      lift: 'bench',
+      style: { grip: 'wide' },
+      stickingPoint: 'none',
+      sessionTimeLimit: 999, // return all so relative rank is visible
+      equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+      regionStatus: {},
+      accessoryPreference: 'any',
+      excluded: [],
+    })
+    const skullIdx = r.findIndex((e) => e.name === 'Skull Crusher (barbell)')
+    const curlIdx = r.findIndex((e) => e.name === 'Barbell Curl')
+    expect(skullIdx).toBeGreaterThanOrEqual(0)
+    expect(curlIdx).toBeGreaterThanOrEqual(0)
+    expect(skullIdx).toBeLessThan(curlIdx)
+  })
+})
