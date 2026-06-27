@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BANDS, yearsProgress, fatigueScale, weeklySets, bandForBlend, ageScale, volumeRamp } from './volume.js'
+import { BANDS, yearsProgress, fatigueScale, weeklySets, bandForBlend, ageScale, volumeRamp, PER_SESSION_CAP, loadRamp } from './volume.js'
 
 describe('yearsProgress', () => {
   it('is 0 at 0 years and caps at 1 by 5 years', () => {
@@ -76,5 +76,29 @@ describe('weeklySets higher floor', () => {
   it('a novice mixed-blend starts above MEV (not pinned to it)', () => {
     const blend = { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 } // -> balanced band
     expect(weeklySets(blend, 1, 1)).toBeGreaterThan(BANDS.balanced.mev)
+  })
+})
+
+describe('PER_SESSION_CAP', () => {
+  it('caps each main lift, with deadlift strictest (highest axial/CNS fatigue)', () => {
+    expect(PER_SESSION_CAP.deadlift).toBeLessThan(PER_SESSION_CAP.squat)
+    expect(PER_SESSION_CAP.deadlift).toBeLessThan(PER_SESSION_CAP.bench)
+    expect(PER_SESSION_CAP.deadlift).toBe(4)
+    expect(PER_SESSION_CAP.squat).toBe(6)
+    expect(PER_SESSION_CAP.bench).toBe(8)
+  })
+})
+
+describe('loadRamp (bounded weekly load progression)', () => {
+  it('flat at week 1, rises to +4% by the last working week, bounded', () => {
+    expect(loadRamp(0, 4)).toBe(1)
+    expect(loadRamp(3, 4)).toBeCloseTo(1.04, 5)
+    expect(loadRamp(0, 1)).toBe(1)        // single week -> flat
+  })
+  it('is monotonic and never exceeds +4%', () => {
+    for (let w = 0; w < 8; w++) {
+      expect(loadRamp(w, 8)).toBeLessThanOrEqual(1.04)
+      if (w > 0) expect(loadRamp(w, 8)).toBeGreaterThanOrEqual(loadRamp(w - 1, 8))
+    }
   })
 })

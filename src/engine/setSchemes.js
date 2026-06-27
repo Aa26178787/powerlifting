@@ -1,5 +1,5 @@
 import { weightFor, ZONES } from './quality.js'
-import { roundToIncrement } from './e1rm.js'
+import { roundToIncrement, loadForRpe } from './e1rm.js'
 
 const r = roundToIncrement
 
@@ -100,7 +100,10 @@ function strengthHypertrophy({ e1rm, baseSets }) {
   const sZ = ZONES.strength, hZ = ZONES.hypertrophy
   const top = r(e1rm * sZ.pct[1])                 // ~0.92
   const sets = [{ weight: top, reps: sZ.reps[0], rpe: sZ.rpeTarget, label: '탑(근력)' }]
-  const back = r(e1rm * hZ.pct[0])                // ~0.67 → 근비대 부하
+  // RPE-derived (not a fixed pct): the backoff must actually BE its labeled
+  // RPE 8.5 at 9 reps (chart 72.8% + high-rep correction ≈ 75%), not the old
+  // ~0.67 that was a full RPE light. See research doc (A, C).
+  const back = loadForRpe(e1rm, hZ.repAnchor, hZ.rpeTarget)
   for (let i = 1; i < Math.max(2, baseSets); i++)
     sets.push({ weight: back, reps: hZ.repAnchor, rpe: hZ.rpeTarget, label: '백오프(근비대)' })
   return { sets }
