@@ -289,3 +289,39 @@ describe('main lift volume floor + weekly ramp', () => {
     expect(Math.max(...wk1.map(e=>e.sets))).toBeGreaterThanOrEqual(5)
   })
 })
+
+describe('peaking (competition) taper mode integration', () => {
+  // 6-week powerlifting meso with competition on + date → peaking=true → taper mode
+  const peakProfile = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 6, deloadEnabled: false,
+    qualities: { power: 0.10, strength: 0.70, hypertrophy: 0.20, endurance: 0.00 },
+    competition: { on: true, date: '2026-09-01' },
+  }
+  // sum all main lift sets in a given working-week index (0-based)
+  const mainSetsInWeek = (plan, w) =>
+    plan.weeks[w].sessions
+      .flatMap(s => s.exercises)
+      .filter(e => ['squat','bench','deadlift'].includes(e.baseLift))
+      .reduce((a, e) => a + e.sets, 0)
+
+  it('last working week main volume < peak-boundary week (taper is non-monotonic)', () => {
+    const plan = generate(peakProfile)
+    // For 6-week meso: PEAK_AT=2/3 → t≈2/3 near w=3 (t=3/5=0.6); last working = w=5.
+    // Peak-boundary ramp ≈1.135 at w=3; last ramp=0.55 at w=5 → last < mid.
+    const midSets  = mainSetsInWeek(plan, 3)   // w=3 is last ascending week
+    const lastSets = mainSetsInWeek(plan, 5)   // w=5 is last working week
+    expect(lastSets).toBeLessThan(midSets)
+  })
+
+  it('every working week main lift has >= 2 sets per session (taper floor=2)', () => {
+    const plan = generate(peakProfile)
+    for (const wk of plan.weeks) {
+      for (const s of wk.sessions) {
+        for (const e of s.exercises.filter(ex => ['squat','bench','deadlift'].includes(ex.baseLift))) {
+          expect(e.sets).toBeGreaterThanOrEqual(2)
+        }
+      }
+    }
+  })
+})

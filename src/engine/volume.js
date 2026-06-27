@@ -40,11 +40,33 @@ export function weeklySets(blend, years, fatigue, age) {
 }
 
 // Weekly volume ramp across the mesocycle: week 1 sits at the floor (weeklySets),
-// ramping up ~35% toward MRV by the last working week (progressive overload by
-// volume). Capped to MRV downstream. totalWeeks<=1 -> flat.
-export function volumeRamp(weekIndex, totalWeeks) {
+// ramping up toward MRV by the last working week (progressive overload by volume).
+// Capped to MRV downstream. totalWeeks<=1 -> flat.
+// mode='accumulate' (default): +35% ramp — hyp/balanced/mixed, non-peaking.
+// mode='maintain': +20% ramp — strength/power dominant non-mixed, non-peaking.
+// mode='taper': inverse-V (→1.15 at 2/3 boundary, →0.55 at end) — peaking only.
+// 2-arg call (no mode) is bit-for-bit identical to prior 'accumulate' behavior.
+export function volumeRamp(weekIndex, totalWeeks, mode = 'accumulate') {
   if (totalWeeks <= 1) return 1
-  return 1 + 0.35 * (weekIndex / (totalWeeks - 1))
+  const t = weekIndex / (totalWeeks - 1)
+  if (mode === 'maintain') return 1 + 0.20 * t
+  if (mode === 'taper') {
+    const PEAK_AT = 2 / 3
+    if (t <= PEAK_AT) return 1 + 0.15 * (t / PEAK_AT)
+    return 1.15 - (1.15 - 0.55) * ((t - PEAK_AT) / (1 - PEAK_AT))
+  }
+  return 1 + 0.35 * t   // accumulate (default): original formula, bit-for-bit unchanged
+}
+
+// Derive the ramp mode from blend + peaking flag.
+// peaking (competition on+date) always → taper, regardless of blend.
+// Non-peaking strength/power dominant non-mixed → maintain (gentler ramp).
+// Everything else (hyp/balanced/mixed, non-peaking) → accumulate.
+export function volumeRampMode(blend, peaking) {
+  if (peaking) return 'taper'
+  const { dom, isMixed } = classifyBlend(blend)
+  if ((dom === 'strength' || dom === 'power') && !isMixed) return 'maintain'
+  return 'accumulate'
 }
 
 // Absolute per-session working-set cap for the main lift, regardless of
