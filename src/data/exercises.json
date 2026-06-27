@@ -6,8 +6,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder", "hip"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ]
     },
     {
       "name": "Back Squat (High Bar)",
@@ -15,8 +22,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "ankle"
+      ],
       "e1rmModifier": 0.94
     },
     {
@@ -25,8 +39,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -35,8 +56,15 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -45,10 +73,21 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder", "hip"],
-      "tempo": [3, 1, 1],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
+      "tempo": [
+        3,
+        1,
+        1
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Pin Squat (below parallel)",
@@ -56,10 +95,20 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "pins"],
-      "stress": ["knee", "shoulder", "hip"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.89
+      "equipment": [
+        "barbell",
+        "rack",
+        "pins"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
+      "e1rmModifier": 0.87
     },
     {
       "name": "Pin Squat (above parallel)",
@@ -67,10 +116,20 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "pins"],
-      "stress": ["knee", "shoulder", "hip"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.89
+      "equipment": [
+        "barbell",
+        "rack",
+        "pins"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
+      "e1rmModifier": 0.92
     },
     {
       "name": "Box Squat (below parallel)",
@@ -78,10 +137,20 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["barbell", "rack", "box"],
-      "stress": ["shoulder", "hip", "hamstring"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "barbell",
+        "rack",
+        "box"
+      ],
+      "stress": [
+        "shoulder",
+        "hip",
+        "hamstring"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Box Squat (parallel)",
@@ -89,10 +158,20 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["barbell", "rack", "box"],
-      "stress": ["shoulder", "hip", "hamstring"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "barbell",
+        "rack",
+        "box"
+      ],
+      "stress": [
+        "shoulder",
+        "hip",
+        "hamstring"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Box Squat (above parallel)",
@@ -100,10 +179,20 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "box"],
-      "stress": ["knee", "shoulder", "hip"],
-      "styleBias": ["low-bar"],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "barbell",
+        "rack",
+        "box"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Front Squat",
@@ -111,8 +200,16 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder", "wrist"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "wrist",
+        "ankle"
+      ],
       "e1rmModifier": 0.84
     },
     {
@@ -121,8 +218,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/upper-back",
-      "equipment": ["ssb", "rack"],
-      "stress": ["knee", "shoulder"],
+      "equipment": [
+        "ssb",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder"
+      ],
       "e1rmModifier": 0.89
     },
     {
@@ -131,9 +234,18 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "quads/upper-back",
-      "equipment": ["ssb", "rack", "box"],
-      "stress": ["knee", "shoulder"],
-      "styleBias": ["low-bar"],
+      "equipment": [
+        "ssb",
+        "rack",
+        "box"
+      ],
+      "stress": [
+        "knee",
+        "shoulder"
+      ],
+      "styleBias": [
+        "low-bar"
+      ],
       "e1rmModifier": 0.89
     },
     {
@@ -142,8 +254,15 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["ssb", "rack"],
-      "stress": ["lowerBack", "shoulder", "hamstring"]
+      "equipment": [
+        "ssb",
+        "rack"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ]
     },
     {
       "name": "SSB Front Squat",
@@ -151,8 +270,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["ssb", "rack"],
-      "stress": ["knee", "shoulder"],
+      "equipment": [
+        "ssb",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "ankle"
+      ],
       "e1rmModifier": 0.89
     },
     {
@@ -161,8 +287,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["duffalo bar", "rack"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "duffalo bar",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.99
     },
     {
@@ -171,8 +304,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes/upper-back",
-      "equipment": ["cambered bar", "rack"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "cambered bar",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.91
     },
     {
@@ -181,10 +321,18 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "bands"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bands"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Chain Squat",
@@ -192,10 +340,18 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "chains"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "chains"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Heel-Elevated Squat",
@@ -203,8 +359,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["barbell", "plate/wedge"],
-      "stress": ["knee", "shoulder"],
+      "equipment": [
+        "barbell",
+        "plate/wedge"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "ankle"
+      ],
       "e1rmModifier": 0.85
     },
     {
@@ -213,8 +376,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["db/kb", "wedge"],
-      "stress": ["knee"]
+      "equipment": [
+        "db/kb",
+        "wedge"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Zombie Squat (arms forward)",
@@ -222,9 +391,16 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/upper-back",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder"],
-      "e1rmModifier": 0.80
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "ankle"
+      ],
+      "e1rmModifier": 0.8
     },
     {
       "name": "Belt Squat",
@@ -232,8 +408,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["belt squat machine"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "belt squat machine"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Hatfield Squat",
@@ -241,8 +422,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["ssb", "rack uprights"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "ssb",
+        "rack uprights"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -251,8 +439,16 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell", "rack", "pins"],
-      "stress": ["knee", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "pins"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.88
     },
     {
@@ -261,8 +457,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["barbell", "rack"],
-      "stress": ["knee", "shoulder"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "ankle"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -271,8 +474,14 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "glutes/adductors",
-      "equipment": ["barbell", "rack"],
-      "stress": ["shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "shoulder",
+        "hip"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -281,9 +490,15 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/upper-back/core",
-      "equipment": ["barbell"],
-      "stress": ["knee", "shoulder", "elbow"],
-      "e1rmModifier": 0.80
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "knee",
+        "shoulder",
+        "elbow"
+      ],
+      "e1rmModifier": 0.8
     },
     {
       "name": "Bench Press (Competition Grip)",
@@ -291,8 +506,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps/shoulders",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
     },
     {
       "name": "Paused Bench Press",
@@ -300,8 +523,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -310,8 +541,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -320,8 +559,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.95
     },
     {
@@ -330,8 +577,16 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.97
     },
     {
@@ -340,8 +595,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.94
     },
     {
@@ -350,8 +613,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "triceps/chest",
-      "equipment": ["barbell", "pins", "floor"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "pins",
+        "floor"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -360,8 +630,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["barbell", "bench", "1 board"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "bench",
+        "1 board"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 1.04
     },
     {
@@ -370,9 +648,17 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "bench", "2 boards"],
-      "stress": ["shoulder", "elbow"],
-      "e1rmModifier": 1.04
+      "equipment": [
+        "barbell",
+        "bench",
+        "2 boards"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
+      "e1rmModifier": 1.06
     },
     {
       "name": "Board Press (3-Board)",
@@ -380,9 +666,17 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "bench", "3 boards"],
-      "stress": ["shoulder", "elbow"],
-      "e1rmModifier": 1.04
+      "equipment": [
+        "barbell",
+        "bench",
+        "3 boards"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
+      "e1rmModifier": 1.08
     },
     {
       "name": "Board Press (4–5 Board)",
@@ -390,9 +684,17 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "bench", "4–5 boards"],
-      "stress": ["shoulder", "elbow"],
-      "e1rmModifier": 1.04
+      "equipment": [
+        "barbell",
+        "bench",
+        "4–5 boards"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
+      "e1rmModifier": 1.1
     },
     {
       "name": "Pin Press (off chest)",
@@ -400,9 +702,17 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "pins", "bench"],
-      "stress": ["shoulder", "elbow"],
-      "e1rmModifier": 0.94
+      "equipment": [
+        "barbell",
+        "pins",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
+      "e1rmModifier": 0.92
     },
     {
       "name": "Pin Press (midrange)",
@@ -410,9 +720,17 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["barbell", "pins", "bench"],
-      "stress": ["shoulder", "elbow"],
-      "e1rmModifier": 0.94
+      "equipment": [
+        "barbell",
+        "pins",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
+      "e1rmModifier": 0.96
     },
     {
       "name": "Rack Press (lockout)",
@@ -420,8 +738,15 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "pins", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "pins",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ],
       "e1rmModifier": 0.94
     },
     {
@@ -430,8 +755,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders/upper-chest",
-      "equipment": ["barbell", "incline bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.82
     },
     {
@@ -440,8 +772,15 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "lower-chest",
-      "equipment": ["barbell", "decline bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "decline bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
     },
     {
       "name": "Larsen Press",
@@ -449,8 +788,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -459,8 +806,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -469,8 +824,16 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "bench", "slingshot"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "bench",
+        "slingshot"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 1.04
     },
     {
@@ -479,8 +842,16 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.92
     },
     {
@@ -489,8 +860,15 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["cambered bar", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "cambered bar",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -499,8 +877,15 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
     },
     {
       "name": "Dumbbell Incline Press",
@@ -508,8 +893,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders/upper-chest",
-      "equipment": ["dumbbells", "incline bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
     },
     {
       "name": "Banded Bench Press",
@@ -517,10 +909,18 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps/chest",
-      "equipment": ["barbell", "bench", "bands"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "bench",
+        "bands"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Chain Bench Press",
@@ -528,10 +928,18 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps/chest",
-      "equipment": ["barbell", "bench", "chains"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "barbell",
+        "bench",
+        "chains"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Swiss Bar / Football Bar Press",
@@ -539,8 +947,14 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["swiss bar", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "swiss bar",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -549,8 +963,15 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["axle bar", "bench"],
-      "stress": ["shoulder", "elbow"],
+      "equipment": [
+        "axle bar",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -559,8 +980,15 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "rack", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "rack",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Overhead Press (Barbell)",
@@ -568,8 +996,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders",
-      "equipment": ["barbell", "rack"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Push Press",
@@ -577,8 +1012,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "shoulders/triceps",
-      "equipment": ["barbell", "rack"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Seated Overhead Press",
@@ -586,8 +1027,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders",
-      "equipment": ["barbell/db", "bench"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "barbell/db",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Z Press",
@@ -595,8 +1043,13 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders/core",
-      "equipment": ["barbell"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Dips (weighted)",
@@ -604,8 +1057,15 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["dip station", "belt"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dip station",
+        "belt"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
     },
     {
       "name": "Conventional Deadlift",
@@ -613,8 +1073,15 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/glutes/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Sumo Deadlift",
@@ -622,8 +1089,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "glutes/adductors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hip"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip"
+      ]
     },
     {
       "name": "Deficit Deadlift (conventional)",
@@ -631,9 +1104,19 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["barbell", "deficit"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"],
-      "styleBias": ["conventional"],
+      "equipment": [
+        "barbell",
+        "deficit"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ],
+      "styleBias": [
+        "conventional"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -642,9 +1125,18 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "glutes/adductors",
-      "equipment": ["barbell", "deficit"],
-      "stress": ["lowerBack", "shoulder", "hip"],
-      "styleBias": ["sumo"],
+      "equipment": [
+        "barbell",
+        "deficit"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip"
+      ],
+      "styleBias": [
+        "sumo"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -653,8 +1145,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -663,8 +1161,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
       "e1rmModifier": 0.94
     },
     {
@@ -673,8 +1177,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
       "e1rmModifier": 0.93
     },
     {
@@ -683,8 +1193,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
       "e1rmModifier": 0.92
     },
     {
@@ -693,9 +1209,16 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors/lats",
-      "equipment": ["barbell", "blocks"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "e1rmModifier": 1.00
+      "equipment": [
+        "barbell",
+        "blocks"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "e1rmModifier": 1
     },
     {
       "name": "Block Pull (above knee)",
@@ -703,8 +1226,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "lockout",
       "primaryMuscle": "erectors/traps",
-      "equipment": ["barbell", "blocks"],
-      "stress": ["lowerBack", "shoulder"],
+      "equipment": [
+        "barbell",
+        "blocks"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ],
       "e1rmModifier": 1.05
     },
     {
@@ -713,8 +1242,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "lockout",
       "primaryMuscle": "erectors/traps",
-      "equipment": ["barbell", "rack pins"],
-      "stress": ["lowerBack", "shoulder"],
+      "equipment": [
+        "barbell",
+        "rack pins"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ],
       "e1rmModifier": 1.05
     },
     {
@@ -723,8 +1258,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "erectors/lats",
-      "equipment": ["barbell", "rack pins"],
-      "stress": ["lowerBack", "shoulder"],
+      "equipment": [
+        "barbell",
+        "rack pins"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ],
       "e1rmModifier": 1.02
     },
     {
@@ -733,9 +1274,17 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "upper-back/traps",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "wrist"],
-      "styleBias": ["conventional"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "wrist"
+      ],
+      "styleBias": [
+        "conventional"
+      ],
       "e1rmModifier": 0.85
     },
     {
@@ -744,9 +1293,17 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "styleBias": ["conventional"],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "styleBias": [
+        "conventional"
+      ],
       "e1rmModifier": 0.92
     },
     {
@@ -755,8 +1312,15 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Stiff-Leg Deadlift",
@@ -764,9 +1328,17 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "styleBias": ["conventional"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "styleBias": [
+        "conventional"
+      ]
     },
     {
       "name": "Trap Bar Deadlift (high handles)",
@@ -774,9 +1346,16 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["trap bar"],
-      "stress": ["lowerBack", "knee", "shoulder", "hip"],
-      "e1rmModifier": 1.05
+      "equipment": [
+        "trap bar"
+      ],
+      "stress": [
+        "lowerBack",
+        "knee",
+        "shoulder",
+        "hip"
+      ],
+      "e1rmModifier": 1.07
     },
     {
       "name": "Trap Bar Deadlift (low handles)",
@@ -784,9 +1363,15 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["trap bar"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "e1rmModifier": 1.05
+      "equipment": [
+        "trap bar"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "e1rmModifier": 1.03
     },
     {
       "name": "Banded Deadlift",
@@ -794,10 +1379,17 @@
       "targetLift": "deadlift",
       "stickingPoint": "lockout",
       "primaryMuscle": "erectors/glutes",
-      "equipment": ["barbell", "bands"],
-      "stress": ["lowerBack", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "bands"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Chain Deadlift",
@@ -805,10 +1397,17 @@
       "targetLift": "deadlift",
       "stickingPoint": "lockout",
       "primaryMuscle": "erectors/glutes",
-      "equipment": ["barbell", "chains"],
-      "stress": ["lowerBack", "shoulder", "hip"],
+      "equipment": [
+        "barbell",
+        "chains"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip"
+      ],
       "advanced": true,
-      "e1rmModifier": 0.90
+      "e1rmModifier": 0.9
     },
     {
       "name": "Sumo Block Pull",
@@ -816,9 +1415,18 @@
       "targetLift": "deadlift",
       "stickingPoint": "lockout",
       "primaryMuscle": "glutes/adductors/erectors",
-      "equipment": ["barbell", "blocks"],
-      "stress": ["lowerBack", "shoulder", "hip"],
-      "styleBias": ["sumo"],
+      "equipment": [
+        "barbell",
+        "blocks"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip"
+      ],
+      "styleBias": [
+        "sumo"
+      ],
       "e1rmModifier": 1.05
     },
     {
@@ -827,10 +1435,20 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "tempo": [3, 1, 1],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "tempo": [
+        3,
+        1,
+        1
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Tempo to Knees Deadlift (T2K)",
@@ -838,9 +1456,19 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "hamstring", "hip"],
-      "tempo": [3, 0, 1],
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "hamstring",
+        "hip"
+      ],
+      "tempo": [
+        3,
+        0,
+        1
+      ],
       "tempoStop": "knee",
       "e1rmModifier": 0.88
     },
@@ -850,9 +1478,15 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "hamstrings/grip",
-      "equipment": ["axle bar"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
-      "e1rmModifier": 0.90
+      "equipment": [
+        "axle bar"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
+      "e1rmModifier": 0.9
     },
     {
       "name": "Single-Leg RDL",
@@ -860,8 +1494,15 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["barbell/db"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+      "equipment": [
+        "barbell/db"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Landmine Single-Leg RDL",
@@ -869,8 +1510,16 @@
       "targetLift": "deadlift",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["barbell", "landmine"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Pendlay Row",
@@ -878,8 +1527,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ]
     },
     {
       "name": "Barbell Bent-Over Row (overhand)",
@@ -887,8 +1541,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back/erectors",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ]
     },
     {
       "name": "Barbell Row (underhand)",
@@ -896,8 +1555,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
-      "equipment": ["barbell"],
-      "stress": ["lowerBack", "shoulder", "elbow"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Dumbbell Row (single-arm)",
@@ -905,8 +1570,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["dumbbell", "bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbell",
+        "bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Kroc Row",
@@ -914,8 +1584,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/traps",
-      "equipment": ["dumbbell", "bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbell",
+        "bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Seal Row",
@@ -923,8 +1598,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["barbell/db", "elevated bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "barbell/db",
+        "elevated bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Chest-Supported Row",
@@ -932,8 +1612,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["machine/db", "incline bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "machine/db",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "T-Bar Row",
@@ -941,8 +1626,12 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["t-bar/landmine"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "t-bar/landmine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Meadows Row",
@@ -950,8 +1639,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/rear-delts",
-      "equipment": ["barbell", "landmine"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Helms Row",
@@ -959,8 +1653,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["dumbbells", "incline bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbells",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Seated Cable Row (close)",
@@ -968,8 +1667,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Seated Cable Row (wide)",
@@ -977,8 +1680,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Single-Arm Cable Row",
@@ -986,8 +1693,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Lat Pulldown (wide)",
@@ -995,8 +1706,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Lat Pulldown (close neutral)",
@@ -1004,8 +1719,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
-      "equipment": ["cables"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Lat Pulldown (single-arm)",
@@ -1013,8 +1733,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Pull-Up (wide)",
@@ -1022,8 +1746,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["pull-up bar"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Pull-Up (neutral)",
@@ -1031,8 +1759,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
-      "equipment": ["neutral bar"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "neutral bar"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Chin-Up (underhand)",
@@ -1040,8 +1773,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
-      "equipment": ["pull-up bar"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Weighted Pull-Up/Chin-Up",
@@ -1049,8 +1787,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "lats/biceps",
-      "equipment": ["pull-up bar", "belt"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "pull-up bar",
+        "belt"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Face Pull",
@@ -1058,8 +1802,13 @@
       "targetLift": "bench",
       "stickingPoint": "none",
       "primaryMuscle": "rear-delts/upper-back",
-      "equipment": ["cables", "rope"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables",
+        "rope"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Band Pull-Apart",
@@ -1067,8 +1816,12 @@
       "targetLift": "bench",
       "stickingPoint": "none",
       "primaryMuscle": "rear-delts/upper-back",
-      "equipment": ["band"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "band"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Rear Delt Fly",
@@ -1076,8 +1829,12 @@
       "targetLift": "bench",
       "stickingPoint": "none",
       "primaryMuscle": "rear-delts",
-      "equipment": ["cables/db"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables/db"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Barbell Shrug",
@@ -1085,7 +1842,9 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "traps",
-      "equipment": ["barbell"],
+      "equipment": [
+        "barbell"
+      ],
       "stress": []
     },
     {
@@ -1094,7 +1853,9 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "traps",
-      "equipment": ["dumbbells"],
+      "equipment": [
+        "dumbbells"
+      ],
       "stress": []
     },
     {
@@ -1103,7 +1864,9 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "traps",
-      "equipment": ["trap bar"],
+      "equipment": [
+        "trap bar"
+      ],
       "stress": []
     },
     {
@@ -1112,7 +1875,9 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "traps",
-      "equipment": ["cables"],
+      "equipment": [
+        "cables"
+      ],
       "stress": []
     },
     {
@@ -1121,8 +1886,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["barbell", "landmine"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Inverted Row",
@@ -1130,8 +1900,12 @@
       "targetLift": "bench",
       "stickingPoint": "none",
       "primaryMuscle": "lats/upper-back",
-      "equipment": ["barbell in rack/rings"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "barbell in rack/rings"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Cable Pullover",
@@ -1139,8 +1913,12 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Dumbbell Pullover",
@@ -1148,8 +1926,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "lats",
-      "equipment": ["dumbbell", "bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbell",
+        "bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Skull Crusher (EZ)",
@@ -1157,8 +1940,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["ez bar", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "ez bar",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Skull Crusher (barbell)",
@@ -1166,8 +1955,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["barbell", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Skull Crusher (dumbbell)",
@@ -1175,8 +1970,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Tate Press",
@@ -1184,8 +1985,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Rolling DB Extension",
@@ -1193,8 +2000,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Triceps Pushdown (rope)",
@@ -1202,8 +2015,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["cables", "rope"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "cables",
+        "rope"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Triceps Pushdown (bar)",
@@ -1211,8 +2030,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["cables", "bar"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "cables",
+        "bar"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Overhead Triceps Ext (cable)",
@@ -1220,8 +2045,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["cables"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Overhead Triceps Ext (DB)",
@@ -1229,8 +2060,14 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["dumbbell"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "dumbbell"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Close-Grip Push-Up",
@@ -1238,8 +2075,13 @@
       "targetLift": "bench",
       "stickingPoint": "lockout",
       "primaryMuscle": "triceps",
-      "equipment": ["bodyweight"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "bodyweight"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Dumbbell Floor Press",
@@ -1247,8 +2089,14 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "chest/triceps",
-      "equipment": ["dumbbells", "floor"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "floor"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Cable Fly",
@@ -1256,8 +2104,13 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
     },
     {
       "name": "Dumbbell Fly",
@@ -1265,8 +2118,14 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
     },
     {
       "name": "Incline Dumbbell Fly",
@@ -1274,8 +2133,14 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "upper-chest",
-      "equipment": ["dumbbells", "incline bench"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbells",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
     },
     {
       "name": "Pec Deck",
@@ -1283,8 +2148,13 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "chest",
-      "equipment": ["machine"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
     },
     {
       "name": "Lateral Raise (DB)",
@@ -1292,8 +2162,12 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders (lat delt)",
-      "equipment": ["dumbbells"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "dumbbells"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Cable Lateral Raise",
@@ -1301,8 +2175,12 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders (lat delt)",
-      "equipment": ["cables"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Military Press",
@@ -1310,8 +2188,14 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders/triceps",
-      "equipment": ["barbell", "rack"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Seated DB Overhead Press",
@@ -1319,8 +2203,15 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Arnold Press",
@@ -1328,8 +2219,14 @@
       "targetLift": "bench",
       "stickingPoint": "midrange",
       "primaryMuscle": "shoulders",
-      "equipment": ["dumbbells", "bench"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Landmine Press",
@@ -1337,8 +2234,14 @@
       "targetLift": "bench",
       "stickingPoint": "bottom",
       "primaryMuscle": "shoulders/chest",
-      "equipment": ["barbell", "landmine"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Good Morning (standing)",
@@ -1346,8 +2249,15 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell", "rack"],
-      "stress": ["lowerBack", "shoulder", "hamstring"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ]
     },
     {
       "name": "Good Morning (wide)",
@@ -1355,8 +2265,16 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["barbell", "rack"],
-      "stress": ["lowerBack", "shoulder", "hip", "hamstring"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Good Morning (narrow)",
@@ -1364,8 +2282,15 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["barbell", "rack"],
-      "stress": ["lowerBack", "shoulder", "hamstring"]
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ]
     },
     {
       "name": "Good Morning (cambered)",
@@ -1373,8 +2298,15 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["cambered bar", "rack"],
-      "stress": ["lowerBack", "shoulder", "hamstring"]
+      "equipment": [
+        "cambered bar",
+        "rack"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ]
     },
     {
       "name": "Good Morning (seated)",
@@ -1382,8 +2314,14 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "erectors/QL",
-      "equipment": ["barbell/ssb", "box"],
-      "stress": ["lowerBack", "shoulder"]
+      "equipment": [
+        "barbell/ssb",
+        "box"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder"
+      ]
     },
     {
       "name": "Glute-Ham Raise (GHR)",
@@ -1391,8 +2329,13 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings/glutes",
-      "equipment": ["ghr machine"],
-      "stress": ["hip", "hamstring"]
+      "equipment": [
+        "ghr machine"
+      ],
+      "stress": [
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Nordic Hamstring Curl",
@@ -1400,8 +2343,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
-      "equipment": ["ghr/partner"],
-      "stress": ["hamstring"]
+      "equipment": [
+        "ghr/partner"
+      ],
+      "stress": [
+        "hamstring"
+      ]
     },
     {
       "name": "Hip Thrust (barbell)",
@@ -1409,8 +2356,13 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "glutes",
-      "equipment": ["barbell", "bench"],
-      "stress": ["hip"]
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "stress": [
+        "hip"
+      ]
     },
     {
       "name": "Hip Thrust (banded)",
@@ -1418,8 +2370,13 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "glutes",
-      "equipment": ["band", "bench"],
-      "stress": ["hip"],
+      "equipment": [
+        "band",
+        "bench"
+      ],
+      "stress": [
+        "hip"
+      ],
       "advanced": true
     },
     {
@@ -1428,8 +2385,13 @@
       "targetLift": "squat",
       "stickingPoint": "lockout",
       "primaryMuscle": "glutes",
-      "equipment": ["bw/db", "bench"],
-      "stress": ["hip"]
+      "equipment": [
+        "bw/db",
+        "bench"
+      ],
+      "stress": [
+        "hip"
+      ]
     },
     {
       "name": "Back Extension (45°)",
@@ -1437,8 +2399,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "erectors/glutes/hamstrings",
-      "equipment": ["back ext bench"],
-      "stress": ["lowerBack", "hip", "hamstring"]
+      "equipment": [
+        "back ext bench"
+      ],
+      "stress": [
+        "lowerBack",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Back Extension (GHD)",
@@ -1446,8 +2414,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "erectors/glutes/hamstrings",
-      "equipment": ["ghd"],
-      "stress": ["lowerBack", "hip", "hamstring"]
+      "equipment": [
+        "ghd"
+      ],
+      "stress": [
+        "lowerBack",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Reverse Hyperextension",
@@ -1455,8 +2429,14 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "glutes/hamstrings/erectors",
-      "equipment": ["reverse hyper"],
-      "stress": ["lowerBack", "hip", "hamstring"]
+      "equipment": [
+        "reverse hyper"
+      ],
+      "stress": [
+        "lowerBack",
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Banded Good Morning",
@@ -1464,8 +2444,14 @@
       "targetLift": "squat",
       "stickingPoint": "midrange",
       "primaryMuscle": "hamstrings/erectors",
-      "equipment": ["band"],
-      "stress": ["lowerBack", "shoulder", "hamstring"],
+      "equipment": [
+        "band"
+      ],
+      "stress": [
+        "lowerBack",
+        "shoulder",
+        "hamstring"
+      ],
       "advanced": true
     },
     {
@@ -1474,8 +2460,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["kettlebell"],
-      "stress": ["hip", "hamstring"]
+      "equipment": [
+        "kettlebell"
+      ],
+      "stress": [
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Cable Pull-Through",
@@ -1483,8 +2474,13 @@
       "targetLift": "deadlift",
       "stickingPoint": "bottom",
       "primaryMuscle": "glutes/hamstrings",
-      "equipment": ["cables"],
-      "stress": ["hip", "hamstring"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "hip",
+        "hamstring"
+      ]
     },
     {
       "name": "Seated Leg Curl",
@@ -1492,8 +2488,12 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
-      "equipment": ["machine"],
-      "stress": ["hamstring"]
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hamstring"
+      ]
     },
     {
       "name": "Lying Leg Curl",
@@ -1501,8 +2501,12 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
-      "equipment": ["machine"],
-      "stress": ["hamstring"]
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hamstring"
+      ]
     },
     {
       "name": "Nordic-Leg Curl Machine",
@@ -1510,8 +2514,12 @@
       "targetLift": "deadlift",
       "stickingPoint": "none",
       "primaryMuscle": "hamstrings",
-      "equipment": ["machine"],
-      "stress": ["hamstring"]
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hamstring"
+      ]
     },
     {
       "name": "Sled Drag (forward)",
@@ -1519,8 +2527,13 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["sled"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "sled"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Sled Drag (backward)",
@@ -1528,8 +2541,12 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "quads",
-      "equipment": ["sled"],
-      "stress": ["knee"]
+      "equipment": [
+        "sled"
+      ],
+      "stress": [
+        "knee"
+      ]
     },
     {
       "name": "Leg Press",
@@ -1537,8 +2554,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["leg press machine"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "leg press machine"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Hack Squat (machine)",
@@ -1546,8 +2568,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["hack squat machine"],
-      "stress": ["knee"]
+      "equipment": [
+        "hack squat machine"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Bulgarian Split Squat",
@@ -1555,8 +2582,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["db/barbell", "bench"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "db/barbell",
+        "bench"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "SSB Split Squat",
@@ -1564,8 +2597,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["ssb", "bench"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "ssb",
+        "bench"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Front-Foot Elevated Split Squat",
@@ -1573,8 +2612,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["db", "step"],
-      "stress": ["knee"]
+      "equipment": [
+        "db",
+        "step"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Walking Lunge",
@@ -1582,8 +2627,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell/db"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "barbell/db"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Reverse Lunge",
@@ -1591,8 +2641,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell/db"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "barbell/db"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Step-Up",
@@ -1600,8 +2655,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["barbell/db", "box"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "barbell/db",
+        "box"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Sissy Squat",
@@ -1609,8 +2670,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["bw/weighted"],
-      "stress": ["knee"]
+      "equipment": [
+        "bw/weighted"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Leg Extension",
@@ -1618,8 +2684,12 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "quads",
-      "equipment": ["machine"],
-      "stress": ["knee"]
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "knee"
+      ]
     },
     {
       "name": "Goblet Squat",
@@ -1627,8 +2697,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["db/kb"],
-      "stress": ["knee"]
+      "equipment": [
+        "db/kb"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Box Step-Up",
@@ -1636,8 +2711,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["db", "box"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "db",
+        "box"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Cyclist Squat",
@@ -1645,8 +2726,14 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["barbell", "heels elevated"],
-      "stress": ["knee"]
+      "equipment": [
+        "barbell",
+        "heels elevated"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Single-Leg Leg Press",
@@ -1654,8 +2741,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads/glutes",
-      "equipment": ["leg press machine"],
-      "stress": ["knee", "hip"]
+      "equipment": [
+        "leg press machine"
+      ],
+      "stress": [
+        "knee",
+        "hip"
+      ]
     },
     {
       "name": "Hack Squat (narrow)",
@@ -1663,8 +2755,13 @@
       "targetLift": "squat",
       "stickingPoint": "bottom",
       "primaryMuscle": "quads",
-      "equipment": ["hack squat machine"],
-      "stress": ["knee"]
+      "equipment": [
+        "hack squat machine"
+      ],
+      "stress": [
+        "knee",
+        "ankle"
+      ]
     },
     {
       "name": "Barbell Curl",
@@ -1672,8 +2769,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["barbell"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "barbell"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "EZ Bar Curl",
@@ -1681,8 +2783,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["ez bar"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "ez bar"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Dumbbell Curl",
@@ -1690,8 +2797,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["dumbbells"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbells"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Hammer Curl",
@@ -1699,8 +2811,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps/brachialis",
-      "equipment": ["dumbbells"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbells"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Incline DB Curl",
@@ -1708,8 +2825,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps (long head)",
-      "equipment": ["dumbbells", "incline bench"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbells",
+        "incline bench"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Preacher Curl (EZ/BB)",
@@ -1717,8 +2840,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["ez/barbell", "preacher"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "ez/barbell",
+        "preacher"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Preacher Curl (DB)",
@@ -1726,8 +2855,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["dumbbell", "preacher"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbell",
+        "preacher"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Cable Curl",
@@ -1735,8 +2870,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["cables"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Spider Curl",
@@ -1744,8 +2884,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["barbell/db", "incline bench"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "barbell/db",
+        "incline bench"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Zottman Curl",
@@ -1753,8 +2899,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps/brachialis",
-      "equipment": ["dumbbells"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbells"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Concentration Curl",
@@ -1762,8 +2913,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "biceps",
-      "equipment": ["dumbbell"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "dumbbell"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Reverse Curl",
@@ -1771,8 +2927,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "brachioradialis/forearms",
-      "equipment": ["barbell/ez"],
-      "stress": ["elbow", "bicepsTendon"]
+      "equipment": [
+        "barbell/ez"
+      ],
+      "stress": [
+        "elbow",
+        "bicepsTendon"
+      ]
     },
     {
       "name": "Plank",
@@ -1780,7 +2941,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core",
-      "equipment": ["bodyweight"],
+      "equipment": [
+        "bodyweight"
+      ],
       "stress": []
     },
     {
@@ -1789,7 +2952,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "obliques/core",
-      "equipment": ["bodyweight"],
+      "equipment": [
+        "bodyweight"
+      ],
       "stress": []
     },
     {
@@ -1798,7 +2963,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core (anterior)",
-      "equipment": ["ab wheel"],
+      "equipment": [
+        "ab wheel"
+      ],
       "stress": []
     },
     {
@@ -1807,7 +2974,10 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "abs",
-      "equipment": ["cables", "rope"],
+      "equipment": [
+        "cables",
+        "rope"
+      ],
       "stress": []
     },
     {
@@ -1816,7 +2986,10 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "abs",
-      "equipment": ["decline bench", "plate"],
+      "equipment": [
+        "decline bench",
+        "plate"
+      ],
       "stress": []
     },
     {
@@ -1825,8 +2998,13 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core (anti-rotation)",
-      "equipment": ["cables/band"],
-      "stress": ["shoulder", "elbow"]
+      "equipment": [
+        "cables/band"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     },
     {
       "name": "Pallof Press (overhead)",
@@ -1834,8 +3012,14 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core",
-      "equipment": ["cables/band"],
-      "stress": ["shoulder", "elbow", "wrist"]
+      "equipment": [
+        "cables/band"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ]
     },
     {
       "name": "Hanging Leg Raise",
@@ -1843,8 +3027,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "abs/hip-flexors",
-      "equipment": ["pull-up bar"],
-      "stress": ["shoulder"]
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder"
+      ]
     },
     {
       "name": "Lying Leg Raise",
@@ -1852,7 +3040,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "abs/hip-flexors",
-      "equipment": ["bench/floor"],
+      "equipment": [
+        "bench/floor"
+      ],
       "stress": []
     },
     {
@@ -1861,7 +3051,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core",
-      "equipment": ["bench"],
+      "equipment": [
+        "bench"
+      ],
       "stress": []
     },
     {
@@ -1870,7 +3062,10 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "obliques/core",
-      "equipment": ["barbell", "landmine"],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
       "stress": []
     },
     {
@@ -1879,7 +3074,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "abs/hip-flexors",
-      "equipment": ["ghd"],
+      "equipment": [
+        "ghd"
+      ],
       "stress": []
     },
     {
@@ -1888,7 +3085,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "obliques",
-      "equipment": ["bw/plate"],
+      "equipment": [
+        "bw/plate"
+      ],
       "stress": []
     },
     {
@@ -1897,7 +3096,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core",
-      "equipment": ["bodyweight"],
+      "equipment": [
+        "bodyweight"
+      ],
       "stress": []
     },
     {
@@ -1906,8 +3107,12 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core/erectors",
-      "equipment": ["bodyweight"],
-      "stress": ["lowerBack"]
+      "equipment": [
+        "bodyweight"
+      ],
+      "stress": [
+        "lowerBack"
+      ]
     },
     {
       "name": "Farmer's Walk",
@@ -1915,7 +3120,9 @@
       "targetLift": "general",
       "stickingPoint": "none",
       "primaryMuscle": "core/traps/grip",
-      "equipment": ["db/trap bar/axle"],
+      "equipment": [
+        "db/trap bar/axle"
+      ],
       "stress": []
     },
     {
@@ -1924,8 +3131,12 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "core/traps/quads",
-      "equipment": ["yoke"],
-      "stress": ["knee"]
+      "equipment": [
+        "yoke"
+      ],
+      "stress": [
+        "knee"
+      ]
     },
     {
       "name": "Belt Squat March",
@@ -1933,8 +3144,12 @@
       "targetLift": "squat",
       "stickingPoint": "none",
       "primaryMuscle": "core/quads",
-      "equipment": ["belt squat machine"],
-      "stress": ["knee"]
+      "equipment": [
+        "belt squat machine"
+      ],
+      "stress": [
+        "knee"
+      ]
     }
   ]
 }
