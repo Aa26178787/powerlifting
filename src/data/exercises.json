@@ -178,6 +178,7 @@
       "category": "variation",
       "targetLift": "squat",
       "stickingPoint": "lockout",
+      "cause": "hip",
       "primaryMuscle": "quads/glutes",
       "equipment": [
         "barbell",
@@ -320,6 +321,7 @@
       "category": "variation",
       "targetLift": "squat",
       "stickingPoint": "lockout",
+      "cause": "hip",
       "primaryMuscle": "quads/glutes",
       "equipment": [
         "barbell",
@@ -339,6 +341,7 @@
       "category": "variation",
       "targetLift": "squat",
       "stickingPoint": "lockout",
+      "cause": "hip",
       "primaryMuscle": "quads/glutes",
       "equipment": [
         "barbell",
@@ -1011,6 +1014,7 @@
       "category": "accessory",
       "targetLift": "bench",
       "stickingPoint": "lockout",
+      "cause": "triceps",
       "primaryMuscle": "shoulders/triceps",
       "equipment": [
         "barbell",
