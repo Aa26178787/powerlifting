@@ -12,6 +12,7 @@ import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
+import { newLedger, addToLedger, summarize } from './muscleVolume.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -96,9 +97,8 @@ export function generate(profile) {
   const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
 
-  const weeks = allWeeks.map((wk) => ({
-    ...wk,
-    sessions: wk.sessions.map((s) => {
+  const weeks = allWeeks.map((wk) => {
+    const sessions = wk.sessions.map((s) => {
       const notes = []
       const exercises = s.exercises
         .map((e) => {
@@ -174,8 +174,22 @@ export function generate(profile) {
         isDeload: wk.isDeload,
       })
       return { ...s, exercises: kept, accessories, notes }
-    }),
-  }))
+    })
+
+    // ── Per-muscle volume ledger (additive reporting field; no prescription change) ──
+    const weekLedger = newLedger()
+    for (const s of sessions) {
+      for (const e of s.exercises) {
+        const ex = byName(e.lift)
+        if (ex?.primaryMuscle) addToLedger(weekLedger, ex.primaryMuscle, e.sets)
+      }
+      for (const a of s.accessories) {
+        if (a.primaryMuscle) addToLedger(weekLedger, a.primaryMuscle, a.scheme.sets.length)
+      }
+    }
+
+    return { ...wk, sessions, muscleVolume: summarize(weekLedger) }
+  })
 
   return { template: 'custom', model, weeks }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate } from './generate.js'
 import { byName } from './exercises.js'
 import { PRESETS } from './quality.js'
+import { MUSCLES } from './muscleVolume.js'
 
 const profile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
@@ -9,6 +10,44 @@ const profile = {
   qualities: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
   periodizationModel: 'auto',
 }
+
+// ── Test 8: muscleVolume reporting field ──────────────────────────────────────
+describe('muscleVolume reporting (test 8)', () => {
+  it('every week carries a muscleVolume field with all 15 canonical groups', () => {
+    const plan = generate(profile)
+    for (const wk of plan.weeks) {
+      expect(wk.muscleVolume).toBeTruthy()
+      for (const group of MUSCLES) {
+        const entry = wk.muscleVolume[group]
+        expect(entry, `missing group ${group}`).toBeTruthy()
+        expect(typeof entry.sets).toBe('number')
+        expect(['under', 'in', 'over']).toContain(entry.status)
+        expect(typeof entry.mev).toBe('number')
+        expect(typeof entry.mrv).toBe('number')
+      }
+    }
+  })
+
+  it('4-day powerbuilding: quads/erectors well-represented, biceps lower (sanity)', () => {
+    const plan = generate(profile)
+    const wk1 = plan.weeks[0].muscleVolume
+    // SBD-heavy → quads and erectors should accumulate meaningful volume
+    expect(wk1.quads.sets).toBeGreaterThan(0)
+    expect(wk1.erectors.sets).toBeGreaterThan(0)
+    // Biceps is not a primary in SBD main lifts → remains zero or very low from mains
+    // (accessories may contribute, but at most a few sets from curls)
+    expect(wk1.quads.sets).toBeGreaterThan(wk1.biceps.sets)
+  })
+
+  it('muscleVolume field does not break existing plan shape ({template, model, weeks})', () => {
+    const plan = generate(profile)
+    expect(plan.template).toBe('custom')
+    expect(typeof plan.model).toBe('string')
+    expect(Array.isArray(plan.weeks)).toBe(true)
+    // muscleVolume is additive — sessions and exercises still present
+    expect(plan.weeks[0].sessions[0].exercises.length).toBeGreaterThan(0)
+  })
+})
 
 describe('resolveE1rm', () => {
   it('uses a direct 1RM when provided', () => {

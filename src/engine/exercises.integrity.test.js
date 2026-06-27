@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import db from '../data/exercises.json' with { type: 'json' }
+import { canonicalToken } from './muscleVolume.js'
 
 const CATEGORY = ['competition', 'variation', 'accessory']
 const TARGET = ['squat', 'bench', 'deadlift', 'general']
@@ -39,6 +40,21 @@ describe('exercise DB integrity', () => {
   it('names are unique', () => {
     const names = db.exercises.map((e) => e.name)
     expect(new Set(names).size).toBe(names.length)
+  })
+})
+
+describe('muscle token coverage (test 7)', () => {
+  it('every primaryMuscle token in the DB resolves via canonicalToken (0 unmapped)', () => {
+    const unmapped = []
+    for (const ex of db.exercises) {
+      for (const tok of ex.primaryMuscle.split('/')) {
+        if (canonicalToken(tok.trim()) === null) {
+          unmapped.push(`${ex.name}: "${tok.trim()}"`)
+        }
+      }
+    }
+    if (unmapped.length > 0) console.error('Unmapped tokens:', unmapped)
+    expect(unmapped).toHaveLength(0)
   })
 })
 
