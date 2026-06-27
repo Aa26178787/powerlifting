@@ -293,3 +293,198 @@ describe('stickingCause (spec §4.1 case 11)', () => {
     expect(p.lifts.squat.oneRM).toBe(100)
   })
 })
+
+// ── volumeOverride actions (§5.3) ─────────────────────────────────────────────
+describe('volumeOverride default', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('DEFAULT_PROFILE includes volumeOverride with disabled main + accessory and null setsPerSession', () => {
+    expect(DEFAULT_PROFILE.volumeOverride).toEqual({
+      main: {
+        enabled: false,
+        mode: 'rampFromFloor',
+        setsPerSession: { squat: null, bench: null, deadlift: null },
+      },
+      accessory: { enabled: false, setsPerSession: null },
+    })
+  })
+})
+
+describe('setVolumeOverrideEnabled', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('enables main volume override', () => {
+    useProfileStore.getState().setVolumeOverrideEnabled('main', true)
+    expect(useProfileStore.getState().profile.volumeOverride.main.enabled).toBe(true)
+  })
+  it('enables accessory volume override', () => {
+    useProfileStore.getState().setVolumeOverrideEnabled('accessory', true)
+    expect(useProfileStore.getState().profile.volumeOverride.accessory.enabled).toBe(true)
+  })
+  it('disables main volume override', () => {
+    useProfileStore.getState().setVolumeOverrideEnabled('main', true)
+    useProfileStore.getState().setVolumeOverrideEnabled('main', false)
+    expect(useProfileStore.getState().profile.volumeOverride.main.enabled).toBe(false)
+  })
+})
+
+describe('setMainVolumeMode', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('sets mode to fixed', () => {
+    useProfileStore.getState().setMainVolumeMode('fixed')
+    expect(useProfileStore.getState().profile.volumeOverride.main.mode).toBe('fixed')
+  })
+  it('sets mode back to rampFromFloor', () => {
+    useProfileStore.getState().setMainVolumeMode('fixed')
+    useProfileStore.getState().setMainVolumeMode('rampFromFloor')
+    expect(useProfileStore.getState().profile.volumeOverride.main.mode).toBe('rampFromFloor')
+  })
+})
+
+describe('setMainSetsPerSession', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('sets squat setsPerSession to a value', () => {
+    useProfileStore.getState().setMainSetsPerSession('squat', 5)
+    expect(useProfileStore.getState().profile.volumeOverride.main.setsPerSession.squat).toBe(5)
+  })
+  it('clamps value to max 12', () => {
+    useProfileStore.getState().setMainSetsPerSession('bench', 15)
+    expect(useProfileStore.getState().profile.volumeOverride.main.setsPerSession.bench).toBe(12)
+  })
+  it('clamps value to min 1', () => {
+    useProfileStore.getState().setMainSetsPerSession('deadlift', 0)
+    expect(useProfileStore.getState().profile.volumeOverride.main.setsPerSession.deadlift).toBe(1)
+  })
+  it('accepts null (clears the override)', () => {
+    useProfileStore.getState().setMainSetsPerSession('squat', 5)
+    useProfileStore.getState().setMainSetsPerSession('squat', null)
+    expect(useProfileStore.getState().profile.volumeOverride.main.setsPerSession.squat).toBeNull()
+  })
+  it('only updates the targeted lift', () => {
+    useProfileStore.getState().setMainSetsPerSession('squat', 4)
+    const sps = useProfileStore.getState().profile.volumeOverride.main.setsPerSession
+    expect(sps.bench).toBeNull()
+    expect(sps.deadlift).toBeNull()
+  })
+})
+
+describe('setAccessorySetsPerSession', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('sets accessory setsPerSession', () => {
+    useProfileStore.getState().setAccessorySetsPerSession(4)
+    expect(useProfileStore.getState().profile.volumeOverride.accessory.setsPerSession).toBe(4)
+  })
+  it('clamps value to max 8', () => {
+    useProfileStore.getState().setAccessorySetsPerSession(10)
+    expect(useProfileStore.getState().profile.volumeOverride.accessory.setsPerSession).toBe(8)
+  })
+  it('clamps value to min 0', () => {
+    useProfileStore.getState().setAccessorySetsPerSession(-1)
+    expect(useProfileStore.getState().profile.volumeOverride.accessory.setsPerSession).toBe(0)
+  })
+  it('accepts null', () => {
+    useProfileStore.getState().setAccessorySetsPerSession(4)
+    useProfileStore.getState().setAccessorySetsPerSession(null)
+    expect(useProfileStore.getState().profile.volumeOverride.accessory.setsPerSession).toBeNull()
+  })
+})
+
+describe('applyVolumeRecommendation', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('fills all three lifts setsPerSession with non-null values', () => {
+    useProfileStore.getState().applyVolumeRecommendation()
+    const sps = useProfileStore.getState().profile.volumeOverride.main.setsPerSession
+    expect(sps.squat).not.toBeNull()
+    expect(sps.bench).not.toBeNull()
+    expect(sps.deadlift).not.toBeNull()
+  })
+  it('sets main.enabled = true', () => {
+    useProfileStore.getState().applyVolumeRecommendation()
+    expect(useProfileStore.getState().profile.volumeOverride.main.enabled).toBe(true)
+  })
+  it('sets accessory.enabled = true and fills setsPerSession', () => {
+    useProfileStore.getState().applyVolumeRecommendation()
+    const acc = useProfileStore.getState().profile.volumeOverride.accessory
+    expect(acc.enabled).toBe(true)
+    expect(acc.setsPerSession).not.toBeNull()
+  })
+  it('sets mode to rampFromFloor', () => {
+    useProfileStore.getState().setMainVolumeMode('fixed')
+    useProfileStore.getState().applyVolumeRecommendation()
+    expect(useProfileStore.getState().profile.volumeOverride.main.mode).toBe('rampFromFloor')
+  })
+})
+
+describe('clearVolumeOverride', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('resets all setsPerSession to null and enabled to false', () => {
+    useProfileStore.getState().applyVolumeRecommendation()
+    useProfileStore.getState().clearVolumeOverride()
+    const ov = useProfileStore.getState().profile.volumeOverride
+    expect(ov.main.enabled).toBe(false)
+    expect(ov.main.mode).toBe('rampFromFloor')
+    expect(ov.main.setsPerSession).toEqual({ squat: null, bench: null, deadlift: null })
+    expect(ov.accessory.enabled).toBe(false)
+    expect(ov.accessory.setsPerSession).toBeNull()
+  })
+})
+
+describe('merge injects volumeOverride default into old profile lacking it', () => {
+  beforeEach(() => { localStorage.clear() })
+
+  it('old profile without volumeOverride gets defaults merged in without crash', async () => {
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+          // volumeOverride intentionally absent (old persisted profile)
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    expect(p.volumeOverride).toBeDefined()
+    expect(p.volumeOverride.main.enabled).toBe(false)
+    expect(p.volumeOverride.main.mode).toBe('rampFromFloor')
+    expect(p.volumeOverride.main.setsPerSession).toEqual({ squat: null, bench: null, deadlift: null })
+    expect(p.volumeOverride.accessory.enabled).toBe(false)
+    expect(p.volumeOverride.accessory.setsPerSession).toBeNull()
+    // original user data preserved
+    expect(p.lifts.squat.oneRM).toBe(100)
+    expect(p.years).toBe(3)
+  })
+
+  it('partial volumeOverride in old profile is deep-merged (setsPerSession preserved)', async () => {
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 2, daysPerWeek: 4, fatigue: 2,
+          volumeOverride: {
+            main: { enabled: true, mode: 'fixed', setsPerSession: { squat: 5, bench: null, deadlift: null } },
+            // accessory absent
+          },
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    expect(p.volumeOverride.main.enabled).toBe(true)
+    expect(p.volumeOverride.main.mode).toBe('fixed')
+    expect(p.volumeOverride.main.setsPerSession.squat).toBe(5)
+    expect(p.volumeOverride.accessory.enabled).toBe(false)
+    expect(p.volumeOverride.accessory.setsPerSession).toBeNull()
+  })
+})

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { presetBlend } from '../../engine/quality.js'
 import { POSITION_CAUSES } from '../../engine/stickingPoint.js'
+import { recommendVolume } from '../../engine/volumeOverride.js'
 
 export const DEFAULT_PROFILE = {
   lifts: {
@@ -34,6 +35,14 @@ export const DEFAULT_PROFILE = {
   units: 'kg',
   accessoryPreference: 'machine',
   frequency: { squat: 2, bench: 2, deadlift: 1 },
+  volumeOverride: {
+    main: {
+      enabled: false,
+      mode: 'rampFromFloor',
+      setsPerSession: { squat: null, bench: null, deadlift: null },
+    },
+    accessory: { enabled: false, setsPerSession: null },
+  },
 }
 
 function hasUsableLift(liftInput) {
@@ -80,6 +89,87 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, stickingCause: { ...s.profile.stickingCause, [lift]: value } } })),
       setFrequency: (lift, value) =>
         set((s) => ({ profile: { ...s.profile, frequency: { ...s.profile.frequency, [lift]: value } } })),
+      setVolumeOverrideEnabled: (scope, bool) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            volumeOverride: {
+              ...s.profile.volumeOverride,
+              [scope]: { ...s.profile.volumeOverride[scope], enabled: bool },
+            },
+          },
+        })),
+      setMainVolumeMode: (mode) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            volumeOverride: {
+              ...s.profile.volumeOverride,
+              main: { ...s.profile.volumeOverride.main, mode },
+            },
+          },
+        })),
+      setMainSetsPerSession: (lift, value) =>
+        set((s) => {
+          const v = value == null ? null : Math.max(1, Math.min(12, Number(value)))
+          return {
+            profile: {
+              ...s.profile,
+              volumeOverride: {
+                ...s.profile.volumeOverride,
+                main: {
+                  ...s.profile.volumeOverride.main,
+                  setsPerSession: { ...s.profile.volumeOverride.main.setsPerSession, [lift]: v },
+                },
+              },
+            },
+          }
+        }),
+      setAccessorySetsPerSession: (value) =>
+        set((s) => {
+          const v = value == null ? null : Math.max(0, Math.min(8, Number(value)))
+          return {
+            profile: {
+              ...s.profile,
+              volumeOverride: {
+                ...s.profile.volumeOverride,
+                accessory: { ...s.profile.volumeOverride.accessory, setsPerSession: v },
+              },
+            },
+          }
+        }),
+      applyVolumeRecommendation: () =>
+        set((s) => {
+          const rec = recommendVolume(s.profile)
+          return {
+            profile: {
+              ...s.profile,
+              volumeOverride: {
+                main: {
+                  ...s.profile.volumeOverride.main,
+                  enabled: true,
+                  mode: 'rampFromFloor',
+                  setsPerSession: rec.main.setsPerSession,
+                },
+                accessory: { enabled: true, setsPerSession: rec.accessory },
+              },
+            },
+          }
+        }),
+      clearVolumeOverride: () =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            volumeOverride: {
+              main: {
+                enabled: false,
+                mode: 'rampFromFloor',
+                setsPerSession: { squat: null, bench: null, deadlift: null },
+              },
+              accessory: { enabled: false, setsPerSession: null },
+            },
+          },
+        })),
       setRegionStatus: (region, value) =>
         set((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, [region]: value } } })),
       setQuality: (q, value) =>
@@ -153,6 +243,20 @@ export const useProfileStore = create(
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
             units: p.units ?? current.profile.units,
             accessoryPreference: p.accessoryPreference ?? current.profile.accessoryPreference,
+            volumeOverride: {
+              main: {
+                ...current.profile.volumeOverride.main,
+                ...(p.volumeOverride?.main || {}),
+                setsPerSession: {
+                  ...current.profile.volumeOverride.main.setsPerSession,
+                  ...(p.volumeOverride?.main?.setsPerSession || {}),
+                },
+              },
+              accessory: {
+                ...current.profile.volumeOverride.accessory,
+                ...(p.volumeOverride?.accessory || {}),
+              },
+            },
           },
           checkinLog: persisted?.checkinLog ?? [],
         }

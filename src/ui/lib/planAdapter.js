@@ -24,6 +24,7 @@ export function toEngineProfile(form) {
     cueNeed: form.cueNeed ?? {},
     accessoryPreference: form.accessoryPreference,
     frequency: form.frequency,
+    volumeOverride: form.volumeOverride,
   }
 }
 
