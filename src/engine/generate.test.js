@@ -374,6 +374,102 @@ describe('steering layer gating (test 9)', () => {
   })
 })
 
+// ── Tests: peaking × ledger tuning (Change A + B) ────────────────────────────
+describe('peaking × ledger tuning (Change A + B)', () => {
+  // 6-week hypertrophy-dominant peaking profile (hyp=0.7 → dom='hypertrophy',
+  // goalBias=1, minCap=1, sharedCap=4, baseDeficit=0.6)
+  const hypPeakProfile = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 2,
+    qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 },
+    mesoWeeks: 6,
+    competition: { on: true, date: '2026-09-01' },
+    deloadEnabled: false,
+    equipment: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+  }
+  // Phase map for 6-week meso (phaseFor(wk.index-1, 6, true)):
+  //  plan.weeks[0,1] → accumulation   (deficitWeight=0.6, sharedCap=4)
+  //  plan.weeks[2,3] → intensification (deficitWeight=0.3, sharedCap=4)
+  //  plan.weeks[4,5] → peak            (deficitWeight=0.0, sharedCap=3)
+
+  const weekAccCount = (plan, i) =>
+    plan.weeks[i].sessions.reduce((sum, s) => sum + s.accessories.length, 0)
+
+  const weekBicepsSets = (plan, i) =>
+    plan.weeks[i].sessions
+      .flatMap(s => s.accessories)
+      .filter(a => a.primaryMuscle === 'biceps')
+      .reduce((sum, a) => sum + a.scheme.sets.length, 0)
+
+  // ── A.1: no backfill in peak ───────────────────────────────────────────────
+  it('A — peak weeks: biceps deficit sets ≤ intensification weeks (no taper reversal)', () => {
+    const plan = generate(hypPeakProfile)
+    const accumBiceps  = weekBicepsSets(plan, 0) + weekBicepsSets(plan, 1)
+    const intensBiceps = weekBicepsSets(plan, 2) + weekBicepsSets(plan, 3)
+    const peakBiceps   = weekBicepsSets(plan, 4) + weekBicepsSets(plan, 5)
+    // Deficit fill in accum should boost under-represented biceps in SBD plans
+    expect(accumBiceps).toBeGreaterThan(0)
+    // Peak: deficitWeight=0 → biceps not boosted → count ≤ intens level
+    expect(peakBiceps).toBeLessThanOrEqual(intensBiceps)
+  })
+
+  // ── A.2: determinism ──────────────────────────────────────────────────────
+  it('A — determinism: two generate() calls produce identical accessory output', () => {
+    const names = (p) => p.weeks.map(w => w.sessions.map(s => s.accessories.map(a => a.name)))
+    expect(names(generate(hypPeakProfile))).toEqual(names(generate(hypPeakProfile)))
+  })
+
+  // ── B.3: count taper but not zero ─────────────────────────────────────────
+  it('B — peak accessory count ≤ accum count and every peak session ≥ minCap (1)', () => {
+    const plan = generate(hypPeakProfile)
+    // hyp-dom: sharedCap=4 in accum, sharedCap=3 in peak (after −1 trim)
+    expect(weekAccCount(plan, 4)).toBeLessThanOrEqual(weekAccCount(plan, 0))
+    // Floor = minCap=1: no session is wiped out entirely
+    for (const s of plan.weeks[4].sessions) {
+      expect(s.accessories.length).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  // ── B.4: deload guard ─────────────────────────────────────────────────────
+  it('B — deload guard: deload week in peak phase is NOT double-cut below working peak', () => {
+    const plan = generate({ ...hypPeakProfile, deloadEnabled: true })
+    expect(plan.weeks).toHaveLength(7)
+    const deloadWk = plan.weeks[6]
+    expect(deloadWk.isDeload).toBe(true)
+    // Guard (!wk.isDeload) prevents the −1 trim: deload sharedCap stays at 4 (accum level)
+    // Working peak sharedCap=3 → deload must be ≥ peak
+    const deloadTotal = deloadWk.sessions.reduce((sum, s) => sum + s.accessories.length, 0)
+    expect(deloadTotal).toBeGreaterThanOrEqual(weekAccCount(plan, 4))
+  })
+
+  // ── 5: non-peaking bit-for-bit unchanged ──────────────────────────────────
+  it('non-peaking: same profile with competition off produces identical output twice', () => {
+    const nonPeakProfile = { ...hypPeakProfile, competition: { on: false, date: '' } }
+    const snap = (p) => p.weeks.map(w => w.sessions.map(s => ({
+      count: s.accessories.length,
+      names: s.accessories.map(a => a.name),
+    })))
+    // Proves A+B code paths (gated by peaking=false) introduce no non-determinism
+    expect(snap(generate(nonPeakProfile))).toEqual(snap(generate(nonPeakProfile)))
+  })
+
+  // ── 6: pure-PL protection ─────────────────────────────────────────────────
+  it('pure-PL peaking: accessory names identical to non-peaking (minCap floor absorbs trim)', () => {
+    // str=0.70 → dom='strength' → goalBias=-1 → minCap=2, sharedCap=2
+    // Peak taper: Math.max(2, 2-1) = 2 (no change — already at floor)
+    // baseDeficit=0 (str-dom) → weekDeficitWeight=0 for all phases in both cases
+    // → same deficitWeight=0 → same accessory selection → bit-identical names
+    const plPeakProfile = {
+      ...hypPeakProfile,
+      qualities: { power: 0.10, strength: 0.70, hypertrophy: 0.20, endurance: 0.00 },
+    }
+    const peakPlan    = generate(plPeakProfile)
+    const nonPeakPlan = generate({ ...plPeakProfile, competition: { on: false, date: '' } })
+    const names = (p) => p.weeks.map(w => w.sessions.flatMap(s => s.accessories.map(a => a.name)))
+    expect(names(peakPlan)).toEqual(names(nonPeakPlan))
+  })
+})
+
 describe('peaking (competition) taper mode integration', () => {
   // 6-week powerlifting meso with competition on + date → peaking=true → taper mode
   const peakProfile = {
