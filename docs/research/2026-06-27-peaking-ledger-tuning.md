@@ -40,7 +40,7 @@
 
 ## 미해결·후속
 - ~~순수 PL 피커 보조 taper(2→1) 미활성(보수적 minCap floor). 원하면 1줄 전환.~~ → **해소(상단 갱신)**: floor=1로 전환, 순수 PL도 peak주 taper 활성.
-- ACCESSORY_EST_SETS=3 평탄 추정(조향 한정, 보고는 실측) — 기존 한계 유지.
+- ~~ACCESSORY_EST_SETS=3 평탄 추정(조향 한정, 보고는 실측) — 기존 한계 유지.~~ → **해소**: 조향 ledger seed를 scheme 배정 후 **실측 `scheme.sets.length`**(restPause=1·straight=3·myoReps=4 등)로 정밀화 → 같은 주 후속 세션이 정확한 누적 부하 인지. 단 select 내 MRV overflow *예측*(candidate scheme 미배정 시점)은 불가피하게 EST=3 유지.
 
 ## 방법
 3관점 병렬 설계(opus) → 합성(opus high-effort). 코드 라인 단위 검증 + `docs/research/` 3문서 교차. ~266k token.

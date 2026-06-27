@@ -360,9 +360,8 @@ describe('steering layer gating (test 9)', () => {
     }
   })
 
-  it('reporting muscleVolume still uses actual scheme.sets (not steering estimate)', () => {
-    // The steering ledger uses ACCESSORY_EST_SETS=3; actual schemes may differ.
-    // Reporting must reflect realized sets, not the estimate.
+  it('reporting muscleVolume uses actual scheme.sets', () => {
+    // Both the steering ledger and reporting now use realized scheme.sets.length.
     const plan = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
     for (const wk of plan.weeks) {
       expect(wk.muscleVolume).toBeTruthy()
@@ -371,6 +370,22 @@ describe('steering layer gating (test 9)', () => {
         expect(wk.muscleVolume[group].sets).toBeGreaterThanOrEqual(0)
       }
     }
+  })
+
+  // ── steering ledger precision: actual scheme sets, not a flat estimate ──────
+  it('steering uses actual accessory set counts (restPause=1..myoReps=4), deterministic', () => {
+    const hyp = { ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } }
+    // Realized accessory schemes span multiple set counts — so a flat-3 estimate
+    // would mis-account headroom. Confirm the variance exists (non-trivial input).
+    const plan = generate(hyp)
+    const setLens = new Set(
+      plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.accessories).map((a) => a.scheme.sets.length)
+    )
+    expect(setLens.size).toBeGreaterThan(1)        // not all 3 → estimate was lossy
+    expect(Math.max(...setLens)).toBeGreaterThan(3) // e.g. myoReps=4 (estimate under-counted)
+    // Reorder (scheme-before-ledger) must keep generation deterministic.
+    const names = (p) => p.weeks.map((w) => w.sessions.map((s) => s.accessories.map((a) => a.name)))
+    expect(names(generate(hyp))).toEqual(names(plan))
   })
 })
 

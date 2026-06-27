@@ -12,7 +12,7 @@ import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
-import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS, ACCESSORY_EST_SETS } from './muscleVolume.js'
+import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -221,19 +221,22 @@ export function generate(profile) {
         }
       }
 
-      // Update steering ledger with estimated accessory volume so subsequent
-      // sessions in the same week see the accumulated load (ACCESSORY_EST_SETS is an
-      // estimate; reporting uses actual scheme.sets.length — see Phase 4 below).
-      for (const acc of allRaw) {
-        if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, ACCESSORY_EST_SETS)
-      }
-
+      // Assign schemes first so the steering ledger can be seeded with each
+      // accessory's ACTUAL realized set count (restPause=1, straight=3, myoReps=4,
+      // deload-straight=2) rather than a flat estimate. Subsequent sessions in the
+      // same week then see accurate accumulated load for deficit/overflow decisions.
+      // (Scheme assignment is independent of the steering ledger, so this reorder
+      // does not change which scheme an accessory gets — only the ledger value.)
       const accessories = withAccessoryScheme(allRaw, {
         weekIndex: wk.index - 1,
         advanced,
         phase,
         isDeload: wk.isDeload,
       })
+      for (const acc of accessories) {
+        if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, acc.scheme.sets.length)
+      }
+
       return { ...s, exercises: kept, accessories, notes }
     })
 
