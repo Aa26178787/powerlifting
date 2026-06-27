@@ -13,4 +13,15 @@ describe('detectOverreaching', () => {
   it('no flag when healthy', () => {
     expect(detectOverreaching([{ readiness: 0.9 }, { readiness: 0.8 }, { readiness: 0.85 }]).flag).toBe(false)
   })
+  it('out-of-order check-ins: detects trend by {week,day} order, not insertion order', () => {
+    // Logged week3 first, then week1, then week2 — out of training order.
+    const log = [
+      { week: 3, day: 1, readiness: 0.3 },  // worst (week 3)
+      { week: 1, day: 1, readiness: 0.49 }, // best  (week 1)
+      { week: 2, day: 1, readiness: 0.4 },  // mid   (week 2)
+    ]
+    // After sorting by week: [0.49, 0.4, 0.3] → strictly declining, all <0.5 → flag
+    // Broken (slice(-3) insertion order): [0.3, 0.49, 0.4] → not declining → no flag
+    expect(detectOverreaching(log).flag).toBe(true)
+  })
 })

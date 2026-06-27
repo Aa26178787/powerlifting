@@ -6,7 +6,21 @@ import { readinessScore, loadFactor, setsToDrop } from './readiness.js'
 
 function trimSets(sets, drop) {
   if (drop <= 0 || sets.length <= 1) return sets
-  return sets.slice(0, Math.max(1, sets.length - drop))
+  const keep = Math.max(1, sets.length - drop)
+  // If any set carries a numeric weight (working sets), drop the heaviest ones first
+  // so protective lighter backoffs are preserved on low-readiness days.
+  // Tie-break: keep the earlier set (lower index) → drop the later one.
+  // Accessories (no weight) fall through to the end-trim path.
+  if (sets.some((s) => typeof s.weight === 'number')) {
+    const dropIndices = new Set(
+      sets
+        .map((s, i) => i)
+        .sort((a, b) => (sets[b].weight ?? -Infinity) - (sets[a].weight ?? -Infinity) || b - a)
+        .slice(0, sets.length - keep)
+    )
+    return sets.filter((_, i) => !dropIndices.has(i))
+  }
+  return sets.slice(0, keep)
 }
 
 export function applyReadiness(session, checkin) {

@@ -19,4 +19,15 @@ describe('readiness scores', () => {
   it('setsToDrop steps with readiness', () => {
     expect(setsToDrop(0.8)).toBe(0); expect(setsToDrop(0.4)).toBe(1); expect(setsToDrop(0.2)).toBe(2)
   })
+  it('partial checkin (only sleepHours) returns finite readiness in [0,1]', () => {
+    // Missing stress/systemicFatigue → old code: NaN. Fixed: fall back to neutral 0.5.
+    const r = readinessScore({ sleepHours: 7 })
+    expect(Number.isFinite(r)).toBe(true)
+    expect(r).toBeGreaterThanOrEqual(0)
+    expect(r).toBeLessThanOrEqual(1)
+  })
+  it('undefined checkin fields do not poison weight calculations', () => {
+    // All undefined → readinessScore should return 0.5 (all mid), not NaN
+    expect(readinessScore({})).toBe(0.5)
+  })
 })
