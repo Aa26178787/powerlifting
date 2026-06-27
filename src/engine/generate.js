@@ -33,6 +33,23 @@ function deficitPhaseScale(phase, peaking) {
   return 0.0 // peak — block deficit-fill entirely
 }
 
+// Deficit-fill base weight.
+// hyp/endurance dominant → full 0.6 (unchanged from prior gate).
+// strength/power dominant → linear ramp on hyp share (SBD specificity gate).
+// dead-zone (hyp ≤ LO=0.30) → Math.max clamps to exactly 0 (FP-safe for PL hyp=0.20).
+// ramp saturates at HI=0.50 → 0.6 full (e.g. 50/50 str/hyp blend).
+// HI must stay ≤ 0.50: raising it toward bodybuilding (0.80) compresses the range,
+// dropping PB 0.45→~0.18 (below effective activation floor ~0.40) — silent bug re-emerge.
+const DEFICIT_FULL    = 0.6   // existing gate "on" value — no new magic number
+const HYP_DEFICIT_LO  = 0.30  // str/pwr: hyp share ≤ LO → 0 (PL safe, gap from hyp=0.20)
+const HYP_DEFICIT_HI  = 0.50  // str/pwr: hyp share ≥ HI → DEFICIT_FULL (50/50 gets full)
+export function deficitBaseWeight({ dom, n }) {
+  if (dom !== 'strength' && dom !== 'power') return DEFICIT_FULL
+  const ramp = Math.max(0, Math.min(1,
+    (n.hypertrophy - HYP_DEFICIT_LO) / (HYP_DEFICIT_HI - HYP_DEFICIT_LO)))
+  return DEFICIT_FULL * ramp
+}
+
 function withAccessoryScheme(accessories, { weekIndex, advanced, phase, isDeload }) {
   return accessories.map((a, i) => {
     const quality = accessoryQuality(a)
@@ -112,12 +129,13 @@ export function generate(profile) {
   const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
 
   // Blend classification is constant for the whole plan — compute once.
-  const { dom } = classifyBlend(blend)
+  const cls = classifyBlend(blend)
+  const dom = cls.dom
   const goalBias = dom === 'hypertrophy' ? 1 : (dom === 'strength' || dom === 'power') ? -1 : 0
-  // Deficit-fill base weight: gated to 0 for strength/power (SBD specificity protection).
+  // Deficit-fill base weight: strength/power dominant uses hyp-share ramp (SBD specificity gate).
   // Overflow guard (isOverMrv) is always active regardless of gate.
   // During peaking the effective weight is further scaled by deficitPhaseScale() per-week.
-  const baseDeficit = (dom === 'strength' || dom === 'power') ? 0 : 0.6
+  const baseDeficit = deficitBaseWeight(cls)
 
   const weeks = allWeeks.map((wk) => {
     // Hoist phase and per-week deficit weight once — shared by all three consumers

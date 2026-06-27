@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveE1rm, generate } from './generate.js'
+import { resolveE1rm, generate, deficitBaseWeight } from './generate.js'
 import { byName } from './exercises.js'
 import { PRESETS } from './quality.js'
 import { MUSCLES } from './muscleVolume.js'
@@ -489,6 +489,101 @@ describe('peaking × ledger tuning (Change A + B)', () => {
     }
     // Non-peaking: no taper — peak-index week count equals accum-index week count
     expect(weekAccCount(nonPeakPlan, 4)).toBe(weekAccCount(nonPeakPlan, 0))
+  })
+})
+
+// ── Accessory deficit-fill gating ramp (feat/accessory-gating-ramp) ──────────
+describe('accessory deficit-fill gating ramp', () => {
+  const base = {
+    lifts: { squat:{oneRM:200}, bench:{oneRM:140}, deadlift:{oneRM:240} },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    equipment: ['barbell','rack','bench','cables','dumbbells'],
+  }
+  const countMuscle = (plan, muscle) =>
+    plan.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories)
+      .filter(a => a.primaryMuscle === muscle).length
+
+  // §4.1 — deficitBaseWeight unit: boundary values (RED: export missing before patch)
+  it('deficitBaseWeight: PL (str-dom, hyp=0.20) → 0 (dead-zone clamp)', () => {
+    expect(deficitBaseWeight({ dom: 'strength', n: { hypertrophy: 0.20 } })).toBe(0)
+  })
+  it('deficitBaseWeight: PB (str-dom, hyp=0.45) → 0.45 (ramp midpoint)', () => {
+    expect(deficitBaseWeight({ dom: 'strength', n: { hypertrophy: 0.45 } })).toBeCloseTo(0.45, 6)
+  })
+  it('deficitBaseWeight: athletic (power-dom, hyp=0.20) → 0 (power branch dead-zone)', () => {
+    expect(deficitBaseWeight({ dom: 'power', n: { hypertrophy: 0.20 } })).toBe(0)
+  })
+  it('deficitBaseWeight: bodybuilding (hyp-dom, hyp=0.80) → 0.6 (non-str/pwr branch full)', () => {
+    expect(deficitBaseWeight({ dom: 'hypertrophy', n: { hypertrophy: 0.80 } })).toBe(0.6)
+  })
+  it('deficitBaseWeight: 50/50 (str-dom, hyp=0.50) → 0.6 (HI clamp)', () => {
+    expect(deficitBaseWeight({ dom: 'strength', n: { hypertrophy: 0.50 } })).toBe(0.6)
+  })
+  it('deficitBaseWeight: endurance-dom → 0.6 (non-str/pwr branch full)', () => {
+    expect(deficitBaseWeight({ dom: 'endurance', n: { hypertrophy: 0.10 } })).toBe(0.6)
+  })
+
+  // §4.2 — regression: PB active, PL preserved
+  it('PL deficit muscles (biceps/sideDelts/lats/upperBack) = 0', () => {
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    for (const muscle of ['biceps', 'sideDelts', 'lats', 'upperBack']) {
+      expect(countMuscle(pl, muscle), `PL ${muscle} should be 0`).toBe(0)
+    }
+  })
+  it('PB deficit muscles > 0 AND PB accessory names differ from PL (RED: PB currently 0)', () => {
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const deficitMuscles = ['biceps', 'sideDelts', 'lats', 'upperBack']
+    const pbDeficitTotal = deficitMuscles.reduce((s, m) => s + countMuscle(pb, m), 0)
+    expect(pbDeficitTotal, 'PB should have >0 deficit-muscle accessories').toBeGreaterThan(0)
+    const plAllNames = pl.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).map(a => a.name).sort().join(',')
+    const pbAllNames = pb.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).map(a => a.name).sort().join(',')
+    expect(pbAllNames, 'PB accessory names should differ from PL').not.toBe(plAllNames)
+  })
+  it('PB total accessory count === PL total count (goalBias unchanged, targeting only shifts)', () => {
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    const pb = generate({ ...base, qualities: PRESETS.powerbuilding })
+    const count = plan => plan.weeks.flatMap(w => w.sessions).flatMap(s => s.accessories).length
+    expect(count(pb)).toBe(count(pl))
+  })
+
+  // §4.3 — PL bit-identical explicit array (GREEN before and after: PL dead-zone → 0 unchanged)
+  it('PL 4-week accessory names bit-identical to pre-patch golden (no churn)', () => {
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    const names = pl.weeks.map(w => w.sessions.map(s => s.accessories.map(a => a.name)))
+    expect(names).toEqual([
+      [['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Cable Pull-Through'],['Cable Fly','Overhead Triceps Ext (cable)']],
+      [['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Cable Pull-Through'],['Cable Fly','Overhead Triceps Ext (cable)']],
+      [['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Cable Pull-Through'],['Cable Fly','Overhead Triceps Ext (cable)']],
+      [['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Cable Pull-Through'],['Cable Fly','Overhead Triceps Ext (cable)']],
+    ])
+  })
+
+  // §4.4 — PB peaking taper: deficit-fill monotonically decreasing (RED: accumTotal=0 before patch)
+  it('PB peaking: deficit-fill per-week monotonically decreasing (accum > 0, accum ≥ intens ≥ peak=0)', () => {
+    const pbPeakProfile = {
+      ...base,
+      qualities: PRESETS.powerbuilding,
+      mesoWeeks: 6,
+      competition: { on: true, date: '2026-09-01' },
+    }
+    const plan = generate(pbPeakProfile)
+    const weekDeficitCount = (i) => plan.weeks[i].sessions.flatMap(s => s.accessories)
+      .filter(a => ['biceps', 'sideDelts', 'lats', 'upperBack'].includes(a.primaryMuscle)).length
+    const accumTotal = weekDeficitCount(0) + weekDeficitCount(1)
+    const intensTotal = weekDeficitCount(2) + weekDeficitCount(3)
+    const peakTotal   = weekDeficitCount(4) + weekDeficitCount(5)
+    expect(accumTotal, 'PB accum weeks should have active deficit fill').toBeGreaterThan(0)
+    expect(accumTotal).toBeGreaterThanOrEqual(intensTotal)
+    expect(intensTotal).toBeGreaterThanOrEqual(peakTotal)
+    expect(peakTotal, 'peak weeks: deficitWeight=0 → no deficit-muscle fill').toBe(0)
+  })
+
+  // §4.5 — Determinism
+  it('generate() with PB produces identical accessory output on two calls', () => {
+    const pbProfile = { ...base, qualities: PRESETS.powerbuilding }
+    const names = (p) => p.weeks.map(w => w.sessions.map(s => s.accessories.map(a => a.name)))
+    expect(names(generate(pbProfile))).toEqual(names(generate(pbProfile)))
   })
 })
 
