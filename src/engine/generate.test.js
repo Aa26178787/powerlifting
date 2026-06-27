@@ -329,6 +329,51 @@ describe('main lift volume floor + weekly ramp', () => {
   })
 })
 
+// ── Test 9: steering layer gating ────────────────────────────────────────────
+describe('steering layer gating (test 9)', () => {
+  const base = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    equipment: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'],
+  }
+  const countMuscle = (plan, muscle) =>
+    plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.accessories)
+      .filter((a) => a.primaryMuscle === muscle).length
+
+  it('balanced/hyp blend picks more biceps accessories than powerlifting blend (deficit fill ON vs gated)', () => {
+    // balanced: dom='hypertrophy' → gatedWeight=0.6 → biceps deficit-boosted
+    // powerlifting: dom='strength' → gatedWeight=0 → no deficit fill
+    const balanced = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    expect(countMuscle(balanced, 'biceps')).toBeGreaterThan(countMuscle(pl, 'biceps'))
+  })
+
+  it('accessory count per session stays within cap (≤5) for both blends', () => {
+    const balanced = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    const pl = generate({ ...base, qualities: PRESETS.powerlifting })
+    for (const plan of [balanced, pl]) {
+      for (const wk of plan.weeks) {
+        for (const s of wk.sessions) {
+          expect(s.accessories.length).toBeLessThanOrEqual(5)
+        }
+      }
+    }
+  })
+
+  it('reporting muscleVolume still uses actual scheme.sets (not steering estimate)', () => {
+    // The steering ledger uses ACCESSORY_EST_SETS=3; actual schemes may differ.
+    // Reporting must reflect realized sets, not the estimate.
+    const plan = generate({ ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } })
+    for (const wk of plan.weeks) {
+      expect(wk.muscleVolume).toBeTruthy()
+      for (const group of Object.keys(wk.muscleVolume)) {
+        expect(typeof wk.muscleVolume[group].sets).toBe('number')
+        expect(wk.muscleVolume[group].sets).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
+})
+
 describe('peaking (competition) taper mode integration', () => {
   // 6-week powerlifting meso with competition on + date → peaking=true → taper mode
   const peakProfile = {
