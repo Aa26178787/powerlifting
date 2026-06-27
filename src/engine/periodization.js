@@ -7,7 +7,8 @@ import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend } from './qualit
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
-import { volumeRamp } from './volume.js'
+import { volumeRamp, loadRamp, PER_SESSION_CAP } from './volume.js'
+import { roundToIncrement } from './e1rm.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
@@ -23,14 +24,25 @@ function resolveName(slot, ctx) {
   return v ? v.name : compVariant(slot.lift, ctx.style[slot.lift])
 }
 
-function buildExercise(slot, quality, rpeOffset, ctx) {
+// Never program a working set above ~97.5% of the (unramped) projected max —
+// guards pct-anchored peak schemes (wave 0.98, ramping 0.95) from compounding
+// past 1RM once loadRamp is applied.
+function clampSets(sets, ceiling) {
+  return sets.map((s) => (Number.isFinite(s.weight) ? { ...s, weight: Math.min(s.weight, ceiling) } : s))
+}
+
+function buildExercise(slot, quality, ctx) {
   const name = resolveName(slot, ctx)
   const ex = byName(name)
   const z = ZONES[quality]
   const scale = ex ? volumeScale(ex, ctx.regionStatus ?? {}) : 1
-  const rpeTarget = z.loading === 'rpe' ? cap(z.rpeTarget + rpeOffset) : null
+  // Weekly progression is via LOAD at a constant target RPE (not RPE creep) —
+  // keeps the displayed weight↔RPE label consistent.
+  const rpeTarget = z.loading === 'rpe' ? cap(z.rpeTarget) : null
   const role = slotTypeForRole(slot.role) === 'comp' ? 'comp' : (slot.role === 'accessory' ? 'accessory' : 'variation')
-  const eff = ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)
+  const base = ctx.e1rm[slot.lift] * (byName(name)?.e1rmModifier ?? 1)
+  const eff = base * loadRamp(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3)
+  const ceiling = roundToIncrement(base * 0.975)
   const weekSets = ctx.weekSets?.[slot.lift] ?? ctx.setsPerSession[slot.lift]
   const baseSets = Math.round(weekSets * scale)
   // scale 0 (region status 3) → 0 sets → generate drops the lift + notes it.
@@ -40,7 +52,7 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
       lift: name, baseLift: slot.lift, quality,
       reps: z.reps, repAnchor: z.repAnchor,
       pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
-      rpeTarget, weight: weightFor(quality, eff), velocity: null, autoregulate: true,
+      rpeTarget, weight: Math.min(weightFor(quality, eff), ceiling), velocity: null, autoregulate: true,
       scheme: { type: 'straight', evidenceTier: 'rct', sets: [], note: undefined, group: undefined },
       sets: 0,
     }
@@ -52,6 +64,7 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent })
   const scheme = SCHEMES[key]
   const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0 })
+  const clampedSets = clampSets(expanded.sets, ceiling)
   const displayReps = key === 'strengthHypertrophy'
     ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]
     : z.reps
@@ -63,13 +76,13 @@ function buildExercise(slot, quality, rpeOffset, ctx) {
     repAnchor: z.repAnchor,
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
     rpeTarget,
-    weight: weightFor(quality, eff),
+    weight: Math.min(weightFor(quality, eff), ceiling),
     velocity: null,
     autoregulate: true,
     tempo: ex?.tempo ?? null,
     tempoStop: ex?.tempoStop ?? null,
-    scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: expanded.sets, note: expanded.note, group: expanded.group },
-    sets: expanded.sets.length,
+    scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: clampedSets, note: expanded.note, group: expanded.group },
+    sets: clampedSets.length,
   }
 }
 
@@ -88,8 +101,9 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
     ctx.weekSets = {}
     for (const lift of Object.keys(slotCounts)) {
       const base = ctx.setsPerSession[lift] ?? 0
-      const cap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
-      ctx.weekSets[lift] = Math.max(1, Math.min(Math.round(base * ramp), cap))
+      const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
+      const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
+      ctx.weekSets[lift] = Math.max(1, Math.min(Math.round(base * ramp), mrvCap, absCap))
     }
     const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
     // per-lift quality schedule for this week + a consuming index
@@ -101,7 +115,7 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
     const sessions = layout.map((daySlots, dayIdx) => {
       const exercises = daySlots.map((slot) => {
         const quality = sched[slot.lift][idx[slot.lift]++] ?? 'strength'
-        return buildExercise(slot, quality, wp.rpeOffset, ctx)
+        return buildExercise(slot, quality, ctx)
       })
       return { day: dayIdx + 1, exercises }
     })

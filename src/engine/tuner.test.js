@@ -10,10 +10,12 @@ describe('tune', () => {
     expect(t.weeklySets.bench).toBe(10)
     expect(t.weeklySets.deadlift).toBe(10)
   })
-  it('splits weekly sets across sessions by frequency', () => {
+  it('splits weekly sets across sessions by frequency, with an absolute per-session cap', () => {
     const t = tune(profile) // freq: squat2,bench2,deadlift1
     expect(t.setsPerSession.squat).toBe(5)   // round(10/2)
-    expect(t.setsPerSession.deadlift).toBe(10) // round(10/1)
+    // round(10/1)=10 would stack the whole week into one session — capped to the
+    // deadlift per-session ceiling (4, highest axial/CNS fatigue).
+    expect(t.setsPerSession.deadlift).toBe(4)
   })
   it('never prescribes fewer than 1 set per session', () => {
     const t = tune({ blend: { power:0, strength:1, hypertrophy:0, endurance:0 }, years: 0, daysPerWeek: 6, fatigue: 5 })

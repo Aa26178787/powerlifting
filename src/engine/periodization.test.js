@@ -157,3 +157,31 @@ describe('buildWorkingWeeks concurrent (mixed blend)', () => {
     expect(ex.reps).toEqual([ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]])
   })
 })
+
+describe('buildWorkingWeeks weekly load progression + ceiling', () => {
+  const topW = (weeks, w, lift) => Math.max(
+    ...weeks[w].sessions.flatMap(s => s.exercises).filter(e => e.baseLift === lift).map(e => e.weight))
+
+  it('top-set load rises week 1 -> last working week (bounded load progression)', () => {
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[4], { ...ctx, totalWeeks: 4 }, 4)
+    expect(topW(weeks, 3, 'squat')).toBeGreaterThan(topW(weeks, 0, 'squat'))
+    expect(topW(weeks, 3, 'bench')).toBeGreaterThan(topW(weeks, 0, 'bench'))
+  })
+
+  it('no working set ever exceeds ~97.5% of the entered 1RM (ceiling clamp)', () => {
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[5], { ...ctx, advanced: true, peaking: true, totalWeeks: 6 }, 6)
+    for (const wk of weeks) for (const s of wk.sessions) for (const e of s.exercises) {
+      const ceiling = ctx.e1rm[e.baseLift] * 0.975 + 2.5 // + one rounding increment of slack
+      for (const set of e.scheme.sets) if (Number.isFinite(set.weight)) {
+        expect(set.weight).toBeLessThanOrEqual(ceiling)
+      }
+    }
+  })
+
+  it('deadlift never exceeds its per-session cap (4) across the ramp', () => {
+    const weeks = buildWorkingWeeks(DUP_LAYOUTS[4], { ...ctx, mrv: 18, totalWeeks: 5 }, 5)
+    for (const wk of weeks) for (const s of wk.sessions) for (const e of s.exercises) {
+      if (e.baseLift === 'deadlift') expect(e.sets).toBeLessThanOrEqual(4)
+    }
+  })
+})

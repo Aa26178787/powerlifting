@@ -46,3 +46,21 @@ export function volumeRamp(weekIndex, totalWeeks) {
   if (totalWeeks <= 1) return 1
   return 1 + 0.35 * (weekIndex / (totalWeeks - 1))
 }
+
+// Absolute per-session working-set cap for the main lift, regardless of
+// weeklySets/frequency. Deadlift is strictest (highest axial/CNS fatigue, slowest
+// recovery). Beyond these, added barbell sets are junk volume (stimulus-to-fatigue
+// ratio collapses). Consensus-tier heuristic; deadlift-lowest ordering is well
+// accepted. See research doc (B, D). Overflow weekly volume is NOT stacked onto
+// one session — the honest path is to add a session for that lift.
+export const PER_SESSION_CAP = { squat: 6, bench: 8, deadlift: 4 }
+
+// Week-to-week LOAD progression: top-set effective-1RM creeps up to +4% by the
+// last working week (linear), giving visible progressive overload at a constant
+// target RPE. Bounded; deload resets it. Consensus/textbook step (ACSM 2-10%
+// progression principle). See research doc (E). totalWeeks<=1 -> flat.
+export function loadRamp(weekIndex, totalWeeks) {
+  if (totalWeeks <= 1) return 1
+  const MAX = 0.04
+  return 1 + MAX * (weekIndex / (totalWeeks - 1))
+}

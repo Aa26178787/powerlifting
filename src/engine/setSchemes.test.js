@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { SCHEMES, pickScheme, expandAccessory, schemeSeed } from './setSchemes.js'
 import { ZONES } from './quality.js'
+import { loadForRpe } from './e1rm.js'
 
 const ctx = (over = {}) => ({ quality: 'strength', e1rm: 200, zone: ZONES.strength, baseSets: 3, weekIndex: 0, ...over })
 
@@ -157,5 +158,14 @@ describe('strengthHypertrophy scheme', () => {
   it('always emits at least a top + one backoff', () => {
     const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 1 })
     expect(sets.length).toBe(2)
+  })
+  it('backoff load is RPE-derived (matches its 9-reps @ RPE 8.5 label), not the old fixed ~0.67', () => {
+    const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 3 })
+    const back = sets[1]
+    // consistent with the label: loadForRpe(e1rm, hypertrophy repAnchor, rpeTarget)
+    expect(back.weight).toBe(loadForRpe(200, ZONES.hypertrophy.repAnchor, ZONES.hypertrophy.rpeTarget))
+    // and heavier than the old fixed 0.67*e1rm it replaced
+    expect(back.weight).toBeGreaterThan(200 * 0.67)
+    expect(back.weight).toBeLessThan(sets[0].weight) // still a backoff
   })
 })

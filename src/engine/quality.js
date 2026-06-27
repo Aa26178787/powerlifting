@@ -1,4 +1,4 @@
-import { roundToIncrement, workingWeight } from './e1rm.js'
+import { roundToIncrement, loadForRpe } from './e1rm.js'
 
 export const QUALITIES = ['power', 'strength', 'hypertrophy', 'endurance']
 
@@ -43,7 +43,7 @@ export function weightFor(quality, e1rm) {
     const mid = (z.pct[0] + z.pct[1]) / 2
     return roundToIncrement(e1rm * mid)
   }
-  return workingWeight(e1rm, Math.min(12, z.repAnchor), z.rpeTarget)
+  return loadForRpe(e1rm, z.repAnchor, z.rpeTarget)
 }
 
 export function allocateSets(total, blend) {

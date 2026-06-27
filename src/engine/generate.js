@@ -7,7 +7,7 @@ import { select } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND } from './quality.js'
-import { bandForBlend, BANDS } from './volume.js'
+import { bandForBlend, BANDS, PER_SESSION_CAP } from './volume.js'
 import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
@@ -82,12 +82,14 @@ export function generate(profile) {
   const cappedSetsPerSession = {}
   for (const lift of MAIN_LIFTS) {
     const sc = slotCounts[lift] || 1
-    cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], Math.floor(mrv / sc)))
+    const absCap = PER_SESSION_CAP[lift] ?? 6
+    cappedSetsPerSession[lift] = Math.max(1, Math.min(tuned.setsPerSession[lift], absCap, Math.floor(mrv / sc)))
   }
   const priorityLift = profile.priorityLift
   if (priorityLift && MAIN_LIFTS.includes(priorityLift)) {
     const sc = slotCounts[priorityLift] || 1
-    cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, Math.floor(mrv / sc)))
+    const absCap = PER_SESSION_CAP[priorityLift] ?? 6
+    cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, absCap, Math.floor(mrv / sc)))
   }
   const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years }
 
