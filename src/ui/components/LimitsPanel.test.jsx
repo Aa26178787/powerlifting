@@ -87,4 +87,18 @@ describe('LimitsPanel disclosures', () => {
       })
     ).toBeInTheDocument()
   })
+  it('discloses PB vs PL deficit-fill direction is evidence-based but exact coefficients are heuristic', () => {
+    render(<LimitsPanel />)
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName === 'LI' &&
+          /보조 운동 근육 타깃팅 강도/.test(element.textContent) &&
+          /Pelland\/Zourdos 2026/.test(element.textContent) &&
+          /0\.30.*0\.50/.test(element.textContent) &&
+          /컨센서스·추정치/.test(element.textContent)
+        )
+      })
+    ).toBeInTheDocument()
+  })
 })
