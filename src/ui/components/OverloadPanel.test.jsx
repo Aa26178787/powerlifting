@@ -91,4 +91,27 @@ describe('OverloadPanel', () => {
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
     expect(screen.getAllByText(/성공 시/).length).toBeGreaterThan(0)
   })
+
+  it('clamps targetPct: 0 → 1, 99 → 10', async () => {
+    render(<OverloadPanel />)
+    await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
+    const input = screen.getByLabelText(/목표\s*%/)
+    // below-range: 0 clamps to 1
+    fireEvent.change(input, { target: { value: '0' } })
+    expect(useProfileStore.getState().profile.overload.targetPct).toBe(1)
+    // above-range: 99 clamps to 10
+    fireEvent.change(input, { target: { value: '99' } })
+    expect(useProfileStore.getState().profile.overload.targetPct).toBe(10)
+  })
+
+  it('shows min-1-lift hint when enabled with no lifts; hint disappears after checking a lift', async () => {
+    render(<OverloadPanel />)
+    const user = userEvent.setup()
+    await user.click(screen.getByLabelText(/오버로딩 모드/))
+    // hint visible with no lifts selected
+    expect(screen.getByText(/공략할 종목을 1개 이상 선택하세요/)).toBeTruthy()
+    // check a lift → hint should disappear
+    await user.click(screen.getByLabelText(/스쿼트/))
+    expect(screen.queryByText(/공략할 종목을 1개 이상 선택하세요/)).toBeNull()
+  })
 })

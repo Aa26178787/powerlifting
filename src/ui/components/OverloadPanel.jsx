@@ -22,7 +22,8 @@ export default function OverloadPanel() {
   }
 
   function handleTargetPct(e) {
-    setOverload({ targetPct: Number(e.target.value) })
+    const v = Math.max(1, Math.min(10, Number(e.target.value) || 1))
+    setOverload({ targetPct: v })
   }
 
   function handleOverreachWeeks(e) {
@@ -38,10 +39,13 @@ export default function OverloadPanel() {
     setOverload({ preset: key, lifts: preset.lifts, targetPct: preset.targetPct, overreachWeeks: preset.overreachWeeks })
   }
 
-  // Compute live risk + EV (pure functions, always safe to call)
-  const dose = overloadDose(o.targetPct, { lifts: o.lifts })
-  const risk = overloadRisk({ targetPct: o.targetPct, lifts: o.lifts, overreachWeeks: o.overreachWeeks, years: profile.years, readiness: o.readiness })
-  const ev = overloadEV(dose, risk)
+  // Compute live risk + EV only when panel is enabled (Fix 2 — efficiency/clarity)
+  let dose, risk, ev
+  if (o.enabled) {
+    dose = overloadDose(o.targetPct, { lifts: o.lifts })
+    risk = overloadRisk({ targetPct: o.targetPct, lifts: o.lifts, overreachWeeks: o.overreachWeeks, years: profile.years, readiness: o.readiness })
+    ev = overloadEV(dose, risk)
+  }
 
   return (
     <div className="overload-panel">
@@ -72,6 +76,11 @@ export default function OverloadPanel() {
                 {' '}{LIFT_LABELS[lift]}
               </label>
             ))}
+            {o.lifts.length === 0 && (
+              <p style={{ color: '#c00', fontSize: '0.85em', margin: '4px 0 0' }}>
+                공략할 종목을 1개 이상 선택하세요
+              </p>
+            )}
           </fieldset>
 
           <label>목표 %
