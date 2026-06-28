@@ -719,3 +719,48 @@ describe('recommendedFrequency integration', () => {
     expect(squatCount(r)).toBe(2)
   })
 })
+
+// whole-mesocycle phase, block-relative ramp (S2 Task 3 fix)
+describe('12-week peaking plan: whole-mesocycle phase arc (S2 Task 3 fix)', () => {
+  // Pure strength + peaking: peak schemes (topSingleBackoff/ramping) must appear only
+  // in late whole-mesocycle weeks (workWeekIndex ≥ 8/11 → frac ≥ 0.67), NOT in early
+  // block-1 weeks even though those weeks sit at blockWeek 4/5 within their 6-week block.
+  const peakProfile12 = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 12, deloadEnabled: true,
+    qualities: { power: 0, strength: 1, hypertrophy: 0, endurance: 0 },
+    competition: { on: true, date: '2027-01-01' },
+    periodizationModel: 'auto',
+  }
+  // planLayout(12, true): 6 work + deload + 6 work + deload = 14 entries
+  // plan.weeks[4]  = block-1 blockWeek=4, workWeekIndex=4 → frac=4/11≈0.36 → accumulation (fixed)
+  //                  broken: phaseFor(4,6,true) frac=4/5=0.80 → 'peak' → topSingleBackoff/ramping
+  // plan.weeks[12] = block-2 blockWeek=5, workWeekIndex=11 → frac=11/11=1.0 → 'peak' (both)
+
+  it('early work week (plan.weeks[4], workWeekIndex=4) does NOT use peak-phase scheme', () => {
+    const plan = generate(peakProfile12)
+    expect(plan.weeks).toHaveLength(14) // 6 work + deload + 6 work + deload
+    expect(plan.weeks[4].isDeload).toBe(false)
+    const earlyStrExs = plan.weeks[4].sessions.flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+    expect(earlyStrExs.length, 'early week must have strength exercises').toBeGreaterThan(0)
+    for (const ex of earlyStrExs) {
+      expect(
+        ['topSingleBackoff', 'ramping'],
+        `week 5 (workWeekIndex=4) must NOT use peak scheme; got ${ex.scheme.type} on ${ex.lift}`,
+      ).not.toContain(ex.scheme.type)
+    }
+  })
+
+  it('final work week (plan.weeks[12], workWeekIndex=11) uses peak-phase scheme', () => {
+    const plan = generate(peakProfile12)
+    expect(plan.weeks[12].isDeload).toBe(false)
+    const lateStrExs = plan.weeks[12].sessions.flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+    expect(lateStrExs.length, 'final work week must have strength exercises').toBeGreaterThan(0)
+    const hasPeakScheme = lateStrExs.some(e =>
+      e.scheme.type === 'topSingleBackoff' || e.scheme.type === 'ramping',
+    )
+    expect(hasPeakScheme, 'final work week should use peak-phase scheme').toBe(true)
+  })
+})

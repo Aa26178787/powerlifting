@@ -66,7 +66,7 @@ function buildExercise(slot, quality, ctx) {
       sets: 0,
     }
   }
-  const phase = phaseFor(ctx.weekIndex ?? 0, ctx.totalWeeks ?? 3, ctx.peaking)
+  const phase = phaseFor(ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, ctx.peaking)
   const cls = ctx.blend ? classifyBlend(ctx.blend) : null
   const concurrent = !!(cls && cls.isMixed && cls.n.hypertrophy >= 0.25 && (ctx.years == null || ctx.years >= 1))
   // ss = strength share of the (str+hyp) pool; hypShare = complement passed to pickScheme.
@@ -74,9 +74,9 @@ function buildExercise(slot, quality, ctx) {
   // topSetBackoff/straight/etc. ignore it → PL path bit-identical.
   const ss = ctx.blend ? strengthShare(ctx.blend) : 0.5
   const seed = schemeSeed(slot.lift, slot.role)
-  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.weekIndex ?? 0, seed, concurrent, hypShare: 1 - ss })
+  const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, seed, concurrent, hypShare: 1 - ss })
   const scheme = SCHEMES[key]
-  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.weekIndex ?? 0, phase, totalWeeks: ctx.totalWeeks ?? 3, heavyShare: ss })
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss })
   const clampedSets = clampSets(expanded.sets, ceiling)
   const displayReps = key === 'strengthHypertrophy'
     ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]
@@ -133,7 +133,7 @@ export function buildBlockWeek(layout, ctx, blockWeek, blockLen, weekNumber) {
     }
   }
 
-  const wp = weekPlan(ctx.model, blockWeek, ctx.blend, ctx.competition, blockLen)
+  const wp = weekPlan(ctx.model, ctx.phaseWeekIndex ?? blockWeek, ctx.blend, ctx.competition, ctx.phaseTotalWeeks ?? blockLen)
   // per-lift quality schedule for this week + a consuming index
   const sched = {}, idx = {}
   for (const lift of Object.keys(slotCounts)) {
@@ -158,6 +158,8 @@ export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
   ctx.totalWeeks = totalWeeks
   const weeks = []
   for (let w = 0; w < totalWeeks; w++) {
+    ctx.phaseWeekIndex = w
+    ctx.phaseTotalWeeks = totalWeeks
     weeks.push(buildBlockWeek(layout, ctx, w, totalWeeks, w + 1))
   }
   return weeks

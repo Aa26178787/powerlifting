@@ -149,12 +149,17 @@ export function generate(profile) {
   const entries = planLayout(mesoWeeks, deloadEnabled)
   const allWeeks = []
   let weekNumber = 1
+  let workWeekIndex = 0
   let lastWorking = null
   for (const entry of entries) {
     if (entry.kind === 'work') {
+      ctx.phaseWeekIndex = workWeekIndex
+      ctx.phaseTotalWeeks = mesoWeeks
       const wk = buildBlockWeek(layout, ctx, entry.blockWeek, entry.blockLen, weekNumber++)
+      wk.phaseWeekIndex = workWeekIndex
       allWeeks.push(wk)
       lastWorking = wk
+      workWeekIndex++
     } else {
       // buildDeloadWeek sets index = lastWorking.index + 1, which equals weekNumber here
       allWeeks.push(buildDeloadWeek(lastWorking, ctx))
@@ -184,7 +189,7 @@ export function generate(profile) {
     // Hoist phase and per-week deficit weight once — shared by all three consumers
     // (sharedCap peak taper, select deficitWeight, withAccessoryScheme) so we have
     // a single source of truth per week.
-    const phase = phaseFor(wk.index - 1, mesoWeeks, peaking)
+    const phase = phaseFor(wk.phaseWeekIndex ?? (wk.index - 1), mesoWeeks, peaking)
     const weekDeficitWeight = baseDeficit * deficitPhaseScale(phase, peaking)
 
     // ── Phase 1: collect kept exercises per session (deterministic main lifts) ──
