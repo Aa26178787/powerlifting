@@ -52,6 +52,10 @@ export default function LimitsPanel() {
         <li>근비대 보조에 <strong>긴 근육 길이(스트레치) 강조</strong> 안내를 답니다. (방향 <strong>근거 강</strong> · 종목 선정 <strong>근거 약함</strong>)</li>
         <li>16~24주 장기 플랜은 <strong>블록 주기화</strong>로 약 6주마다 디로드를 자동 삽입하고 블록마다 부하 램프를 리셋합니다(주기 6주 = 컨센서스 <strong>근거 약함</strong>).</li>
         <li>대회(피킹) 플랜의 마지막 주는 <strong>realization 테이퍼</strong> — 강도는 유지하고 볼륨만 ~40% 줄입니다(방향 <strong>근거 강</strong>: Bosquet 메타 / 정확 계수 <strong>근거 약함</strong>). 비대회 플랜의 디로드는 회복형(RPE 6) 유지.</li>
+        <li>e1RM은 하루에도 약 <strong>±20%</strong> 변동할 수 있어 추정 1RM을 <strong>범위(밴드)</strong>로 함께 표시합니다(처방 부하는 바뀌지 않는 보조 표시).</li>
+        <li><strong>단조로움(monotony)·strain</strong> 지표로 과훈련 경향을 모니터합니다(Foster — 방향 <strong>근거 중</strong>, RPE×반복 부하 프록시는 <strong>근거 약함</strong>).</li>
+        <li><strong>예상 피크 시점</strong>은 Fitness-Fatigue 모델(Banister)로 추정합니다 — 모델 방향은 확립됐으나 개인 파라미터는 <strong>근거 약함</strong>인 보조 지표입니다.</li>
+        <li><strong>ACWR</strong>(급성:만성 부하비)는 <strong>신뢰성 논란</strong>이 있어 참고용으로만 표시하며 기준(게이트)으로 쓰지 않습니다(<strong>근거 약함</strong>).</li>
       </ul>
     </details>
   )
