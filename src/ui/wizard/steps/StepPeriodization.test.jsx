@@ -52,4 +52,12 @@ describe('StepPeriodization', () => {
     render(<StepPeriodization />)
     expect(screen.getByText(/볼륨·강도·실패 근접도/)).toBeInTheDocument()
   })
+
+  it('clamps mesoWeeks above 24 to 24 on blur', () => {
+    render(<StepPeriodization />)
+    const input = screen.getByLabelText(/운동 주차/)
+    fireEvent.change(input, { target: { value: '25' } })
+    fireEvent.blur(input)
+    expect(useProfileStore.getState().profile.mesoWeeks).toBe(24)
+  })
 })

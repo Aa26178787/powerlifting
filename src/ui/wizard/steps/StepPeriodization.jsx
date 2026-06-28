@@ -33,11 +33,11 @@ export default function StepPeriodization() {
         <input
           type="number"
           min={3}
-          max={8}
+          max={24}
           value={mesoRaw}
           onChange={(e) => setMesoRaw(e.target.value)}
           onBlur={(e) => {
-            const clamped = Math.max(3, Math.min(8, Number(e.target.value) || 4))
+            const clamped = Math.max(3, Math.min(24, Number(e.target.value) || 4))
             setMesoRaw(String(clamped))
             setField('mesoWeeks', clamped)
           }}

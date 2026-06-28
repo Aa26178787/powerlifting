@@ -88,7 +88,7 @@ export function generate(profile) {
   const ov = profile.volumeOverride
   const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
   const competition = profile.competition ?? { on: false, date: '' }
-  const mesoWeeks = Math.max(3, Math.min(8, profile.mesoWeeks ?? 4))
+  const mesoWeeks = Math.max(3, Math.min(24, profile.mesoWeeks ?? 4))
   const deloadEnabled = profile.deloadEnabled ?? true
   const peaking = !!(competition.on && competition.date)
   const variationOverride = profile.variationOverride ?? {}
