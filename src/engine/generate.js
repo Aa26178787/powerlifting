@@ -9,7 +9,7 @@ import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND, classifyBlend } from './quality.js'
 import { bandForBlend, BANDS, PER_SESSION_CAP } from './volume.js'
 import { buildLayout } from './layoutGenerator.js'
-import { defaultFrequency } from './frequency.js'
+import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
@@ -103,7 +103,7 @@ export function generate(profile) {
   const regionStatus = profile.regionStatus ?? {}
   const equipment = profile.equipment ?? ['barbell', 'rack', 'bench']
   const advanced = years >= 3
-  const freqInput = profile.frequency ?? defaultFrequency(daysPerWeek)
+  const freqInput = profile.frequency ?? recommendedFrequency(blend, daysPerWeek)
   const frequency = {}
   for (const lift of MAIN_LIFTS) frequency[lift] = Math.max(0, Math.min(daysPerWeek, freqInput[lift] ?? 0))
 
