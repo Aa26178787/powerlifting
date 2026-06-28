@@ -719,3 +719,120 @@ describe('recommendedFrequency integration', () => {
     expect(squatCount(r)).toBe(2)
   })
 })
+
+// whole-mesocycle phase, block-relative ramp (S2 Task 3 fix)
+describe('12-week peaking plan: whole-mesocycle phase arc (S2 Task 3 fix)', () => {
+  // Pure strength + peaking: peak schemes (topSingleBackoff/ramping) must appear only
+  // in late whole-mesocycle weeks (workWeekIndex ≥ 8/11 → frac ≥ 0.67), NOT in early
+  // block-1 weeks even though those weeks sit at blockWeek 4/5 within their 6-week block.
+  const peakProfile12 = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 12, deloadEnabled: true,
+    qualities: { power: 0, strength: 1, hypertrophy: 0, endurance: 0 },
+    competition: { on: true, date: '2027-01-01' },
+    periodizationModel: 'auto',
+  }
+  // planLayout(12, true): 6 work + deload + 6 work + deload = 14 entries
+  // plan.weeks[4]  = block-1 blockWeek=4, workWeekIndex=4 → frac=4/11≈0.36 → accumulation (fixed)
+  //                  broken: phaseFor(4,6,true) frac=4/5=0.80 → 'peak' → topSingleBackoff/ramping
+  // plan.weeks[12] = block-2 blockWeek=5, workWeekIndex=11 → frac=11/11=1.0 → 'peak' (both)
+
+  it('early work week (plan.weeks[4], workWeekIndex=4) does NOT use peak-phase scheme', () => {
+    const plan = generate(peakProfile12)
+    expect(plan.weeks).toHaveLength(14) // 6 work + deload + 6 work + deload
+    expect(plan.weeks[4].isDeload).toBe(false)
+    const earlyStrExs = plan.weeks[4].sessions.flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+    expect(earlyStrExs.length, 'early week must have strength exercises').toBeGreaterThan(0)
+    for (const ex of earlyStrExs) {
+      expect(
+        ['topSingleBackoff', 'ramping'],
+        `week 5 (workWeekIndex=4) must NOT use peak scheme; got ${ex.scheme.type} on ${ex.lift}`,
+      ).not.toContain(ex.scheme.type)
+    }
+  })
+
+  it('final work week (plan.weeks[12], workWeekIndex=11) uses peak-phase scheme', () => {
+    const plan = generate(peakProfile12)
+    expect(plan.weeks[12].isDeload).toBe(false)
+    const lateStrExs = plan.weeks[12].sessions.flatMap(s => s.exercises)
+      .filter(e => e.quality === 'strength')
+    expect(lateStrExs.length, 'final work week must have strength exercises').toBeGreaterThan(0)
+    const hasPeakScheme = lateStrExs.some(e =>
+      e.scheme.type === 'topSingleBackoff' || e.scheme.type === 'ramping',
+    )
+    expect(hasPeakScheme, 'final work week should use peak-phase scheme').toBe(true)
+  })
+})
+
+// realization isolation integration (S2 final-review)
+describe('realization deload vs recovery deload integration (S2 final-review)', () => {
+  // 4-week peaking plan with deload: trailing deload → Bosquet realization taper (holds intensity)
+  const peakDeloadProfile = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 4, deloadEnabled: true,
+    qualities: { power: 0.10, strength: 0.70, hypertrophy: 0.20, endurance: 0.00 },
+    competition: { on: true, date: '2026-09-01' },
+    periodizationModel: 'auto',
+  }
+  // Same profile without competition → recovery deload (drops to RPE 6)
+  const nonPeakDeloadProfile = { ...peakDeloadProfile, competition: { on: false, date: '' } }
+
+  // 12-week peaking plan with deloads enabled → block-1 deload (recovery) + block-2 deload (realization)
+  const longPeakDeloadProfile = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 12, deloadEnabled: true,
+    qualities: { power: 0, strength: 1, hypertrophy: 0, endurance: 0 },
+    competition: { on: true, date: '2027-01-01' },
+    periodizationModel: 'auto',
+  }
+
+  it('PEAKING plan trailing deload holds intensity (rpeTarget !== 6) — realization', () => {
+    const plan = generate(peakDeloadProfile)
+    const deloadWeeks = plan.weeks.filter(w => w.isDeload)
+    expect(deloadWeeks.length).toBeGreaterThan(0)
+    const trailingDeload = deloadWeeks[deloadWeeks.length - 1]
+    const mainExs = trailingDeload.sessions.flatMap(s => s.exercises)
+      .filter(e => ['squat', 'bench', 'deadlift'].includes(e.baseLift))
+    expect(mainExs.length).toBeGreaterThan(0)
+    for (const ex of mainExs) {
+      expect(ex.rpeTarget, `realization: ${ex.lift} rpeTarget should not be 6`).not.toBe(6)
+    }
+  })
+
+  it('NON-PEAKING plan trailing deload drops to rpeTarget 6 — recovery', () => {
+    const plan = generate(nonPeakDeloadProfile)
+    const deloadWeeks = plan.weeks.filter(w => w.isDeload)
+    expect(deloadWeeks.length).toBeGreaterThan(0)
+    const trailingDeload = deloadWeeks[deloadWeeks.length - 1]
+    const mainExs = trailingDeload.sessions.flatMap(s => s.exercises)
+      .filter(e => ['squat', 'bench', 'deadlift'].includes(e.baseLift))
+    expect(mainExs.length).toBeGreaterThan(0)
+    for (const ex of mainExs) {
+      expect(ex.rpeTarget, `recovery: ${ex.lift} rpeTarget should be 6`).toBe(6)
+    }
+  })
+
+  it('>8-week peaking plan: mid-plan deload is recovery (rpeTarget 6), final deload is realization (rpeTarget !== 6)', () => {
+    const plan = generate(longPeakDeloadProfile)
+    // planLayout(12, true): 6 work + deload + 6 work + deload = 14 total weeks, 2 deloads
+    const deloadWeeks = plan.weeks.filter(w => w.isDeload)
+    expect(deloadWeeks.length).toBe(2)
+    // Mid-plan deload (block-1 trailing): NOT lastEntry → recovery
+    const midDeload = deloadWeeks[0]
+    const midMainExs = midDeload.sessions.flatMap(s => s.exercises)
+      .filter(e => ['squat', 'bench', 'deadlift'].includes(e.baseLift))
+    expect(midMainExs.length).toBeGreaterThan(0)
+    for (const ex of midMainExs) {
+      expect(ex.rpeTarget, `mid-deload recovery: ${ex.lift} should be 6`).toBe(6)
+    }
+    // Final deload (block-2 trailing = lastEntry in a peaking plan): realization
+    const finalDeload = deloadWeeks[deloadWeeks.length - 1]
+    const finalMainExs = finalDeload.sessions.flatMap(s => s.exercises)
+      .filter(e => ['squat', 'bench', 'deadlift'].includes(e.baseLift))
+    expect(finalMainExs.length).toBeGreaterThan(0)
+    for (const ex of finalMainExs) {
+      expect(ex.rpeTarget, `final-deload realization: ${ex.lift} rpeTarget should not be 6`).not.toBe(6)
+    }
+  })
+})

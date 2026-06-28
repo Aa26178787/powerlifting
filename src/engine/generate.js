@@ -1,6 +1,7 @@
 import { e1rmFrom } from './e1rm.js'
 import { tune } from './tuner.js'
-import { buildWorkingWeeks } from './periodization.js'
+import { buildBlockWeek } from './periodization.js'
+import { planLayout } from './planLayout.js'
 import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
 import { select, orderByPriority, lengthenedNote } from './accessories.js'
@@ -88,7 +89,7 @@ export function generate(profile) {
   const ov = profile.volumeOverride
   const blend = normalizeBlend(profile.qualities ?? DEFAULT_BLEND)
   const competition = profile.competition ?? { on: false, date: '' }
-  const mesoWeeks = Math.max(3, Math.min(8, profile.mesoWeeks ?? 4))
+  const mesoWeeks = Math.max(3, Math.min(24, profile.mesoWeeks ?? 4))
   const deloadEnabled = profile.deloadEnabled ?? true
   const peaking = !!(competition.on && competition.date)
   const variationOverride = profile.variationOverride ?? {}
@@ -142,8 +143,35 @@ export function generate(profile) {
   }
   const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
 
-  const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
-  const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
+  // Drive week assembly from planLayout: for ≤8 weeks this is one block (bit-identical
+  // to the legacy path); for >8 weeks blocks of ≤BLOCK_LEN work weeks each get their
+  // own ramp reset (sawtooth) with a recovery deload inserted after each block.
+  const entries = planLayout(mesoWeeks, deloadEnabled)
+  // The trailing deload of a peaking plan uses the Bosquet realization taper (hold intensity,
+  // cut volume to ~40%). Mid-plan deloads (multi-block plans) use the standard recovery style.
+  // Detect trailing deload by reference: the last entry in the layout, when kind='deload'.
+  const lastEntry = entries.length > 0 ? entries[entries.length - 1] : null
+  const allWeeks = []
+  let weekNumber = 1
+  let workWeekIndex = 0
+  let lastWorking = null
+  for (const entry of entries) {
+    if (entry.kind === 'work') {
+      ctx.phaseWeekIndex = workWeekIndex
+      ctx.phaseTotalWeeks = mesoWeeks
+      const wk = buildBlockWeek(layout, ctx, entry.blockWeek, entry.blockLen, weekNumber++)
+      wk.phaseWeekIndex = workWeekIndex
+      allWeeks.push(wk)
+      lastWorking = wk
+      workWeekIndex++
+    } else {
+      // buildDeloadWeek sets index = lastWorking.index + 1, which equals weekNumber here
+      // Trailing deload of a peaking plan → realization taper (Task 4); all others → recovery.
+      const deloadOpts = (peaking && entry === lastEntry) ? { realization: true } : undefined
+      allWeeks.push(buildDeloadWeek(lastWorking, ctx, deloadOpts))
+      weekNumber++
+    }
+  }
 
   // Blend classification is constant for the whole plan — compute once.
   const cls = classifyBlend(blend)
@@ -167,7 +195,7 @@ export function generate(profile) {
     // Hoist phase and per-week deficit weight once — shared by all three consumers
     // (sharedCap peak taper, select deficitWeight, withAccessoryScheme) so we have
     // a single source of truth per week.
-    const phase = phaseFor(wk.index - 1, mesoWeeks, peaking)
+    const phase = phaseFor(wk.phaseWeekIndex ?? (wk.index - 1), mesoWeeks, peaking)
     const weekDeficitWeight = baseDeficit * deficitPhaseScale(phase, peaking)
 
     // ── Phase 1: collect kept exercises per session (deterministic main lifts) ──
@@ -323,7 +351,10 @@ export function generate(profile) {
       }
     }
 
-    return { ...wk, sessions, muscleVolume: summarize(weekLedger) }
+    // Fix 2: strip internal phaseWeekIndex from output (restore strict ≤8 byte-identity).
+    // The accessory pass above reads wk.phaseWeekIndex before this return — still intact.
+    const { phaseWeekIndex: _pwi, ...wkRest } = wk
+    return { ...wkRest, sessions, muscleVolume: summarize(weekLedger) }
   })
 
   return { template: 'custom', model, weeks }

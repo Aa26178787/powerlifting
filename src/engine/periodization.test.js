@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildWorkingWeeks } from './periodization.js'
+import { generate } from './generate.js'
 import { byName, allEquipment } from './exercises.js'
 import { ZONES } from './quality.js'
 
@@ -204,5 +205,41 @@ describe('buildWorkingWeeks weekly load progression + ceiling', () => {
     for (const wk of weeks) for (const s of wk.sessions) for (const e of s.exercises) {
       if (e.baseLift === 'deadlift') expect(e.sets).toBeLessThanOrEqual(4)
     }
+  })
+})
+
+describe('block-relative ramp reset — sawtooth (12-week plan)', () => {
+  const profile12 = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, daysPerWeek: 4, fatigue: 2,
+    qualities: { power: 0, strength: 0.5, hypertrophy: 0.5, endurance: 0 },
+    periodizationModel: 'auto',
+    mesoWeeks: 12,
+    deloadEnabled: true,
+  }
+
+  it('12-week plan resets load ramp each block (sawtooth)', () => {
+    const plan = generate(profile12)
+    // Maximum working-set weight for squat in a given plan.weeks index.
+    // Using max across sessions+sets makes the comparison quality/scheme-agnostic.
+    const maxSquat = (wi) => Math.max(
+      ...plan.weeks[wi].sessions
+        .flatMap(s => s.exercises)
+        .filter(e => e.baseLift === 'squat')
+        .flatMap(e => e.scheme.sets)
+        .filter(s => Number.isFinite(s.weight))
+        .map(s => s.weight)
+    )
+    const w1 = plan.weeks.findIndex((w) => !w.isDeload)         // first work week (idx 0)
+    const firstDeload = plan.weeks.findIndex((w) => w.isDeload) // first deload (idx 6)
+    const blk2 = firstDeload + 1                                 // first work week of block 2 (idx 7)
+    // The plan must have the expected multi-block structure
+    expect(plan.weeks.length).toBe(14) // 12 work + 2 deloads
+    expect(plan.weeks[firstDeload].isDeload).toBe(true)
+    expect(plan.weeks[blk2].isDeload).toBe(false)
+    // Block-2 week-1 load ≈ block-1 week-1 load (ramp resets at block boundary).
+    // Both have blockWeek=0, blockLen=6 → identical loadRamp(0,6)=1 and identical
+    // scheme seed context, so the max working weight must be the same.
+    expect(maxSquat(blk2)).toBeCloseTo(maxSquat(w1), 1)
   })
 })
