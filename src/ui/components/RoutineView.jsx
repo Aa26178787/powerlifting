@@ -4,8 +4,10 @@ import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
 import CheckinPanel from './CheckinPanel.jsx'
+import LiftLogRow from './LiftLogRow.jsx'
 
-function ExerciseRow({ ex, units }) {
+// ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
+function ExerciseRow({ ex, units, week, day }) {
   const scheme = ex.scheme
   const warmup = ex.warmup ?? []
   return (
@@ -15,7 +17,7 @@ function ExerciseRow({ ex, units }) {
         <span className="badge q" data-quality={ex.quality}>{qualityLabel(ex.quality)}</span>
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         {scheme && <span className="tag evidence">{evidenceLabel(scheme.evidenceTier)}</span>}
-        <span className="ex-autoregulate">자동조절</span>
+        <LiftLogRow ex={ex} week={week} day={day} units={units} />
       </div>
       {ex.tempo && (
         <div className="ex-tempo">
@@ -139,7 +141,7 @@ export default function RoutineView({ plan }) {
                 {adjusted[key] && (
                   <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
                 )}
-                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} />)}</ul>
+                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
                 {(view.accessories ?? []).length > 0 && (
                   <div className="accessories">
                     <h5>보조운동</h5>

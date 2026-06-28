@@ -377,3 +377,23 @@ export const schemeLabel = (k) => SCHEME[k] ?? k
 export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
 export const cueLabel = (k) => CUE[k] ?? k
+
+// ── Lift-logger UI labels (§7 B6) ─────────────────────────────────────────────
+// Used by LiftLogRow and App toolbar. Korean strings for the logging→feedback loop.
+export const LOG = {
+  summary:        '수행 기록',           // <details> summary label
+  weightLabel:    '실제 무게',           // weight input label
+  repsLabel:      '반복 수',             // reps input label
+  rpeLabel:       '실제 RPE',           // RPE select label
+  flagLabel:      '통증·중단',           // pain/abort flag checkbox
+  logBtn:         '기록',               // submit button
+  advisoryPrefix: '다음 세션 권장 탑',   // Tier A advisory prefix
+  e1rmBadge:      '추정 1RM',           // Tier B badge prefix
+  e1rmSuffix:     '재생성 시 반영',      // Tier B badge suffix
+  regenerate:     '기록 반영 재생성',    // toolbar regenerate button
+  // Tier B disclosure — shown next to the e1RM badge and in LimitsPanel.
+  disclosure:
+    '자동조절은 보조 지표입니다. 통증·컨디션은 본인 판단이 우선입니다. ' +
+    '1회 기록만으로 부하가 급변하지 않도록 평활(EWMA)·클램프되며, ' +
+    '변경은 다음 사이클에만 반영됩니다.',
+}
