@@ -1,20 +1,23 @@
 import React, { useState } from 'react'
-import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel } from '../i18n.js'
+import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
 import CheckinPanel from './CheckinPanel.jsx'
+import LiftLogRow from './LiftLogRow.jsx'
 
-function ExerciseRow({ ex, units }) {
+// ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
+function ExerciseRow({ ex, units, week, day }) {
   const scheme = ex.scheme
+  const warmup = ex.warmup ?? []
   return (
     <li className="exercise-row" data-quality={ex.quality}>
       <div className="ex-header">
-        <span className="ex-lift">{liftLabel(ex.lift)}</span>
+        <span className="ex-lift">{exerciseName(ex.lift)}</span>
         <span className="badge q" data-quality={ex.quality}>{qualityLabel(ex.quality)}</span>
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         {scheme && <span className="tag evidence">{evidenceLabel(scheme.evidenceTier)}</span>}
-        <span className="ex-autoregulate">자동조절</span>
+        <LiftLogRow ex={ex} week={week} day={day} units={units} />
       </div>
       {ex.tempo && (
         <div className="ex-tempo">
@@ -24,12 +27,24 @@ function ExerciseRow({ ex, units }) {
       {scheme && scheme.note && (
         <div className="ex-scheme-note">{scheme.note}</div>
       )}
-      {scheme && scheme.sets && scheme.sets.length > 0 && (
+      {ex.quality && (
+        <div className="ex-rest">세트 간 휴식 {restLabel(ex.quality)}</div>
+      )}
+      {scheme && (warmup.length > 0 || (scheme.sets && scheme.sets.length > 0)) && (
         <div className="set-table-wrap">
           <table className="set-table">
             <thead><tr><th>세트</th><th>무게</th><th>반복</th><th>RPE</th><th>비고</th></tr></thead>
             <tbody>
-              {scheme.sets.map((s, i) => (
+              {warmup.map((s, i) => (
+                <tr key={`w${i}`} className="warmup-row">
+                  <td className="warmup-label">워밍업 {i + 1}</td>
+                  <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
+                  <td className="num">{s.reps}</td>
+                  <td className="num">—</td>
+                  <td></td>
+                </tr>
+              ))}
+              {scheme.sets && scheme.sets.map((s, i) => (
                 <tr key={i}>
                   <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
                   <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
@@ -51,12 +66,15 @@ function AccessoryRow({ acc }) {
   return (
     <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
-        <span className="acc-name">{liftLabel(acc.name)}</span>
+        <span className="acc-name">{exerciseName(acc.name)}</span>
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         <span className="acc-feel">체감</span>
       </div>
       {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
+      {acc.quality && (
+        <div className="acc-rest">세트 간 휴식 {restLabel(acc.quality)}</div>
+      )}
       {scheme && scheme.sets && scheme.sets.length > 0 && (
         <div className="set-table-wrap">
           <table className="set-table acc">
@@ -123,7 +141,7 @@ export default function RoutineView({ plan }) {
                 {adjusted[key] && (
                   <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
                 )}
-                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} />)}</ul>
+                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
                 {(view.accessories ?? []).length > 0 && (
                   <div className="accessories">
                     <h5>보조운동</h5>

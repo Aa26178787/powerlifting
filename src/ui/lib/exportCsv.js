@@ -1,4 +1,4 @@
-import { liftLabel, qualityLabel } from '../i18n.js'
+import { exerciseName, qualityLabel } from '../i18n.js'
 import { toDisplay, unitLabel } from './units.js'
 
 /**
@@ -37,7 +37,7 @@ export function planToCsv(plan, units = 'kg') {
             wk.index,
             wk.isDeload ? '예' : '아니오',
             s.day,
-            liftLabel(ex.lift),
+            exerciseName(ex.lift),
             qualityLabel(ex.quality),
             i + 1,
             toDisplay(set.weight, units),
@@ -54,7 +54,7 @@ export function planToCsv(plan, units = 'kg') {
             wk.index,
             wk.isDeload ? '예' : '아니오',
             s.day,
-            liftLabel(acc.name),
+            exerciseName(acc.name),
             qualityLabel(acc.quality),
             i + 1,
             '체감', // accessories have no tracked 1RM → load by feel

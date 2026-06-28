@@ -488,3 +488,68 @@ describe('merge injects volumeOverride default into old profile lacking it', () 
     expect(p.volumeOverride.accessory.setsPerSession).toBeNull()
   })
 })
+
+// ── liftLog (mirrors checkinLog pattern) ─────────────────────────────────────
+describe('liftLog', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('defaults to empty array', () => {
+    expect(useProfileStore.getState().liftLog).toEqual([])
+  })
+
+  it('logLift appends an entry with a ts timestamp', () => {
+    const entry = { lift: 'squat', week: 1, day: 1, weight: 100, reps: 1, rpe: 10, flag: null }
+    useProfileStore.getState().logLift(entry)
+    const state = useProfileStore.getState()
+    expect(state.liftLog).toHaveLength(1)
+    expect(state.liftLog[0]).toMatchObject(entry)
+    expect(typeof state.liftLog[0].ts).toBe('number')
+  })
+
+  it('logLift upserts by {lift,week,day} — duplicate key replaced, not appended', () => {
+    const e1 = { lift: 'squat', week: 1, day: 1, weight: 100, reps: 1, rpe: 10, flag: null }
+    const e2 = { lift: 'squat', week: 1, day: 1, weight: 105, reps: 1, rpe: 9.5, flag: null }
+    useProfileStore.getState().logLift(e1)
+    useProfileStore.getState().logLift(e2)
+    const state = useProfileStore.getState()
+    expect(state.liftLog).toHaveLength(1) // upsert, not append
+    expect(state.liftLog[0].weight).toBe(105) // latest value wins
+  })
+
+  it('logLift with different lift/week/day → separate entries', () => {
+    useProfileStore.getState().logLift({ lift: 'squat', week: 1, day: 1, weight: 100, reps: 1, rpe: 10, flag: null })
+    useProfileStore.getState().logLift({ lift: 'bench', week: 1, day: 1, weight: 80,  reps: 1, rpe: 10, flag: null })
+    expect(useProfileStore.getState().liftLog).toHaveLength(2)
+  })
+
+  it('clearLiftLog empties the array', () => {
+    useProfileStore.getState().logLift({ lift: 'squat', week: 1, day: 1, weight: 100, reps: 1, rpe: 10, flag: null })
+    expect(useProfileStore.getState().liftLog).toHaveLength(1)
+    useProfileStore.getState().clearLiftLog()
+    expect(useProfileStore.getState().liftLog).toEqual([])
+  })
+
+  it('reset clears liftLog', () => {
+    useProfileStore.getState().logLift({ lift: 'squat', week: 1, day: 1, weight: 100, reps: 1, rpe: 10, flag: null })
+    useProfileStore.getState().reset()
+    expect(useProfileStore.getState().liftLog).toEqual([])
+  })
+
+  it('rehydrates missing liftLog from old persisted state → defaults to []', async () => {
+    localStorage.clear()
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+          // liftLog intentionally absent (old persisted profile)
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    expect(useProfileStore.getState().liftLog).toEqual([])
+  })
+})

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule, classifyBlend, HEAVY_FLOOR, strengthShare } from './quality.js'
+import { QUALITIES, ZONES, DEFAULT_BLEND, PRESETS, normalizeBlend, presetBlend, dominantQuality, weightFor, allocateSets, weeklyQualitySchedule, classifyBlend, HEAVY_FLOOR, strengthShare, restRange } from './quality.js'
 
 describe('constants', () => {
   it('four qualities and zone shapes', () => {
@@ -96,5 +96,17 @@ describe('classifyBlend', () => {
     const c = classifyBlend({ power:0, strength:2, hypertrophy:1, endurance:1 })
     expect(c.dom).toBe('strength')
     expect(c.n.strength).toBeCloseTo(0.5, 5)
+  })
+})
+
+describe('restRange', () => {
+  it('power → { min:3, max:5 }', () => expect(restRange('power')).toEqual({ min:3, max:5 }))
+  it('strength → { min:3, max:5 }', () => expect(restRange('strength')).toEqual({ min:3, max:5 }))
+  it('hypertrophy → { min:1, max:2 }', () => expect(restRange('hypertrophy')).toEqual({ min:1, max:2 }))
+  it('endurance → { min:1, max:1 }', () => expect(restRange('endurance')).toEqual({ min:1, max:1 }))
+  it('unknown quality returns a safe default', () => {
+    const r = restRange('unknown')
+    expect(r.min).toBeGreaterThanOrEqual(1)
+    expect(r.max).toBeGreaterThanOrEqual(r.min)
   })
 })
