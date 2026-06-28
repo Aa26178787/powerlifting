@@ -3,8 +3,11 @@ import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, 
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
+import { resolveE1rm } from '../../engine/generate.js'
+import { effectiveLiftE1rm, liftEntries } from '../../engine/loadFeedback.js'
 import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
+import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -101,7 +104,20 @@ export default function RoutineView({ plan }) {
   const logCheckin = useProfileStore((s) => s.logCheckin)
   const units = useProfileStore((s) => s.profile.units ?? 'kg')
   const profile = useProfileStore((s) => s.profile)
+  const liftLog  = useProfileStore((s) => s.liftLog)  // InsightsPanel (S3 Task 2)
   const [adjusted, setAdjusted] = useState({})
+
+  // InsightsPanel (S3 Task 2): derive effective e1RM map from profile + log history.
+  // resolveE1rm handles both oneRM-direct and weight/reps/rpe derivation.
+  const e1rmMap = {}
+  for (const lift of ['squat', 'bench', 'deadlift']) {
+    try {
+      const seed = resolveE1rm(profile.lifts?.[lift])
+      e1rmMap[lift] = effectiveLiftE1rm(seed, liftEntries(liftLog, lift))
+    } catch {
+      // invalid lift input (no oneRM and no weight/reps/rpe) — skip
+    }
+  }
 
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
 
@@ -113,6 +129,8 @@ export default function RoutineView({ plan }) {
       {over.flag && (
         <div className="overreaching-banner" role="alert">경고: ⚠️ {over.reason} · 디로드를 고려하세요</div>
       )}
+      {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
+      <InsightsPanel log={liftLog} e1rm={e1rmMap} />
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
           <h3>{wk.index}주차</h3>
