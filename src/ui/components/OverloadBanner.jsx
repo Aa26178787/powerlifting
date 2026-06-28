@@ -4,14 +4,14 @@ import { detectOverreaching } from '../../engine/overreaching.js'
 /**
  * OverloadBanner — presentational banner shown when plan.overload metadata is present.
  * Props:
- *   overload  — plan.overload object from generateOverload (null/undefined → renders nothing)
- *   liftLog   — performance log array from useProfileStore; passed to detectOverreaching
- *               for the abort circuit (non-blocking).
+ *   overload   — plan.overload object from generateOverload (null/undefined → renders nothing)
+ *   checkinLog — readiness check-in log array from useProfileStore; passed to detectOverreaching
+ *                for the abort circuit (non-blocking).
  */
-export default function OverloadBanner({ overload, liftLog }) {
+export default function OverloadBanner({ overload, checkinLog }) {
   if (!overload) return null
 
-  const abort = detectOverreaching(liftLog ?? [])
+  const abort = detectOverreaching(checkinLog ?? [])
 
   return (
     <div className="overload-banner" role="region" aria-label="오버로딩 경고">

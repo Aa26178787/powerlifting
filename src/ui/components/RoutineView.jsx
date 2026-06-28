@@ -131,7 +131,7 @@ export default function RoutineView({ plan }) {
         <div className="overreaching-banner" role="alert">경고: ⚠️ {over.reason} · 디로드를 고려하세요</div>
       )}
       {/* Spec 4 Task 4: overload risk/EV/abort/cooldown banner */}
-      {plan.overload && <OverloadBanner overload={plan.overload} liftLog={liftLog} />}
+      {plan.overload && <OverloadBanner overload={plan.overload} checkinLog={checkinLog} />}
       {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
       {plan.weeks.map((wk) => (
