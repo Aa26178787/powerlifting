@@ -48,4 +48,8 @@ describe('StepPeriodization', () => {
     await userEvent.setup().click(screen.getByLabelText(/디로드 포함/))
     expect(useProfileStore.getState().profile.deloadEnabled).toBe(false)
   })
+  it('frames the hybrid as secondary to volume/intensity/proximity (no model-superiority claim)', () => {
+    render(<StepPeriodization />)
+    expect(screen.getByText(/볼륨·강도·실패 근접도/)).toBeInTheDocument()
+  })
 })
