@@ -5,7 +5,7 @@ export const QUALITIES = ['power', 'strength', 'hypertrophy', 'endurance']
 export const ZONES = {
   power:       { reps: [2, 4],   repAnchor: 3,  pct: [0.55, 0.70], loading: 'pct', rpeTarget: null },
   strength:    { reps: [2, 5],   repAnchor: 3,  pct: [0.82, 0.92], loading: 'rpe', rpeTarget: 8.5 },
-  hypertrophy: { reps: [6, 12],  repAnchor: 9,  pct: [0.67, 0.78], loading: 'rpe', rpeTarget: 8.5 },
+  hypertrophy: { reps: [6, 12],  repAnchor: 9,  pct: [0.67, 0.78], loading: 'rpe', rpeTarget: 9 },
   endurance:   { reps: [12, 20], repAnchor: 16, pct: [0.50, 0.62], loading: 'rpe', rpeTarget: 8 },
 }
 

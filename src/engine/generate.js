@@ -3,13 +3,13 @@ import { tune } from './tuner.js'
 import { buildWorkingWeeks } from './periodization.js'
 import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
-import { select } from './accessories.js'
+import { select, orderByPriority, lengthenedNote } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND, classifyBlend } from './quality.js'
 import { bandForBlend, BANDS, PER_SESSION_CAP } from './volume.js'
 import { buildLayout } from './layoutGenerator.js'
-import { defaultFrequency } from './frequency.js'
+import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
@@ -103,7 +103,7 @@ export function generate(profile) {
   const regionStatus = profile.regionStatus ?? {}
   const equipment = profile.equipment ?? ['barbell', 'rack', 'bench']
   const advanced = years >= 3
-  const freqInput = profile.frequency ?? defaultFrequency(daysPerWeek)
+  const freqInput = profile.frequency ?? recommendedFrequency(blend, daysPerWeek)
   const frequency = {}
   for (const lift of MAIN_LIFTS) frequency[lift] = Math.max(0, Math.min(daysPerWeek, freqInput[lift] ?? 0))
 
@@ -276,17 +276,26 @@ export function generate(profile) {
       // accessory's ACTUAL realized set count (restPause=1, straight=3, myoReps=4,
       // deload-straight=2) rather than a flat estimate. Subsequent sessions in the
       // same week then see accurate accumulated load for deficit/overflow decisions.
-      // (Scheme assignment is independent of the steering ledger, so this reorder
-      // does not change which scheme an accessory gets — only the ledger value.)
       const accessories = withAccessoryScheme(allRaw, {
         weekIndex: wk.index - 1,
         advanced,
         phase,
         isDeload: wk.isDeload,
       })
-      for (const acc of accessories) {
+      const accessoriesTagged = goalBias >= 0
+        ? accessories.map((a) => {
+            const note = lengthenedNote(a)
+            return note ? { ...a, lengthenedEmphasis: true, lengthenedNote: note } : a
+          })
+        : accessories
+      for (const acc of accessoriesTagged) {
         if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, acc.scheme.sets.length)
       }
+      // Lagging/priority-first ordering (plan Task 4) applied LAST: it only
+      // reorders the final display list. Scheme assignment + steering ledger
+      // above use the original selection order, so this is purely cosmetic —
+      // no set-count/volume change.
+      const accessoriesOrdered = orderByPriority(accessoriesTagged, { priorityLift: profile.priorityLift, goalBias })
 
       // Attach warmup sets (additive field) to every main-lift exercise.
       // Accessories are in their own list — they get no warmup.
@@ -298,7 +307,7 @@ export function generate(profile) {
         return { ...ex, warmup: warmupSets(topW, { lightestWorkingWeight: lightW }) }
       })
 
-      return { ...s, exercises: exercisesWithWarmup, accessories, notes }
+      return { ...s, exercises: exercisesWithWarmup, accessories: accessoriesOrdered, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────

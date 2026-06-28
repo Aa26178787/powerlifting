@@ -158,3 +158,12 @@ describe('loadRamp (bounded weekly load progression)', () => {
     }
   })
 })
+
+describe('volume dose-response honesty', () => {
+  it('strength band saturates earlier than hypertrophy (strength diminishes faster)', () => {
+    // Pelland/Zourdos 2025: gains rise with volume but diminish; strength faster.
+    // Encoded as lower strength MRV/MAV than hypertrophy. Regression guard.
+    expect(BANDS.strength.mrv).toBeLessThan(BANDS.hypertrophy.mrv)
+    expect(BANDS.strength.mav).toBeLessThan(BANDS.hypertrophy.mav)
+  })
+})

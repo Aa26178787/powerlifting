@@ -35,9 +35,12 @@ describe('weightFor', () => {
   it('power uses 0.625 of e1rm', () => {
     expect(weightFor('power', 200)).toBe(125) // 200*0.625=125
   })
-  it('strength uses RPE via repAnchor', () => {
-    // workingWeight(200, 3, 8.5) = 200 * pctOf1RM(3,8.5)/100 = 200*0.878=175.6 -> 175
-    expect(weightFor('strength', 200)).toBe(175)
+  it('strength uses RPE via repAnchor (unchanged: rpeTarget 8.5)', () => {
+    expect(weightFor('strength', 200)).toBe(175) // 200*pctOf1RM(3,8.5)=87.8% → 175
+  })
+  it('hypertrophy proximity to failure: rpeTarget 9 → 152.5', () => {
+    // 200 * pctOf1RM(9,9)=73.9% * highRepCorrection(9)=1.032 = 152.53 → 152.5
+    expect(weightFor('hypertrophy', 200)).toBe(152.5)
   })
 })
 
