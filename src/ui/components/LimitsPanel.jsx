@@ -50,6 +50,8 @@ export default function LimitsPanel() {
         <li>주기화 <strong>모델</strong>(선형/비선형/블록) 선택은 볼륨이 같으면 결과 차이가 거의 없습니다 — 모델보다 볼륨·강도·실패 근접도가 중요합니다. (<strong>근거 강</strong>)</li>
         <li>약점/우선 종목 보조운동을 세션 앞에 배치합니다(첫 운동이 적응 이득이 큼 — 컨센서스). (<strong>근거 약함</strong>)</li>
         <li>근비대 보조에 <strong>긴 근육 길이(스트레치) 강조</strong> 안내를 답니다. (방향 <strong>근거 강</strong> · 종목 선정 <strong>근거 약함</strong>)</li>
+        <li>16~24주 장기 플랜은 <strong>블록 주기화</strong>로 약 6주마다 디로드를 자동 삽입하고 블록마다 부하 램프를 리셋합니다(주기 6주 = 컨센서스 <strong>근거 약함</strong>).</li>
+        <li>대회(피킹) 플랜의 마지막 주는 <strong>realization 테이퍼</strong> — 강도는 유지하고 볼륨만 ~40% 줄입니다(방향 <strong>근거 강</strong>: Bosquet 메타 / 정확 계수 <strong>근거 약함</strong>). 비대회 플랜의 디로드는 회복형(RPE 6) 유지.</li>
       </ul>
     </details>
   )
