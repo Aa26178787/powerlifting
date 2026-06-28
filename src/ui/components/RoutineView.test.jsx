@@ -174,6 +174,40 @@ describe('RoutineView', () => {
   })
 })
 
+// ── Feature: Korean exercise name localisation ────────────────────────────────
+describe('RoutineView: Korean exercise name rendering', () => {
+  beforeEach(() => {
+    useProfileStore.setState({ checkinLog: [] })
+  })
+
+  it('renders Korean for a DB exercise name used as ex.lift (Front Squat)', () => {
+    const planWithDbName = {
+      template: 'linearLP',
+      weeks: [{ index: 1, isDeload: false, sessions: [{
+        day: 1,
+        exercises: [{
+          lift: 'Front Squat',
+          quality: 'strength',
+          scheme: { type: 'straight', evidenceTier: 'rct', sets: [{ weight: 100, reps: 3, rpe: 8 }] },
+        }],
+        accessories: [{
+          name: 'Good Morning (narrow)',
+          quality: 'hypertrophy',
+          scheme: { type: 'straight', evidenceTier: 'rct', sets: [{ reps: 10, rpe: 7 }] },
+        }],
+      }] }],
+    }
+    render(<RoutineView plan={planWithDbName} />)
+    // comp lift enum fallback still works
+    expect(screen.getByText('프론트 스쿼트')).toBeInTheDocument()
+    // accessory with parenthetical qualifier
+    expect(screen.getByText('굿모닝 (내로우)')).toBeInTheDocument()
+    // no raw English in the rendered names
+    expect(screen.queryByText('Front Squat')).not.toBeInTheDocument()
+    expect(screen.queryByText('Good Morning (narrow)')).not.toBeInTheDocument()
+  })
+})
+
 // ── Feature: warmup rows + rest time display ──────────────────────────────────
 const planWithWarmup = {
   template: 'custom',

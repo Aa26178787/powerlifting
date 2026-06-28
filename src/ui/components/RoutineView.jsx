@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel } from '../i18n.js'
+import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
@@ -11,7 +11,7 @@ function ExerciseRow({ ex, units }) {
   return (
     <li className="exercise-row" data-quality={ex.quality}>
       <div className="ex-header">
-        <span className="ex-lift">{liftLabel(ex.lift)}</span>
+        <span className="ex-lift">{exerciseName(ex.lift)}</span>
         <span className="badge q" data-quality={ex.quality}>{qualityLabel(ex.quality)}</span>
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         {scheme && <span className="tag evidence">{evidenceLabel(scheme.evidenceTier)}</span>}
@@ -64,7 +64,7 @@ function AccessoryRow({ acc }) {
   return (
     <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
-        <span className="acc-name">{liftLabel(acc.name)}</span>
+        <span className="acc-name">{exerciseName(acc.name)}</span>
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         <span className="acc-feel">체감</span>

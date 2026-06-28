@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel, restLabel } from './i18n.js'
+import db from '../data/exercises.json' with { type: 'json' }
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel, restLabel, exerciseName } from './i18n.js'
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
@@ -61,6 +62,58 @@ describe('i18n Task 10: scheme/tool/phase/evidence labels', () => {
   it('phaseLabel', () => {
     expect(phaseLabel('peak')).toBe('피킹')
     expect(phaseLabel('unknown')).toBe('unknown')
+  })
+})
+
+// ── exerciseName coverage guard ───────────────────────────────────────────────
+describe('exerciseName: EXERCISE_NAME coverage guard', () => {
+  it('every DB exercise name has an explicit Korean entry (no English fallthrough)', () => {
+    const untranslated = []
+    for (const ex of db.exercises) {
+      // The map must contain the key directly — LIFT fallback is intentionally
+      // reserved for comp-lift enums ('squat'/'bench'/'deadlift') not DB names.
+      if (typeof exerciseName(ex.name) !== 'string' || exerciseName(ex.name) === ex.name) {
+        untranslated.push(ex.name)
+      }
+    }
+    if (untranslated.length > 0) console.error('Untranslated exercise names:', untranslated)
+    expect(untranslated).toHaveLength(0)
+  })
+
+  it('total DB exercises is 205 (guard against silent additions)', () => {
+    expect(db.exercises.length).toBe(205)
+  })
+})
+
+describe('exerciseName: representative mappings', () => {
+  it('comp lift enums localise via LIFT fallback', () => {
+    expect(exerciseName('squat')).toBe('스쿼트')
+    expect(exerciseName('bench')).toBe('벤치프레스')
+    expect(exerciseName('deadlift')).toBe('데드리프트')
+  })
+  it('title-case DB names (comp entries) map directly', () => {
+    expect(exerciseName('Conventional Deadlift')).toBe('컨벤셔널 데드리프트')
+    expect(exerciseName('Bench Press (Competition Grip)')).toBe('벤치프레스 (경기 그립)')
+    expect(exerciseName('Back Squat (Low Bar)')).toBe('백 스쿼트 (로우바)')
+  })
+  it('parenthetical qualifiers are translated', () => {
+    expect(exerciseName('Good Morning (narrow)')).toBe('굿모닝 (내로우)')
+    expect(exerciseName('Pause Squat (bottom)')).toBe('포즈 스쿼트 (바닥)')
+    expect(exerciseName('Box Squat (above parallel)')).toBe('박스 스쿼트 (평행 위)')
+    expect(exerciseName('Pause Deadlift (below knee)')).toBe('포즈 데드리프트 (무릎 아래)')
+  })
+  it('accessory names with equipment transliterations', () => {
+    expect(exerciseName('Trap Bar Deadlift (high handles)')).toBe('트랩바 데드리프트 (높은 핸들)')
+    expect(exerciseName('Dumbbell Bench Press')).toBe('덤벨 벤치프레스')
+    expect(exerciseName('Cable Curl')).toBe('케이블 컬')
+    expect(exerciseName('Leg Press')).toBe('레그 프레스')
+  })
+  it('unknown key falls through to raw string (no crash)', () => {
+    expect(exerciseName('Unknown Exercise XYZ')).toBe('Unknown Exercise XYZ')
+  })
+  it('legacy lowercase LIFT keys still work via fallback (backward compat)', () => {
+    expect(exerciseName('leg press')).toBe('레그 프레스')
+    expect(exerciseName('romanian deadlift')).toBe('루마니안 데드리프트')
   })
 })
 
