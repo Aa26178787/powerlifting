@@ -8,6 +8,7 @@ import { effectiveLiftE1rm, liftEntries } from '../../engine/loadFeedback.js'
 import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
+import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -129,6 +130,8 @@ export default function RoutineView({ plan }) {
       {over.flag && (
         <div className="overreaching-banner" role="alert">경고: ⚠️ {over.reason} · 디로드를 고려하세요</div>
       )}
+      {/* Spec 4 Task 4: overload risk/EV/abort/cooldown banner */}
+      {plan.overload && <OverloadBanner overload={plan.overload} liftLog={liftLog} />}
       {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
       {plan.weeks.map((wk) => (
