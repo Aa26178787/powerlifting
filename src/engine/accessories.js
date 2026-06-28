@@ -82,3 +82,14 @@ export function select({ lift, style, stickingPoint, cause = undefined, equipmen
   while (chosen.length < cap && di < deferred.length) chosen.push(deferred[di++])
   return chosen
 }
+
+// First-in-session work gets the greatest adaptation (B6, 중). When the goal is
+// hypertrophy-leaning (goalBias >= 0) and the user declared a priority lift,
+// surface that lift's accessories first. Strength/power plans (goalBias < 0) keep
+// competition-specific order. Stable: relative order within each group preserved.
+export function orderByPriority(accessories, { priorityLift, goalBias = 0 } = {}) {
+  if (goalBias < 0 || !priorityLift) return accessories
+  const first = [], rest = []
+  for (const a of accessories) (a.targetLift === priorityLift ? first : rest).push(a)
+  return [...first, ...rest]
+}

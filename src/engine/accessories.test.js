@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { select, movementTypeOf } from './accessories.js'
+import { select, movementTypeOf, orderByPriority } from './accessories.js'
 
 describe('accessories.select', () => {
   const base = { equipmentAvailable: ['barbell','rack','bench','cables','dumbbells'], regionStatus: {} }
@@ -201,5 +201,25 @@ describe('cause=undefined regression (case 7)', () => {
     const baseline  = select(base)
     const withNull  = select({ ...base, cause: null })
     expect(withNull.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+})
+
+describe('orderByPriority', () => {
+  const accs = [
+    { name: 'A', targetLift: 'bench' },
+    { name: 'B', targetLift: 'squat' },
+    { name: 'C', targetLift: 'general' },
+  ]
+  it('hyp-leaning + priorityLift squat → squat-targeted first, stable otherwise', () => {
+    const out = orderByPriority(accs, { priorityLift: 'squat', goalBias: 1 })
+    expect(out.map((a) => a.name)).toEqual(['B', 'A', 'C'])
+  })
+  it('strength-leaning (goalBias < 0) → unchanged', () => {
+    const out = orderByPriority(accs, { priorityLift: 'squat', goalBias: -1 })
+    expect(out.map((a) => a.name)).toEqual(['A', 'B', 'C'])
+  })
+  it('no priorityLift → unchanged', () => {
+    const out = orderByPriority(accs, { priorityLift: undefined, goalBias: 1 })
+    expect(out.map((a) => a.name)).toEqual(['A', 'B', 'C'])
   })
 })

@@ -3,7 +3,7 @@ import { tune } from './tuner.js'
 import { buildWorkingWeeks } from './periodization.js'
 import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
-import { select } from './accessories.js'
+import { select, orderByPriority } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND, classifyBlend } from './quality.js'
@@ -278,7 +278,8 @@ export function generate(profile) {
       // same week then see accurate accumulated load for deficit/overflow decisions.
       // (Scheme assignment is independent of the steering ledger, so this reorder
       // does not change which scheme an accessory gets — only the ledger value.)
-      const accessories = withAccessoryScheme(allRaw, {
+      const orderedRaw = orderByPriority(allRaw, { priorityLift: profile.priorityLift, goalBias })
+      const accessories = withAccessoryScheme(orderedRaw, {
         weekIndex: wk.index - 1,
         advanced,
         phase,
