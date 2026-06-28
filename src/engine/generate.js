@@ -1,6 +1,7 @@
 import { e1rmFrom } from './e1rm.js'
 import { tune } from './tuner.js'
-import { buildWorkingWeeks } from './periodization.js'
+import { buildBlockWeek } from './periodization.js'
+import { planLayout } from './planLayout.js'
 import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
 import { select, orderByPriority, lengthenedNote } from './accessories.js'
@@ -142,8 +143,24 @@ export function generate(profile) {
   }
   const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
 
-  const working = buildWorkingWeeks(layout, ctx, mesoWeeks)
-  const allWeeks = deloadEnabled ? [...working, buildDeloadWeek(working[working.length - 1], ctx)] : working
+  // Drive week assembly from planLayout: for ≤8 weeks this is one block (bit-identical
+  // to the legacy path); for >8 weeks blocks of ≤BLOCK_LEN work weeks each get their
+  // own ramp reset (sawtooth) with a recovery deload inserted after each block.
+  const entries = planLayout(mesoWeeks, deloadEnabled)
+  const allWeeks = []
+  let weekNumber = 1
+  let lastWorking = null
+  for (const entry of entries) {
+    if (entry.kind === 'work') {
+      const wk = buildBlockWeek(layout, ctx, entry.blockWeek, entry.blockLen, weekNumber++)
+      allWeeks.push(wk)
+      lastWorking = wk
+    } else {
+      // buildDeloadWeek sets index = lastWorking.index + 1, which equals weekNumber here
+      allWeeks.push(buildDeloadWeek(lastWorking, ctx))
+      weekNumber++
+    }
+  }
 
   // Blend classification is constant for the whole plan — compute once.
   const cls = classifyBlend(blend)

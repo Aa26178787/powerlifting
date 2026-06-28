@@ -99,50 +99,66 @@ function buildExercise(slot, quality, ctx) {
   }
 }
 
-export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
-  if (!layout) throw new Error('buildWorkingWeeks requires a layout')
+// Builds ONE working week with block-relative ramp.
+// blockWeek: 0-based position within the block (drives volumeRamp + loadRamp reset).
+// blockLen: total work weeks in this block (ramp denominator).
+// weekNumber: 1-based continuous index placed on the returned week object.
+// Sets ctx.weekIndex = blockWeek and ctx.totalWeeks = blockLen as side-effects
+// (matching the legacy behaviour for callers that read ctx after the call).
+export function buildBlockWeek(layout, ctx, blockWeek, blockLen, weekNumber) {
   const slotCounts = {}
   for (const day of layout) for (const slot of day) slotCounts[slot.lift] = (slotCounts[slot.lift] || 0) + 1
-  ctx.totalWeeks = totalWeeks
+
+  ctx.totalWeeks = blockLen
+  ctx.weekIndex = blockWeek
 
   // Ramp mode: derived from blend + peaking once per mesocycle (deterministic).
   // taper (peaking) uses floor=2 to prevent single-set collapse in peak week.
   const mode = volumeRampMode(ctx.blend, ctx.peaking)
   const taperFloor = mode === 'taper' ? 2 : 1
 
+  // Per-week volume ramp: scale the floor setsPerSession up toward MRV, capped
+  // by MRV / sessions-per-lift so a lift never exceeds its weekly MRV.
+  const ramp = volumeRamp(blockWeek, blockLen, mode)
+  ctx.weekSets = {}
+  for (const lift of Object.keys(slotCounts)) {
+    const base = ctx.setsPerSession[lift] ?? 0
+    // §3.3 Mode B guard: ctx.volumeOverridden undefined (direct-call tests) → falsy → current path.
+    if (ctx.volumeOverridden?.has(lift) && ctx.volumeMode === 'fixed') {
+      ctx.weekSets[lift] = Math.max(taperFloor, base)   // flat, caps released (warn-only via volumeWarnings)
+    } else {
+      const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
+      const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
+      ctx.weekSets[lift] = Math.max(taperFloor, Math.min(Math.round(base * ramp), mrvCap, absCap))
+    }
+  }
+
+  const wp = weekPlan(ctx.model, blockWeek, ctx.blend, ctx.competition, blockLen)
+  // per-lift quality schedule for this week + a consuming index
+  const sched = {}, idx = {}
+  for (const lift of Object.keys(slotCounts)) {
+    sched[lift] = weeklyQualitySchedule(slotCounts[lift], wp.blend)
+    idx[lift] = 0
+  }
+  const sessions = layout.map((daySlots, dayIdx) => {
+    const exercises = daySlots.map((slot) => {
+      const quality = sched[slot.lift][idx[slot.lift]++] ?? 'strength'
+      return buildExercise(slot, quality, ctx)
+    })
+    return { day: dayIdx + 1, exercises }
+  })
+  return { index: weekNumber, isDeload: false, sessions }
+}
+
+// Builds all working weeks for a single-block mesocycle (≤8 weeks, legacy path).
+// For ≤8 weeks there is exactly one block: blockWeek === w, blockLen === totalWeeks,
+// so buildBlockWeek produces bit-identical output to the old inline loop.
+export function buildWorkingWeeks(layout, ctx, totalWeeks = 3) {
+  if (!layout) throw new Error('buildWorkingWeeks requires a layout')
+  ctx.totalWeeks = totalWeeks
   const weeks = []
   for (let w = 0; w < totalWeeks; w++) {
-    ctx.weekIndex = w
-    // Per-week volume ramp: scale the floor setsPerSession up toward MRV, capped
-    // by MRV / sessions-per-lift so a lift never exceeds its weekly MRV.
-    const ramp = volumeRamp(w, totalWeeks, mode)
-    ctx.weekSets = {}
-    for (const lift of Object.keys(slotCounts)) {
-      const base = ctx.setsPerSession[lift] ?? 0
-      // §3.3 Mode B guard: ctx.volumeOverridden undefined (direct-call tests) → falsy → current path.
-      if (ctx.volumeOverridden?.has(lift) && ctx.volumeMode === 'fixed') {
-        ctx.weekSets[lift] = Math.max(taperFloor, base)   // flat, caps released (warn-only via volumeWarnings)
-      } else {
-        const mrvCap = ctx.mrv ? Math.floor(ctx.mrv / slotCounts[lift]) : Infinity
-        const absCap = PER_SESSION_CAP[lift] ?? 6   // absolute per-session ceiling survives the ramp
-        ctx.weekSets[lift] = Math.max(taperFloor, Math.min(Math.round(base * ramp), mrvCap, absCap))
-      }
-    }
-    const wp = weekPlan(ctx.model, w, ctx.blend, ctx.competition, totalWeeks)
-    // per-lift quality schedule for this week + a consuming index
-    const sched = {}, idx = {}
-    for (const lift of Object.keys(slotCounts)) {
-      sched[lift] = weeklyQualitySchedule(slotCounts[lift], wp.blend)
-      idx[lift] = 0
-    }
-    const sessions = layout.map((daySlots, dayIdx) => {
-      const exercises = daySlots.map((slot) => {
-        const quality = sched[slot.lift][idx[slot.lift]++] ?? 'strength'
-        return buildExercise(slot, quality, ctx)
-      })
-      return { day: dayIdx + 1, exercises }
-    })
-    weeks.push({ index: w + 1, isDeload: false, sessions })
+    weeks.push(buildBlockWeek(layout, ctx, w, totalWeeks, w + 1))
   }
   return weeks
 }
