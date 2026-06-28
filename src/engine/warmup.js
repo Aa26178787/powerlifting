@@ -22,15 +22,21 @@ const MIN_TOP_FOR_WARMUP = 20
  * @param {number} [opts.lightestWorkingWeight=topWorkingWeight]
  *   Lightest working-set weight; any warmup set at or above this weight
  *   is dropped so that no warmup set is heavier than any working set.
+ * @param {number} [opts.barWeight=20]
+ *   Empty-bar weight (kg); computed warmup weights below this are clamped up
+ *   to the bar (an empty-bar set), and duplicate weights are de-duplicated —
+ *   so a light top working weight never yields a sub-bar "warmup".
  * @returns {Array<{weight:number, reps:number, rpe:null, label:string}>}
  */
-export function warmupSets(topWorkingWeight, { increment = 2.5, lightestWorkingWeight = topWorkingWeight } = {}) {
+export function warmupSets(topWorkingWeight, { increment = 2.5, lightestWorkingWeight = topWorkingWeight, barWeight = 20 } = {}) {
   if (!Number.isFinite(topWorkingWeight) || topWorkingWeight <= MIN_TOP_FOR_WARMUP) return []
   const sets = []
+  const seen = new Set()
   for (let i = 0; i < WARMUP_PCTS.length; i++) {
-    const w = roundToIncrement(topWorkingWeight * WARMUP_PCTS[i], increment)
+    const w = Math.max(barWeight, roundToIncrement(topWorkingWeight * WARMUP_PCTS[i], increment))
     if (w >= lightestWorkingWeight) continue  // warmup must be lighter than all working sets
-    if (w <= 0) continue                       // safety net
+    if (seen.has(w)) continue                  // de-dup after bar clamp (e.g. two sub-bar pcts → one bar set)
+    seen.add(w)
     sets.push({ weight: w, reps: WARMUP_REPS[i], rpe: null, label: '워밍업' })
   }
   return sets
