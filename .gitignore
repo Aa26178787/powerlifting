@@ -3,3 +3,6 @@ dist/
 .DS_Store
 *.local
 .claude/
+
+# Subagent-driven dev scratch (ledger, briefs, reports, diffs)
+.superpowers/
