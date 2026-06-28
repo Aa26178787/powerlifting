@@ -489,6 +489,53 @@ describe('merge injects volumeOverride default into old profile lacking it', () 
   })
 })
 
+// ── overload field (v5 / Spec 4 Fix 2) ───────────────────────────────────────
+describe('overload field', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('DEFAULT_PROFILE includes overload with disabled defaults', () => {
+    expect(DEFAULT_PROFILE.overload).toEqual({
+      enabled: false, lifts: [], targetPct: 4, overreachWeeks: 3,
+      preset: null, readiness: null, lastEndWeek: null,
+    })
+  })
+
+  it('setOverload merges a partial into profile.overload', () => {
+    useProfileStore.getState().setOverload({ enabled: true, lifts: ['squat'] })
+    const { overload } = useProfileStore.getState().profile
+    expect(overload.enabled).toBe(true)
+    expect(overload.lifts).toEqual(['squat'])
+    // non-updated fields preserved
+    expect(overload.targetPct).toBe(4)
+    expect(overload.overreachWeeks).toBe(3)
+  })
+
+  it('rehydrates missing overload from old persisted profile (merge deep-fill)', async () => {
+    localStorage.clear()
+    const old = {
+      state: {
+        profile: {
+          lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } },
+          years: 3, daysPerWeek: 4, fatigue: 2,
+          // overload intentionally absent (old persisted profile)
+        },
+        plan: null,
+      },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    expect(p.overload).toEqual({
+      enabled: false, lifts: [], targetPct: 4, overreachWeeks: 3,
+      preset: null, readiness: null, lastEndWeek: null,
+    })
+    // user data preserved
+    expect(p.lifts.squat.oneRM).toBe(100)
+    expect(p.years).toBe(3)
+  })
+})
+
 // ── liftLog (mirrors checkinLog pattern) ─────────────────────────────────────
 describe('liftLog', () => {
   beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
