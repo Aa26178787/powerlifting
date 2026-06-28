@@ -351,7 +351,10 @@ export function generate(profile) {
       }
     }
 
-    return { ...wk, sessions, muscleVolume: summarize(weekLedger) }
+    // Fix 2: strip internal phaseWeekIndex from output (restore strict ≤8 byte-identity).
+    // The accessory pass above reads wk.phaseWeekIndex before this return — still intact.
+    const { phaseWeekIndex: _pwi, ...wkRest } = wk
+    return { ...wkRest, sessions, muscleVolume: summarize(weekLedger) }
   })
 
   return { template: 'custom', model, weeks }

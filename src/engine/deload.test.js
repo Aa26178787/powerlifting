@@ -58,12 +58,26 @@ describe('buildDeloadWeek — realization taper (Bosquet)', () => {
     expect(ex.rpeTarget).toBe(8.5)            // intensity held (not 6)
     expect(ex.weight).toBe(200)               // load held
     expect(ex.sets).toBe(2)                    // round(5*0.4)=2 volume cut
+    // Fix 4: strengthen — assert scheme set content is also held
+    expect(ex.scheme.sets.length).toBe(2)
+    expect(ex.scheme.sets[0].rpe).toBe(8.5)
+    expect(ex.scheme.sets[0].weight).toBe(200)
   })
   it('default deload still drops to RPE 6 (recovery, unchanged)', () => {
     const wk = { index: 4, sessions: [{ day: 1, exercises: [
       { lift: 'Squat', baseLift: 'squat', repAnchor: 3, sets: 5 } ] }] }
     const out = buildDeloadWeek(wk, { e1rm: { squat: 230 } })
     expect(out.sessions[0].exercises[0].rpeTarget).toBe(6)
+  })
+  // Fix 1 TDD (RED pre-fix): realization of a 0-set exercise must yield 0 sets + empty scheme.sets
+  it('realization of 0-set exercise (region-dropped) produces 0 sets and empty scheme (Fix 1)', () => {
+    const wk = { index: 4, sessions: [{ day: 1, exercises: [
+      { lift: 'Deadlift', baseLift: 'deadlift', repAnchor: 3, rpeTarget: 8.5, sets: 0,
+        scheme: { type:'straight', sets:[] }, weight: 200 } ] }] }
+    const out = buildDeloadWeek(wk, { e1rm: { deadlift: 240 } }, { realization: true })
+    const ex = out.sessions[0].exercises[0]
+    expect(ex.sets).toBe(0)               // must stay 0 — not resurrected to 1
+    expect(ex.scheme.sets).toEqual([])    // no heavy single in peak week
   })
 })
 
