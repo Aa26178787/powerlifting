@@ -3,7 +3,7 @@ import { tune } from './tuner.js'
 import { buildWorkingWeeks } from './periodization.js'
 import { buildDeloadWeek } from './deload.js'
 import { MAIN_LIFTS, byName } from './exercises.js'
-import { select, orderByPriority } from './accessories.js'
+import { select, orderByPriority, lengthenedNote } from './accessories.js'
 import { pick } from './variations.js'
 import { shouldSwap } from './regionStatus.js'
 import { normalizeBlend, DEFAULT_BLEND, classifyBlend } from './quality.js'
@@ -285,7 +285,13 @@ export function generate(profile) {
         phase,
         isDeload: wk.isDeload,
       })
-      for (const acc of accessories) {
+      const accessoriesTagged = goalBias >= 0
+        ? accessories.map((a) => {
+            const note = lengthenedNote(a)
+            return note ? { ...a, lengthenedEmphasis: true, lengthenedNote: note } : a
+          })
+        : accessories
+      for (const acc of accessoriesTagged) {
         if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, acc.scheme.sets.length)
       }
 
@@ -299,7 +305,7 @@ export function generate(profile) {
         return { ...ex, warmup: warmupSets(topW, { lightestWorkingWeight: lightW }) }
       })
 
-      return { ...s, exercises: exercisesWithWarmup, accessories, notes }
+      return { ...s, exercises: exercisesWithWarmup, accessories: accessoriesTagged, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────

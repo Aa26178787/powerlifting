@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { select, movementTypeOf, orderByPriority } from './accessories.js'
+import { select, movementTypeOf, orderByPriority, lengthenedNote } from './accessories.js'
 
 describe('accessories.select', () => {
   const base = { equipmentAvailable: ['barbell','rack','bench','cables','dumbbells'], regionStatus: {} }
@@ -201,6 +201,15 @@ describe('cause=undefined regression (case 7)', () => {
     const baseline  = select(base)
     const withNull  = select({ ...base, cause: null })
     expect(withNull.map((e) => e.name)).toEqual(baseline.map((e) => e.name))
+  })
+})
+
+describe('lengthenedNote', () => {
+  it('tags a stretch-biased movement', () => {
+    expect(lengthenedNote({ name: 'Romanian Deadlift' })).toMatch(/긴 근육 길이/)
+  })
+  it('returns null for a non-stretch movement', () => {
+    expect(lengthenedNote({ name: 'Leg Extension' })).toBeNull()
   })
 })
 

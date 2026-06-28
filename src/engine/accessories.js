@@ -83,6 +83,17 @@ export function select({ lift, style, stickingPoint, cause = undefined, equipmen
   return chosen
 }
 
+// Lengthened-position / lengthened-partial emphasis (B4, 중-강). Including the
+// stretched range is the primary ROM consideration for hypertrophy. We tag
+// accessories whose movement is biased toward long muscle length by name stem
+// (no DB schema change). Selection specifics heuristic (근거 약함).
+const LENGTHENED_RX = /romanian|rdl|stiff-leg|incline|overhead|deficit|split squat|bulgarian|lunge|pullover|preacher|seated|deep|stretch/i
+export function lengthenedNote(ex) {
+  return LENGTHENED_RX.test(ex?.name ?? '')
+    ? '긴 근육 길이 강조 — 늘어난 구간(스트레치)에서 통제하면 근비대 자극↑ (lengthened-position)'
+    : null
+}
+
 // First-in-session work gets the greatest adaptation (B6, 중). When the goal is
 // hypertrophy-leaning (goalBias >= 0) and the user declared a priority lift,
 // surface that lift's accessories first. Strength/power plans (goalBias < 0) keep
