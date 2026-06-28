@@ -34,6 +34,16 @@ describe('pick', () => {
   })
 })
 
+const EQUIP = ['barbell', 'rack', 'bench', 'dumbbell', 'machine', 'cables']
+
+describe('variation stability (systematic, not random — B7)', () => {
+  it('same inputs → same variation (deterministic; no week churn)', () => {
+    const a = pick('squat', 'none', { bar: 'low' }, EQUIP, true, [])
+    const b = pick('squat', 'none', { bar: 'low' }, EQUIP, true, [])
+    expect(a?.name).toBe(b?.name)
+  })
+})
+
 import { allEquipment } from './exercises.js'
 
 describe('priorityOf + tie-break', () => {

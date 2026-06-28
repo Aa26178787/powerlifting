@@ -39,6 +39,13 @@ describe('movementTypeOf', () => {
   })
 })
 
+describe('free-weight specificity (B8)', () => {
+  it('classifies a machine accessory as machine, a barbell one as free', () => {
+    expect(movementTypeOf({ name: 'Leg Press', equipment: ['machine'] })).toBe('machine')
+    expect(movementTypeOf({ name: 'Barbell Row', equipment: ['barbell'] })).toBe('free')
+  })
+})
+
 describe('accessoryPreference', () => {
   const eq = ['barbell','rack','bench','cables','dumbbells','leg press machine','machine','box','db']
   const ranks = (pref) => {
