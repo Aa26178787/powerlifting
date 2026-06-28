@@ -1,6 +1,6 @@
 # 파워리프팅 루틴 생성기 — 진행 상황 & 로드맵
 
-> 최종 갱신: 2026-06-27 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting
+> 최종 갱신: 2026-06-28 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting
 
 근거 기반 개인화 파워리프팅 루틴 생성기. 규칙 기반(결정론적·오프라인·무료) 엔진 + React 웹앱. 모든 수치는 메타분석/RCT/코칭 컨센서스에 근거하며 한계를 UI에 정직하게 고지.
 
@@ -32,6 +32,15 @@
 - **세트별 RPE 누적 피로**: 같은 무게 세트는 RPE 점증(마지막 세트=목표)
 - **kg ↔ lbs 단위 변환**: 입력·표시·CSV 전역
 
+### v4 — 모델 현실화·차별화·실전 디테일 (2026-06-27~28, 다관점 토론 기반)
+- **모델 현실화·calibration**: 메인 per-session 세트 상한, RPE 유도 백오프 일관화, 주차별 점진 과부하, dose 파라미터(세트·반복·강도·종목수) 다관점 보정
+- **볼륨 모델**: phase/blend 볼륨 ramp 3모드(accumulate/maintain/taper 역V·대회), per-muscle 볼륨 ledger(15군·정직 보고+보조 조향), peaking×ledger 튜닝, 조향 ledger 실측 정밀화
+- **PL vs PB 차별화(6차원)**: 볼륨·scheme(strengthHypertrophy)·보조 타깃(deficit-fill hyp-share 램프)·보조 개수(goalBias)·메인 강도(heavy:moderate 비율, PB 평균↓·top 보존)·근육 완전성
+- **스티킹 포인트 2D(위치×원인)**: cause 7토큰, POSITION_CAUSES 표, primaryMuscle 런타임 유도, 4-tier 매칭, 종속 드롭다운
+- **볼륨 사용자 선택**: 메인 종목별 세션당·보조 개수 직접 입력 + 자동추천 버튼, 2모드(rampFromFloor/fixed), 경고 비차단
+- **실전 디테일 4종**: 워밍업 세트 자동생성, 세트 간 휴식시간, 운동명 한글화(205/205), 로깅→다음 사이클 피드백(EWMA+클램프, generate 무수정)
+- 전부 다관점 토론(3관점→합성) → 배치 구현(TDD·비트동일 가드) → 정직고지 → `docs/research/` 결정 기록. 미지정/기본값이면 기존 동작 비트동일
+
 ---
 
 ## 2. 아키텍처 (주요 파일)
@@ -48,12 +57,12 @@
 ### UI (`src/ui/`)
 - `store/profileStore.js` zustand(영속, 커스텀 merge — 버전 범프 없이 신규 필드 deep-fill)
 - `wizard/` 8단계(Basics/Lifts/Experience/Goals/Periodization/Style/Equipment/Summary) + StrengthAssessment
-- `components/` RoutineView(세트별 표시+체크인패널+과피로배너) · CheckinPanel · LimitsPanel · RpeLogger
+- `components/` RoutineView(세트별 표시+워밍업+휴식+체크인패널+과피로배너+LiftLogRow) · CheckinPanel · LimitsPanel · VolumeWarnings · LiftLogRow(수행 로깅→피드백)
 - `lib/` planAdapter · exportCsv · units
 - `i18n.js` 한글 라벨 맵(엔진 값은 영어 유지)
 
 ### 테스트/배포
-- Vitest 325 테스트(엔진 골든 + jsdom 컴포넌트), `npm run build`, GitHub Actions → Pages
+- Vitest 668 테스트(엔진 골든 + jsdom 컴포넌트), `npm run build`, GitHub Actions → Pages
 
 ---
 
@@ -87,14 +96,14 @@
 
 ## 4. 앞으로 할 것 (로드맵, 우선순위)
 
-### 가까운 우선순위 (실전 디테일 — 사용성 큼)
-- [ ] **워밍업 세트 자동 생성** — 본세트 전 램프업(예: 40/60/80% × 5/3/1) 표시
-- [ ] **세트 간 휴식 시간 표시** — 자질별(파워 3-5분 / 근력 3-5분 / 근비대 1-2분 / 지구력 ~1분)
-- [ ] **변형·보조 운동 한글화** — DB 운동명 i18n 라벨(현재 영어: Front Squat 등)
-- [ ] **로깅 → 다음 세션 피드백** — RpeLogger를 위저드 흐름에 연결, 실제 RPE → `autoreg.loadAdjustment`로 다음 세션 부하 반영(이미 빌드됨, 미연결)
+### 가까운 우선순위 — ✅ 전부 완료 (2026-06-28)
+- [x] **워밍업 세트 자동 생성** — 40/60/80% × 5/3/2, 빈 바 floor, 메인 종목 (`warmup.js`)
+- [x] **세트 간 휴식 시간 표시** — 자질별(`restRange`/`restLabel`)
+- [x] **변형·보조 운동 한글화** — DB 운동명 205/205 i18n(`exerciseName`) + 커버리지 가드
+- [x] **로깅 → 다음 세션 피드백** — `LiftLogRow` 수행 로깅 → `loadFeedback.effectiveLiftE1rm`(EWMA+클램프) → 다음 사이클 부하 반영(planAdapter 주입, generate 무수정). 기존 RpeLogger는 미연결 죽은코드라 삭제·대체
 
 ### 중기
-- [ ] **대회 피킹/테이퍼 강화** — 현재 후반 강도 상승만; 본격 볼륨 테이퍼 + 개막 주 단일
+- [~] **대회 피킹/테이퍼 강화** — ✅ 볼륨 테이퍼(역V·비대회 미적용) + 피킹 탑싱글 시합강도 ramp 구현. 잔여: 개막 주 단일(realization) 변형
 - [ ] **다종목 묶음 오케스트레이션** — 콘트라스트(PAP) 실제 폭발 종목 페어링, 보조 슈퍼/자이언트 그룹 실행
 - [ ] **스타일 인식 통증 교체** — applyReadiness status-2 교체가 스타일/스티킹 반영 + 후보 풀 전체 부위 필터
 - [ ] **데드 저빈도 큐 안내** — 3일/주에서 데드 큐 미반영 시 UI 안내/대체 처리
