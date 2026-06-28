@@ -83,3 +83,44 @@ describe('buildPlan v3', () => {
     expect(p.frequency).toEqual({ squat: 3, bench: 2, deadlift: 1 })
   })
 })
+
+// ── liftLog feedback path ─────────────────────────────────────────────────────
+
+describe('buildPlan liftLog feedback', () => {
+  it('buildPlan(form, []) deep-equals buildPlan(form) — byte-identical regression lock', () => {
+    const a = buildPlan(form)
+    const b = buildPlan(form, [])
+    expect(JSON.stringify(b)).toBe(JSON.stringify(a))
+  })
+
+  it('buildPlan(form) and buildPlan(form, [], {}) all return identical plans', () => {
+    const a = buildPlan(form)
+    const b = buildPlan(form, [], {})
+    expect(JSON.stringify(b)).toBe(JSON.stringify(a))
+  })
+
+  it('buildPlan(form, squat-log×20) → squat main exercises differ, bench main exercises unchanged', () => {
+    // 20 squat entries all way above seed (200) → effective squat e1rm hits CAP_UP (+15% → 230)
+    const liftLog = Array.from({ length: 20 }, (_, i) => ({
+      lift: 'squat', week: 1, day: i + 1,
+      weight: 9999, reps: 1, rpe: 10, flag: null,
+    }))
+    const base = buildPlan(form)
+    const fed  = buildPlan(form, liftLog)
+
+    // Same number of weeks
+    expect(fed.weeks).toHaveLength(base.weeks.length)
+
+    // Bench main exercises unchanged (bench e1rm = 140 in both plans)
+    const benchStr = (plan) => JSON.stringify(
+      plan.weeks.map((w) => w.sessions.flatMap((s) => s.exercises.filter((e) => e.baseLift === 'bench'))),
+    )
+    expect(benchStr(fed)).toBe(benchStr(base))
+
+    // Squat main exercises changed (effective e1rm 200 → 230, ≈+15% working weights)
+    const squatStr = (plan) => JSON.stringify(
+      plan.weeks.map((w) => w.sessions.flatMap((s) => s.exercises.filter((e) => e.baseLift === 'squat'))),
+    )
+    expect(squatStr(fed)).not.toBe(squatStr(base))
+  })
+})

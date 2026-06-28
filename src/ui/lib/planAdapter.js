@@ -1,4 +1,5 @@
-import { generate } from '../../engine/generate.js'
+import { generate, resolveE1rm } from '../../engine/generate.js'
+import { effectiveLifts } from '../../engine/loadFeedback.js'
 
 export function toEngineProfile(form) {
   return {
@@ -28,7 +29,15 @@ export function toEngineProfile(form) {
   }
 }
 
-export function buildPlan(form) {
-  const raw = generate(toEngineProfile(form))
-  return { template: raw.template, model: raw.model, weeks: raw.weeks }
+// Shape raw generate output to the public plan contract.
+const shape = (raw) => ({ template: raw.template, model: raw.model, weeks: raw.weeks })
+
+// buildPlan(form, liftLog?, opts?)
+// Empty / absent liftLog → LITERALLY the same call as before (byte-identical output).
+// Non-empty liftLog → derives effective e1RM per lift via EWMA+clamp, then generates.
+// generate.js / autoreg.js / toEngineProfile bodies are UNCHANGED.
+export function buildPlan(form, liftLog = [], opts = {}) {
+  if (!liftLog.length) return shape(generate(toEngineProfile(form)))
+  const lifts = effectiveLifts(liftLog, form.lifts, resolveE1rm, opts)
+  return shape(generate(toEngineProfile({ ...form, lifts })))
 }

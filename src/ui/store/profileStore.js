@@ -67,6 +67,7 @@ export const useProfileStore = create(
       profile: DEFAULT_PROFILE,
       plan: null,
       checkinLog: [],
+      liftLog: [],
       setField: (path, value) =>
         set((s) => ({ profile: { ...s.profile, [path]: value } })),
       setLift: (lift, liftInput) =>
@@ -208,7 +209,20 @@ export const useProfileStore = create(
         }),
       clearCheckinLog: () =>
         set({ checkinLog: [] }),
-      reset: () => set({ profile: DEFAULT_PROFILE, plan: null, checkinLog: [] }),
+      // liftLog mirrors the checkinLog pattern exactly.
+      // upsert key = {lift,week,day} — re-logging a session replaces rather than appends
+      // (prevents duplicate entries from skewing the EWMA feedback fold).
+      // ts is added here for display only; the engine NEVER reads ts.
+      logLift: (entry) =>
+        set((s) => {
+          const rest = s.liftLog.filter(
+            (e) => !(e.lift === entry.lift && e.week === entry.week && e.day === entry.day),
+          )
+          return { liftLog: [...rest, { ts: Date.now(), ...entry }] }
+        }),
+      clearLiftLog: () =>
+        set({ liftLog: [] }),
+      reset: () => set({ profile: DEFAULT_PROFILE, plan: null, checkinLog: [], liftLog: [] }),
     }),
     {
       name: 'powerlifting-profile',
@@ -259,6 +273,7 @@ export const useProfileStore = create(
             },
           },
           checkinLog: persisted?.checkinLog ?? [],
+          liftLog:    persisted?.liftLog    ?? [],
         }
       },
     }
