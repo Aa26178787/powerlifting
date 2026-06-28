@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
 import { normalizeBlend, QUALITIES } from '../../../engine/quality.js'
 import { qualityLabel } from '../../i18n.js'
+import OverloadPanel from '../../components/OverloadPanel.jsx'
 
 export default function StepPeriodization() {
   const p = useProfileStore((s) => s.profile)
@@ -69,6 +70,8 @@ export default function StepPeriodization() {
           />
         </label>
       )}
+
+      <OverloadPanel />
     </div>
   )
 }
