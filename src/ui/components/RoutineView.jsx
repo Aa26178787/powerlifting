@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel } from '../i18n.js'
+import { liftLabel, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
@@ -7,6 +7,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 
 function ExerciseRow({ ex, units }) {
   const scheme = ex.scheme
+  const warmup = ex.warmup ?? []
   return (
     <li className="exercise-row" data-quality={ex.quality}>
       <div className="ex-header">
@@ -24,12 +25,24 @@ function ExerciseRow({ ex, units }) {
       {scheme && scheme.note && (
         <div className="ex-scheme-note">{scheme.note}</div>
       )}
-      {scheme && scheme.sets && scheme.sets.length > 0 && (
+      {ex.quality && (
+        <div className="ex-rest">세트 간 휴식 {restLabel(ex.quality)}</div>
+      )}
+      {scheme && (warmup.length > 0 || (scheme.sets && scheme.sets.length > 0)) && (
         <div className="set-table-wrap">
           <table className="set-table">
             <thead><tr><th>세트</th><th>무게</th><th>반복</th><th>RPE</th><th>비고</th></tr></thead>
             <tbody>
-              {scheme.sets.map((s, i) => (
+              {warmup.map((s, i) => (
+                <tr key={`w${i}`} className="warmup-row">
+                  <td className="warmup-label">워밍업 {i + 1}</td>
+                  <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
+                  <td className="num">{s.reps}</td>
+                  <td className="num">—</td>
+                  <td></td>
+                </tr>
+              ))}
+              {scheme.sets && scheme.sets.map((s, i) => (
                 <tr key={i}>
                   <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
                   <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
@@ -57,6 +70,9 @@ function AccessoryRow({ acc }) {
         <span className="acc-feel">체감</span>
       </div>
       {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
+      {acc.quality && (
+        <div className="acc-rest">세트 간 휴식 {restLabel(acc.quality)}</div>
+      )}
       {scheme && scheme.sets && scheme.sets.length > 0 && (
         <div className="set-table-wrap">
           <table className="set-table acc">

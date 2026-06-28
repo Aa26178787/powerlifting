@@ -118,6 +118,16 @@ const CUE = {
   legDrive: '지면 누르는 느낌(레그 드라이브)', hipHinge: '히프 힌지', offFloor: '바닥에서 약함',
 }
 
+// Rest-time display strings — matches restRange() in quality.js (NSCA/ACSM consensus).
+// Kept as a simple map here so i18n.js stays free of engine imports.
+const REST = {
+  power:       '3–5분',
+  strength:    '3–5분',
+  hypertrophy: '1–2분',
+  endurance:   '1분',
+}
+export const restLabel = (k) => REST[k] ?? ''
+
 export const liftLabel = (k) => LIFT[k] ?? k
 export const goalLabel = (k) => GOAL[k] ?? k
 export const injuryLabel = (k) => INJURY[k] ?? k

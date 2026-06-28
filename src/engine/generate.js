@@ -13,6 +13,7 @@ import { defaultFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
+import { warmupSets } from './warmup.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -287,7 +288,17 @@ export function generate(profile) {
         if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, acc.scheme.sets.length)
       }
 
-      return { ...s, exercises: kept, accessories, notes }
+      // Attach warmup sets (additive field) to every main-lift exercise.
+      // Accessories are in their own list — they get no warmup.
+      const exercisesWithWarmup = kept.map((ex) => {
+        const weights = (ex.scheme?.sets ?? []).map((ws) => ws.weight).filter((w) => Number.isFinite(w))
+        if (weights.length === 0) return { ...ex, warmup: [] }
+        const topW = Math.max(...weights)
+        const lightW = Math.min(...weights)
+        return { ...ex, warmup: warmupSets(topW, { lightestWorkingWeight: lightW }) }
+      })
+
+      return { ...s, exercises: exercisesWithWarmup, accessories, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────

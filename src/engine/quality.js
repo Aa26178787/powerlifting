@@ -98,3 +98,19 @@ export function strengthShare(blend) {
   if (d <= 0) return 0.5
   return Math.max(HEAVY_FLOOR, Math.min(1, n.strength / d))
 }
+
+// ── Rest-time recommendations by training quality ─────────────────────────────
+// Evidence tier: NSCA/ACSM goal-based consensus (not RCT for exact ranges).
+// Power / strength: 3–5 min for full neural & phosphocreatine recovery.
+// Hypertrophy: 1–2 min for metabolic stress and hormonal response.
+// Endurance: ≤ 1 min for cardiovascular / lactate-tolerance adaptation.
+const REST_RANGES = {
+  power:       { min: 3, max: 5 },
+  strength:    { min: 3, max: 5 },
+  hypertrophy: { min: 1, max: 2 },
+  endurance:   { min: 1, max: 1 },
+}
+
+export function restRange(quality) {
+  return REST_RANGES[quality] ?? { min: 1, max: 2 }
+}

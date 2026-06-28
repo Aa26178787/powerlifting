@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel } from './i18n.js'
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel, restLabel } from './i18n.js'
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
@@ -62,4 +62,14 @@ describe('i18n Task 10: scheme/tool/phase/evidence labels', () => {
     expect(phaseLabel('peak')).toBe('피킹')
     expect(phaseLabel('unknown')).toBe('unknown')
   })
+})
+
+describe('restLabel', () => {
+  it('power and strength → 3–5분', () => {
+    expect(restLabel('power')).toBe('3–5분')
+    expect(restLabel('strength')).toBe('3–5분')
+  })
+  it('hypertrophy → 1–2분', () => expect(restLabel('hypertrophy')).toBe('1–2분'))
+  it('endurance → 1분', () => expect(restLabel('endurance')).toBe('1분'))
+  it('unknown quality → empty string', () => expect(restLabel('unknown')).toBe(''))
 })
