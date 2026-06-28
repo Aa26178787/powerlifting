@@ -48,3 +48,22 @@ describe('buildDeloadWeek — straight scheme', () => {
   })
 })
 
+describe('buildDeloadWeek — realization taper (Bosquet)', () => {
+  it('realization holds intensity and cuts volume ~0.4', () => {
+    const wk = { index: 4, sessions: [{ day: 1, exercises: [
+      { lift: 'Squat', baseLift: 'squat', repAnchor: 3, rpeTarget: 8.5, sets: 5,
+        scheme: { type:'straight', sets:[{weight:200,reps:3,rpe:8.5}] }, weight: 200 } ] }] }
+    const out = buildDeloadWeek(wk, { e1rm: { squat: 230 } }, { realization: true })
+    const ex = out.sessions[0].exercises[0]
+    expect(ex.rpeTarget).toBe(8.5)            // intensity held (not 6)
+    expect(ex.weight).toBe(200)               // load held
+    expect(ex.sets).toBe(2)                    // round(5*0.4)=2 volume cut
+  })
+  it('default deload still drops to RPE 6 (recovery, unchanged)', () => {
+    const wk = { index: 4, sessions: [{ day: 1, exercises: [
+      { lift: 'Squat', baseLift: 'squat', repAnchor: 3, sets: 5 } ] }] }
+    const out = buildDeloadWeek(wk, { e1rm: { squat: 230 } })
+    expect(out.sessions[0].exercises[0].rpeTarget).toBe(6)
+  })
+})
+

@@ -147,6 +147,10 @@ export function generate(profile) {
   // to the legacy path); for >8 weeks blocks of ≤BLOCK_LEN work weeks each get their
   // own ramp reset (sawtooth) with a recovery deload inserted after each block.
   const entries = planLayout(mesoWeeks, deloadEnabled)
+  // The trailing deload of a peaking plan uses the Bosquet realization taper (hold intensity,
+  // cut volume to ~40%). Mid-plan deloads (multi-block plans) use the standard recovery style.
+  // Detect trailing deload by reference: the last entry in the layout, when kind='deload'.
+  const lastEntry = entries.length > 0 ? entries[entries.length - 1] : null
   const allWeeks = []
   let weekNumber = 1
   let workWeekIndex = 0
@@ -162,7 +166,9 @@ export function generate(profile) {
       workWeekIndex++
     } else {
       // buildDeloadWeek sets index = lastWorking.index + 1, which equals weekNumber here
-      allWeeks.push(buildDeloadWeek(lastWorking, ctx))
+      // Trailing deload of a peaking plan → realization taper (Task 4); all others → recovery.
+      const deloadOpts = (peaking && entry === lastEntry) ? { realization: true } : undefined
+      allWeeks.push(buildDeloadWeek(lastWorking, ctx, deloadOpts))
       weekNumber++
     }
   }
