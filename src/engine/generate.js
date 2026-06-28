@@ -276,10 +276,7 @@ export function generate(profile) {
       // accessory's ACTUAL realized set count (restPause=1, straight=3, myoReps=4,
       // deload-straight=2) rather than a flat estimate. Subsequent sessions in the
       // same week then see accurate accumulated load for deficit/overflow decisions.
-      // (Scheme assignment is independent of the steering ledger, so this reorder
-      // does not change which scheme an accessory gets — only the ledger value.)
-      const orderedRaw = orderByPriority(allRaw, { priorityLift: profile.priorityLift, goalBias })
-      const accessories = withAccessoryScheme(orderedRaw, {
+      const accessories = withAccessoryScheme(allRaw, {
         weekIndex: wk.index - 1,
         advanced,
         phase,
@@ -294,6 +291,11 @@ export function generate(profile) {
       for (const acc of accessoriesTagged) {
         if (acc.primaryMuscle) addToLedger(steeringLedger, acc.primaryMuscle, acc.scheme.sets.length)
       }
+      // Lagging/priority-first ordering (plan Task 4) applied LAST: it only
+      // reorders the final display list. Scheme assignment + steering ledger
+      // above use the original selection order, so this is purely cosmetic —
+      // no set-count/volume change.
+      const accessoriesOrdered = orderByPriority(accessoriesTagged, { priorityLift: profile.priorityLift, goalBias })
 
       // Attach warmup sets (additive field) to every main-lift exercise.
       // Accessories are in their own list — they get no warmup.
@@ -305,7 +307,7 @@ export function generate(profile) {
         return { ...ex, warmup: warmupSets(topW, { lightestWorkingWeight: lightW }) }
       })
 
-      return { ...s, exercises: exercisesWithWarmup, accessories: accessoriesTagged, notes }
+      return { ...s, exercises: exercisesWithWarmup, accessories: accessoriesOrdered, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────

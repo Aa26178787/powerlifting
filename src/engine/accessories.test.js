@@ -238,4 +238,8 @@ describe('orderByPriority', () => {
     const out = orderByPriority(accs, { priorityLift: undefined, goalBias: 1 })
     expect(out.map((a) => a.name)).toEqual(['A', 'B', 'C'])
   })
+  it('goalBias 0 (default) + priorityLift squat → reorders (squat-targeted first)', () => {
+    const out = orderByPriority(accs, { priorityLift: 'squat', goalBias: 0 })
+    expect(out.map((a) => a.name)).toEqual(['B', 'A', 'C'])
+  })
 })

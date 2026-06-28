@@ -700,3 +700,22 @@ describe('peaking (competition) taper mode integration', () => {
     }
   })
 })
+
+// recommendedFrequency integration (final-review fix)
+describe('recommendedFrequency integration', () => {
+  const base = {
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    years: 3, fatigue: 1, mesoWeeks: 4, deloadEnabled: false,
+    qualities: PRESETS.powerlifting,  // str-dominant, non-mixed → +1 squat when room allows
+  }
+  const squatCount = (r) => r.weeks[0].sessions.flatMap((s) => s.exercises).filter((e) => e.baseLift === 'squat').length
+
+  it('5-day str-dominant plan (no explicit frequency) → squat trained 3× in week 1', () => {
+    const r = generate({ ...base, daysPerWeek: 5 })
+    expect(squatCount(r)).toBe(3)
+  })
+  it('4-day str-dominant plan (no explicit frequency, no room) → squat trained 2× in week 1', () => {
+    const r = generate({ ...base, daysPerWeek: 4 })
+    expect(squatCount(r)).toBe(2)
+  })
+})

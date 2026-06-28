@@ -1,3 +1,5 @@
+import { classifyBlend } from './quality.js'
+
 // 사용자가 빈도 미설정 시 기본값(현재 동작 보존). daysPerWeek로 시드.
 export function defaultFrequency(daysPerWeek) {
   return {
@@ -6,8 +8,6 @@ export function defaultFrequency(daysPerWeek) {
     deadlift: daysPerWeek >= 5 ? 2 : 1,
   }
 }
-
-import { classifyBlend } from './quality.js'
 
 // Strength gains rise independently with frequency (Pelland/Zourdos 2025 meta, 강);
 // hypertrophy gains track volume, with frequency only distributing it (negligible
