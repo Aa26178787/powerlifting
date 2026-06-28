@@ -35,6 +35,7 @@ export const DEFAULT_PROFILE = {
   units: 'kg',
   accessoryPreference: 'machine',
   frequency: { squat: 2, bench: 2, deadlift: 1 },
+  overload: { enabled: false, lifts: [], targetPct: 4, overreachWeeks: 3, preset: null, readiness: null, lastEndWeek: null },
   volumeOverride: {
     main: {
       enabled: false,
@@ -90,6 +91,8 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, stickingCause: { ...s.profile.stickingCause, [lift]: value } } })),
       setFrequency: (lift, value) =>
         set((s) => ({ profile: { ...s.profile, frequency: { ...s.profile.frequency, [lift]: value } } })),
+      setOverload: (partial) =>
+        set((s) => ({ profile: { ...s.profile, overload: { ...s.profile.overload, ...partial } } })),
       setVolumeOverrideEnabled: (scope, bool) =>
         set((s) => ({
           profile: {
@@ -246,6 +249,7 @@ export const useProfileStore = create(
             stickingPoint: { ...current.profile.stickingPoint, ...(p.stickingPoint || {}) },
             stickingCause: { ...current.profile.stickingCause, ...(p.stickingCause || {}) },
             frequency: { ...current.profile.frequency, ...(p.frequency || {}) },
+            overload: { ...current.profile.overload, ...(p.overload || {}) },
             regionStatus: { ...current.profile.regionStatus, ...(p.regionStatus || {}) },
             qualities: { ...current.profile.qualities, ...(p.qualities || {}) },
             periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
