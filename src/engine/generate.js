@@ -334,8 +334,9 @@ export function generate(profile) {
       const accessoriesFinal = accessoriesOrdered.map((a) => {
         const slot = patternOf(a.primaryMuscle)
         const target = accessoryOverrides[slot]
-        if (target && target !== slot) {
-          const ex = pickForPattern(target, equipment)
+        if (target && target !== slot && target !== a.name) {
+          // override value is either a specific exercise name or a movement pattern key
+          const ex = byName(target) ?? pickForPattern(target, equipment)
           if (ex) return { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null, accSlot: slot }
         }
         return { ...a, accSlot: slot }

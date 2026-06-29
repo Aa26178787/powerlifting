@@ -48,6 +48,14 @@ const plan = {
   ],
 }
 
+// Weeks render lazily (collapsed) for performance; expand all so collapsed-week
+// content (e.g. the deload week) is mounted in the DOM for assertions.
+function expandWeeks(container) {
+  container.querySelectorAll('details.week').forEach((d) => {
+    if (!d.open) { d.open = true; fireEvent(d, new Event('toggle')) }
+  })
+}
+
 describe('RoutineView', () => {
   beforeEach(() => {
     useProfileStore.setState({ checkinLog: [] })
@@ -82,11 +90,13 @@ describe('RoutineView', () => {
     expect(onRegenerate).toHaveBeenCalled()
   })
   it('renders session notes when present', () => {
-    render(<RoutineView plan={plan} />)
+    const { container } = render(<RoutineView plan={plan} />)
+    expandWeeks(container)   // notes live in the (collapsed) deload week
     expect(screen.getByText(/omitted/)).toBeInTheDocument()
   })
   it('renders scheme label (탑세트+백오프 and 스트레이트)', () => {
-    render(<RoutineView plan={plan} />)
+    const { container } = render(<RoutineView plan={plan} />)
+    expandWeeks(container)   // 스트레이트 is in the collapsed deload week
     expect(screen.getAllByText(/탑세트/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/스트레이트/).length).toBeGreaterThan(0)
   })
@@ -153,13 +163,13 @@ describe('RoutineView', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  it('deload week h3 does not contain (디로드) text in JSX (CSS pin only)', () => {
-    render(<RoutineView plan={plan} />)
-    const headings = screen.getAllByRole('heading', { level: 3 })
-    const deloadHeading = headings.find((h) => h.textContent.includes('4주차'))
-    expect(deloadHeading).toBeTruthy()
-    // The text from JSX should NOT include (디로드) — CSS ::after adds the pin
-    expect(deloadHeading.textContent).not.toMatch(/\(디로드\)/)
+  it('deload week summary has no 디로드 text in JSX (CSS pin only)', () => {
+    const { container } = render(<RoutineView plan={plan} />)
+    const deloadSummary = container.querySelector('.week.deload > .week-summary')
+    expect(deloadSummary).toBeTruthy()
+    expect(deloadSummary.textContent).toContain('4주차')
+    // marked by CSS (.week.deload ::after), not JSX text
+    expect(deloadSummary.textContent).not.toMatch(/디로드/)
   })
 
   it('readiness badge appears in RoutineView after checkin, not in CheckinPanel', async () => {
@@ -176,7 +186,7 @@ describe('RoutineView', () => {
   it('CheckinPanel is wrapped in a <details> element (collapsed by default)', () => {
     const { container } = render(<RoutineView plan={plan} />)
     // the CheckinPanel details (not the AccessoryPicker details) — identify by its content
-    const details = [...container.querySelectorAll('details')].find((d) => d.querySelector('.checkin-panel'))
+    const details = [...container.querySelectorAll('details')].find((d) => /컨디션/.test(d.querySelector(':scope > summary')?.textContent ?? ''))
     expect(details).toBeTruthy()
     // no `open` attribute — collapsed by default
     expect(details.hasAttribute('open')).toBe(false)

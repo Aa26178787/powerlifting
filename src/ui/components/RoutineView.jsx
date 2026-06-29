@@ -9,7 +9,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
-import { PATTERNS, patternOf } from '../../engine/movementPattern.js' // per-row accessory pattern swap
+import { PATTERNS, patternOf, exercisesForPattern } from '../../engine/movementPattern.js' // per-row accessory swap
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -59,14 +59,15 @@ function ExerciseRow({ ex, units, week, day }) {
 function AccessoryRow({ acc, onRegenerate }) {
   const scheme = acc.scheme
   const overrides = useProfileStore((s) => s.profile.accessoryOverrides ?? {})
+  const equipment = useProfileStore((s) => s.profile.equipment ?? [])
   const setField = useProfileStore((s) => s.setField)
   const [open, setOpen] = useState(false)
   // accSlot = the slot's auto-assigned pattern (stable override key); current = the
   // pattern actually shown (may be an override).
   const slot = acc.accSlot ?? patternOf(acc.primaryMuscle)
   const current = patternOf(acc.primaryMuscle)
-  const choose = (patternKey) => {
-    setField('accessoryOverrides', { ...overrides, [slot]: patternKey })
+  const choose = (value) => {   // value = pattern key or specific exercise name
+    setField('accessoryOverrides', { ...overrides, [slot]: value })
     setOpen(false); onRegenerate?.()
   }
   const recommend = () => {
@@ -92,6 +93,19 @@ function AccessoryRow({ acc, onRegenerate }) {
               {p.label}
             </button>
           ))}
+          <label className="acc-exercise-pick">종목 직접 선택:
+            <select value="" onChange={(e) => { if (e.target.value) choose(e.target.value) }}>
+              <option value="">— 선택 —</option>
+              {PATTERNS.map((p) => {
+                const exs = exercisesForPattern(p.key, equipment)
+                return exs.length ? (
+                  <optgroup key={p.key} label={p.label}>
+                    {exs.map((ex) => <option key={ex.name} value={ex.name}>{exerciseName(ex.name)}</option>)}
+                  </optgroup>
+                ) : null
+              })}
+            </select>
+          </label>
         </div>
       )}
       {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
@@ -119,6 +133,20 @@ function AccessoryRow({ acc, onRegenerate }) {
   )
 }
 
+// Lazily renders a week's body only when expanded — a long (e.g. 24-week) plan has
+// thousands of nodes; rendering every week at once blocks the main thread ("응답 없음").
+// Collapsed weeks show only their summary; the body mounts on open.
+function WeekBlock({ wk, defaultOpen, renderBody }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <details className={`week${wk.isDeload ? ' deload' : ''}`} open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="week-summary">{wk.index}주차</summary>
+      {open && <div className="week-body">{renderBody()}</div>}
+    </details>
+  )
+}
+
 export default function RoutineView({ plan, onRegenerate }) {
   const checkinLog = useProfileStore((s) => s.checkinLog)
   const logCheckin = useProfileStore((s) => s.logCheckin)
@@ -142,6 +170,46 @@ export default function RoutineView({ plan, onRegenerate }) {
   if (!plan) return <p className="placeholder">아직 루틴이 없습니다. 왼쪽에 정보를 입력하고 '루틴 생성' 버튼을 눌러주세요.</p>
 
   const over = detectOverreaching(checkinLog)
+  const firstOpenIdx = Math.max(0, plan.weeks.findIndex((w) => !w.isDeload))
+
+  const renderSession = (wk, s) => {
+    const key = `${wk.index}-${s.day}`
+    const view = adjusted[key]?.session ?? s
+    return (
+      <div key={s.day} className="session">
+        <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
+        <details>
+          <summary>오늘 컨디션 반영</summary>
+          <CheckinPanel
+            session={s}
+            weekIndex={wk.index}
+            profile={profile}
+            overreaching={over.flag}
+            onApply={(r) => {
+              setAdjusted((m) => ({
+                ...m,
+                [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
+              }))
+              logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
+            }}
+          />
+        </details>
+        {adjusted[key] && (
+          <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
+        )}
+        <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
+        {(view.accessories ?? []).length > 0 && (
+          <div className="accessories">
+            <h5>보조운동</h5>
+            <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} />)}</ul>
+          </div>
+        )}
+        {view.notes && view.notes.length > 0 && (
+          <p className="notes">⚠️ {view.notes.join(' · ')}</p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <section className="routine-view">
@@ -153,48 +221,9 @@ export default function RoutineView({ plan, onRegenerate }) {
       {plan.overload && <OverloadBanner overload={plan.overload} checkinLog={checkinLog} />}
       {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
-      {plan.weeks.map((wk) => (
-        <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
-          <h3>{wk.index}주차</h3>
-          {wk.sessions.map((s) => {
-            const key = `${wk.index}-${s.day}`
-            const view = adjusted[key]?.session ?? s
-            return (
-              <div key={s.day} className="session">
-                <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
-                <details>
-                  <summary>오늘 컨디션 반영</summary>
-                  <CheckinPanel
-                    session={s}
-                    weekIndex={wk.index}
-                    profile={profile}
-                    overreaching={over.flag}
-                    onApply={(r) => {
-                      setAdjusted((m) => ({
-                        ...m,
-                        [`${wk.index}-${r.day}`]: { session: r.adjusted, readiness: r.readiness },
-                      }))
-                      logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
-                    }}
-                  />
-                </details>
-                {adjusted[key] && (
-                  <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
-                )}
-                <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
-                {(view.accessories ?? []).length > 0 && (
-                  <div className="accessories">
-                    <h5>보조운동</h5>
-                    <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} />)}</ul>
-                  </div>
-                )}
-                {view.notes && view.notes.length > 0 && (
-                  <p className="notes">⚠️ {view.notes.join(' · ')}</p>
-                )}
-              </div>
-            )
-          })}
-        </div>
+      {plan.weeks.map((wk, wi) => (
+        <WeekBlock key={wk.index} wk={wk} defaultOpen={wi === firstOpenIdx}
+          renderBody={() => wk.sessions.map((s) => renderSession(wk, s))} />
       ))}
     </section>
   )
