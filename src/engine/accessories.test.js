@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { select, movementTypeOf, orderByPriority, lengthenedNote } from './accessories.js'
+import { select, movementTypeOf, orderByPriority, lengthenedNote, movementFamily } from './accessories.js'
+
+describe('movementFamily', () => {
+  it('strips parenthetical qualifiers → same family for variants', () => {
+    expect(movementFamily('Good Morning (wide)')).toBe('good morning')
+    expect(movementFamily('Good Morning (narrow)')).toBe('good morning')
+    expect(movementFamily('Lat Pulldown (close neutral)')).toBe('lat pulldown')
+  })
+  it('no same-family duplicate within one session selection', () => {
+    const r = select({ lift: 'squat', style: { bar: 'low' }, stickingPoint: 'none',
+      equipmentAvailable: ['barbell','rack','bench','cables','dumbbells'], regionStatus: {}, maxCount: 999 })
+    const fams = r.map((e) => movementFamily(e.name))
+    expect(new Set(fams).size).toBe(fams.length)   // all families distinct
+  })
+})
 
 describe('accessories.select', () => {
   const base = { equipmentAvailable: ['barbell','rack','bench','cables','dumbbells'], regionStatus: {} }
@@ -167,20 +181,17 @@ describe('2D cause matching (case 6)', () => {
 
   it('cause-match accessory ranks above wrong-cause same-position accessory', () => {
     // squat midrange, cause='hip':
-    // Good Morning (narrow): pm='hamstrings/erectors' → causeOf=['hip'] → full(0.75)
-    // Good Morning (seated): pm='erectors/QL'        → causeOf=['back'] → causeMiss(0.35)
-    // Diversity guard picks one 'hamstrings/erectors' rep first; 'erectors/QL' is a
-    // distinct PM string so it goes in separately at its lower score (0.35+base).
-    // → narrowIdx(0) < seatedIdx(4)
+    // Good Morning (narrow): cause-matched (hip) → full(0.75); (seated): wrong cause → causeMiss(0.35).
+    // Both are the same movement family ("good morning") → family dedup selects ONLY ONE.
+    // The cause-matched (higher-scored) narrow GM wins the slot; the seated GM is deduped out.
     const r = select({
       lift: 'squat', style: { bar: 'low' }, stickingPoint: 'midrange', cause: 'hip',
       sessionTimeLimit: null, maxCount: 999, equipmentAvailable: eq, regionStatus: {},
     })
     const narrowIdx = r.findIndex((e) => e.name === 'Good Morning (narrow)')
     const seatedIdx = r.findIndex((e) => e.name === 'Good Morning (seated)')
-    expect(narrowIdx).toBeGreaterThanOrEqual(0)
-    expect(seatedIdx).toBeGreaterThanOrEqual(0)
-    expect(narrowIdx).toBeLessThan(seatedIdx)
+    expect(narrowIdx).toBeGreaterThanOrEqual(0)   // cause-matched variant is the one selected
+    expect(seatedIdx).toBe(-1)                     // same family → not also selected
   })
 })
 

@@ -165,12 +165,11 @@ describe('strengthHypertrophy scheme', () => {
     const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 1 })
     expect(sets.length).toBe(2)
   })
-  it('backoff load is RPE-derived (matches its 9-reps @ RPE 8.5 label), not the old fixed ~0.67', () => {
+  it('backoff load is RPE-derived at one RPE below the hyp target (genuine back-off, not too heavy)', () => {
     const { sets } = SCHEMES.strengthHypertrophy.expand({ e1rm: 200, baseSets: 3 })
-    const back = sets[1]
-    // consistent with the label: loadForRpe(e1rm, hypertrophy repAnchor, rpeTarget)
-    expect(back.weight).toBe(loadForRpe(200, ZONES.hypertrophy.repAnchor, ZONES.hypertrophy.rpeTarget))
-    // and heavier than the old fixed 0.67*e1rm it replaced
+    const back = sets[sets.length - 1]
+    // backoff RPE is hyp target − 1 (was the full hyp target → too taxing after heavy doubles)
+    expect(back.weight).toBe(loadForRpe(200, ZONES.hypertrophy.repAnchor, ZONES.hypertrophy.rpeTarget - 1))
     expect(back.weight).toBeGreaterThan(200 * 0.67)
     expect(back.weight).toBeLessThan(sets[0].weight) // still a backoff
   })
@@ -273,9 +272,11 @@ describe('topSetBackoff — RPE-derived backoff (Fix B)', () => {
     const { sets } = SCHEMES.topSetBackoff.expand(ctx())
     expect(sets[0].weight).toBeGreaterThan(sets[1].weight)
   })
-  it('backoff rpe is zone.rpeTarget - 1', () => {
+  it('backoff rpe RISES to zone.rpeTarget - 1 across the backoff sets', () => {
     const { sets } = SCHEMES.topSetBackoff.expand(ctx())
-    expect(sets[1].rpe).toBe(ZONES.strength.rpeTarget - 1)
+    const backoffs = sets.slice(1)
+    expect(backoffs[backoffs.length - 1].rpe).toBe(ZONES.strength.rpeTarget - 1)   // last set hits the target
+    for (let i = 1; i < backoffs.length; i++) expect(backoffs[i].rpe).toBeGreaterThanOrEqual(backoffs[i - 1].rpe)
   })
 })
 

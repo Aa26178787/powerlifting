@@ -8,9 +8,12 @@ describe('distinctDays', () => {
     expect(new Set(ds).size).toBe(3)
     expect(ds.every((d) => d >= 0 && d < 5)).toBe(true)
   })
-  it('phase shifts deterministically', () => {
-    expect(distinctDays(2, 4, 0)).toEqual([0, 2])
-    expect(distinctDays(2, 4, 1)).toEqual([1, 3])
+  it('phase shifts deterministically (centered, gap-maximizing placement)', () => {
+    expect(distinctDays(2, 4, 0)).toEqual([1, 3])
+    expect(distinctDays(2, 4, 1)).toEqual([2, 0])
+  })
+  it('avoids adjacent same-lift days when a gap exists (f=2, D=3 → [0,2] not [0,1])', () => {
+    expect(distinctDays(2, 3, 0)).toEqual([0, 2])   // Mon, Wed — not Mon, Tue
   })
 })
 

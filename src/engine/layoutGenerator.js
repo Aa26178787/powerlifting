@@ -2,11 +2,13 @@ import { MAIN_LIFTS } from './exercises.js'
 
 const PHASE = { squat: 0, bench: 1, deadlift: 2 }   // 종목 간 요일 오프셋(분산)
 
-// f회를 D일 canvas에 균등·distinct 배치. f<=D면 floor(i*D/f) 강증가→distinct,
-// (phase + .) % D는 bijection이라 distinct 보존. 결정론.
+// f회를 D일 canvas에 distinct·gap-최대 배치. 중앙배치 floor((i+0.5)*D/f)로 세션
+// 사이 간격을 최대화 (회복 고려) — 예: f=2,D=3 → [0,2](월·수, 인접 회피), 기존
+// floor(i*D/f)의 [0,1](월·화 인접) 문제 해결. f<=D면 연속 항이 D/f(≥1)만큼 떨어져
+// floor가 강증가 → distinct. (phase + .) % D는 bijection이라 distinct 보존. 결정론.
 export function distinctDays(f, D, phase) {
   const days = []
-  for (let i = 0; i < f; i++) days.push((phase + Math.floor((i * D) / f)) % D)
+  for (let i = 0; i < f; i++) days.push((phase + Math.floor(((i + 0.5) * D) / f)) % D)
   return days
 }
 

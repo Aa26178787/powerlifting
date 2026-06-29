@@ -13,7 +13,6 @@ import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
   const scheme = ex.scheme
-  const warmup = ex.warmup ?? []
   return (
     <li className="exercise-row" data-quality={ex.quality}>
       <div className="ex-header">
@@ -34,20 +33,11 @@ function ExerciseRow({ ex, units, week, day }) {
       {ex.quality && (
         <div className="ex-rest">세트 간 휴식 {restLabel(ex.quality)}</div>
       )}
-      {scheme && (warmup.length > 0 || (scheme.sets && scheme.sets.length > 0)) && (
+      {scheme && scheme.sets && scheme.sets.length > 0 && (
         <div className="set-table-wrap">
           <table className="set-table">
             <thead><tr><th>세트</th><th>무게</th><th>반복</th><th>RPE</th><th>비고</th></tr></thead>
             <tbody>
-              {warmup.map((s, i) => (
-                <tr key={`w${i}`} className="warmup-row">
-                  <td className="warmup-label">워밍업 {i + 1}</td>
-                  <td className="num">{(() => { const w = toDisplay(s.weight, units); return w === '' ? '—' : w + unitLabel(units) })()}</td>
-                  <td className="num">{s.reps}</td>
-                  <td className="num">—</td>
-                  <td></td>
-                </tr>
-              ))}
               {scheme.sets && scheme.sets.map((s, i) => (
                 <tr key={i}>
                   <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>

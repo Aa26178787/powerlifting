@@ -7,6 +7,13 @@ import { stickTier } from './stickingPoint.js'
 const MACHINE_EQUIP = ['machine', 'cables', 'smith', 'preacher']   // 'machine' substring catches "* machine"
 const SKILL_RX = /step-up|sled|yoke|sissy|dragon flag|kettlebell|kb swing|pistol|nordic|cossack|single-leg|single-arm|farmer|landmine twist|russian twist/i
 
+// Base movement family: name without its parenthetical qualifier, lowercased.
+// "Good Morning (wide)" & "Good Morning (narrow)" → "good morning" (same family),
+// so near-duplicate variations don't both get selected in one session.
+export function movementFamily(name) {
+  return (name || '').replace(/\s*\(.*?\)\s*/g, '').trim().toLowerCase()
+}
+
 export function movementTypeOf(ex) {
   if (ex.movementType) return ex.movementType
   if ((ex.equipment ?? []).some((e) => MACHINE_EQUIP.some((m) => e.includes(m)))) return 'machine'
@@ -66,33 +73,36 @@ export function select({ lift, style, stickingPoint, cause = undefined, equipmen
   // Empty userPicks → this loop is a no-op → behavior bit-identical to auto-select.
   const chosen = []
   const seenMuscles = new Set()
+  const seenFamilies = new Set()
+  const markSeen = (ex) => { seenMuscles.add(ex.primaryMuscle); seenFamilies.add(movementFamily(ex.name)) }
   if (userPicks.length) {
     const pickSet = new Set(userPicks)
     for (const ex of sorted) {
       if (chosen.length >= cap) break
-      if (pickSet.has(ex.name)) { chosen.push(ex); seenMuscles.add(ex.primaryMuscle) }
+      if (pickSet.has(ex.name)) { chosen.push(ex); markSeen(ex) }   // honor explicit picks (even same family)
     }
   }
-  // Diversity guard: greedily pick, deferring repeats of already-chosen primaryMuscle.
+  // Diversity guard: greedily pick, deferring repeats of an already-chosen primaryMuscle
+  // OR movement family (so "Good Morning (wide)" and "(narrow)" don't both appear).
   // Also defer exercises whose prime mover would exceed MRV in the weekly ledger.
   // Only allow deferred exercises if the pool is exhausted before reaching cap.
   const deferred = []
   for (const ex of sorted) {
     if (chosen.length >= cap) break
     if (chosen.includes(ex)) continue   // already force-included as a user pick
-    if (seenMuscles.has(ex.primaryMuscle) ||
+    if (seenMuscles.has(ex.primaryMuscle) || seenFamilies.has(movementFamily(ex.name)) ||
         (muscleLedger && isOverMrv(muscleLedger, ex.primaryMuscle, ACCESSORY_EST_SETS))) {
       deferred.push(ex)
     } else {
       chosen.push(ex)
-      seenMuscles.add(ex.primaryMuscle)
+      markSeen(ex)
     }
   }
-  // Fill from deferred only if pool is under-filled (exhausted without hitting cap)
+  // Fill from deferred only if pool is under-filled — still skip same-family repeats.
   let di = 0
   while (chosen.length < cap && di < deferred.length) {
-    if (!chosen.includes(deferred[di])) chosen.push(deferred[di])
-    di++
+    const ex = deferred[di++]
+    if (!chosen.includes(ex) && !seenFamilies.has(movementFamily(ex.name))) { chosen.push(ex); markSeen(ex) }
   }
   return chosen
 }

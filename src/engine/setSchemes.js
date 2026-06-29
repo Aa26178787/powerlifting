@@ -23,12 +23,12 @@ function topSetBackoff({ e1rm, zone, baseSets }) {
   // fixed 0.88× multiplier. Null-safe: pct-loaded zones fall back to the old multiplier.
   const backoffRpe = zone.rpeTarget == null ? null : zone.rpeTarget - 1
   const sets = [{ weight: top, reps: zone.reps[0], rpe: zone.rpeTarget, label: '탑' }]
-  for (let i = 1; i < baseSets; i++) {
-    const backW = backoffRpe == null
-      ? r(top * 0.88)
-      : loadForRpe(e1rm, zone.reps[1], backoffRpe)
-    sets.push({ weight: backW, reps: zone.reps[1], rpe: backoffRpe, label: '백오프' })
-  }
+  // Back-off sets share one (lighter) load; RPE RISES across them to the target as
+  // fatigue accumulates (e.g. 7→7.5→8), instead of a flat RPE on every set.
+  const backW = backoffRpe == null ? r(top * 0.88) : loadForRpe(e1rm, zone.reps[1], backoffRpe)
+  risingRpe(backoffRpe, Math.max(0, baseSets - 1)).forEach((rpe) => {
+    sets.push({ weight: backW, reps: zone.reps[1], rpe, label: '백오프' })
+  })
   return { sets }
 }
 function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3 }) {
@@ -119,21 +119,21 @@ function contrastPAP(ctx) {
 function strengthHypertrophy({ e1rm, baseSets, heavyShare = null }) {
   const sZ = ZONES.strength, hZ = ZONES.hypertrophy
   const top  = r(e1rm * sZ.pct[1])                        // ~0.92 — preserved for all heavyShare
-  // RPE-derived (not a fixed pct): the backoff must actually BE its labeled
-  // RPE 8.5 at 9 reps (chart 72.8% + high-rep correction ≈ 75%), not the old
-  // ~0.67 that was a full RPE light. See research doc (A, C).
-  const back = loadForRpe(e1rm, hZ.repAnchor, hZ.rpeTarget)
+  // Back-off is a genuine reduction after the heavy top sets: one RPE below the
+  // hypertrophy target (was hZ.rpeTarget=9 → too taxing right after heavy doubles).
+  const backRpe = hZ.rpeTarget - 1
+  const back = loadForRpe(e1rm, hZ.repAnchor, backRpe)
   const N = Math.max(2, baseSets)
-  // heavyShare=null → current 1:(N-1) behavior BIT-IDENTICAL (direct-call tests pass).
-  // When passed (concurrent/PB path) → blend-faithful split.
+  // heavyShare=null → current 1:(N-1) split. When passed (concurrent/PB) → blend-faithful.
   // Lower clamp 1: top-end + PB strength preserved. Upper clamp N-1: moderate ≥1 always.
   const heavyN = heavyShare == null ? 1
     : Math.max(1, Math.min(N - 1, Math.round(N * heavyShare)))
   const sets = []
-  for (let i = 0; i < heavyN; i++)
-    sets.push({ weight: top,  reps: sZ.reps[0],    rpe: sZ.rpeTarget, label: '탑(근력)' })
-  for (let i = heavyN; i < N; i++)
-    sets.push({ weight: back, reps: hZ.repAnchor, rpe: hZ.rpeTarget, label: '백오프(근비대)' })
+  // RPE rises across each group (same load) as within-session fatigue accumulates.
+  risingRpe(sZ.rpeTarget, heavyN).forEach((rpe) =>
+    sets.push({ weight: top, reps: sZ.reps[0], rpe, label: '탑(근력)' }))
+  risingRpe(backRpe, N - heavyN).forEach((rpe) =>
+    sets.push({ weight: back, reps: hZ.repAnchor, rpe, label: '백오프(근비대)' }))
   return { sets }
 }
 

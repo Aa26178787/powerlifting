@@ -208,19 +208,14 @@ describe('RoutineView: Korean exercise name rendering', () => {
   })
 })
 
-// ── Feature: warmup rows + rest time display ──────────────────────────────────
-const planWithWarmup = {
+// ── Feature: rest time display (warmup removed) ───────────────────────────────
+const planRest = {
   template: 'custom',
   weeks: [{
     index: 1, isDeload: false, sessions: [{
       day: 1,
       exercises: [{
         lift: 'squat', quality: 'strength',
-        warmup: [
-          { weight: 65,   reps: 5, rpe: null, label: '워밍업' },
-          { weight: 97.5, reps: 3, rpe: null, label: '워밍업' },
-          { weight: 130,  reps: 2, rpe: null, label: '워밍업' },
-        ],
         scheme: {
           type: 'straight', evidenceTier: 'rct',
           sets: [{ weight: 162.5, reps: 3, rpe: 8.5 }],
@@ -234,46 +229,30 @@ const planWithWarmup = {
   }],
 }
 
-describe('RoutineView warmup + rest', () => {
+describe('RoutineView rest times (no warmup)', () => {
   beforeEach(() => {
     useProfileStore.setState({ checkinLog: [] })
   })
 
-  it('renders warmup rows with 워밍업 label for main exercises', () => {
-    render(<RoutineView plan={planWithWarmup} />)
-    // Three warmup rows labelled "워밍업 1", "워밍업 2", "워밍업 3"
-    expect(screen.getByText(/워밍업 1/)).toBeInTheDocument()
-    expect(screen.getByText(/워밍업 2/)).toBeInTheDocument()
-    expect(screen.getByText(/워밍업 3/)).toBeInTheDocument()
-  })
-
-  it('warmup rows appear in a .warmup-row CSS class', () => {
-    const { container } = render(<RoutineView plan={planWithWarmup} />)
-    expect(container.querySelectorAll('.warmup-row').length).toBe(3)
-  })
-
-  it('renders warmup weights in the table', () => {
-    render(<RoutineView plan={planWithWarmup} />)
-    expect(screen.getByText(/65/)).toBeInTheDocument()
-    expect(screen.getByText(/97\.5/)).toBeInTheDocument()
-    expect(screen.getByText(/130/)).toBeInTheDocument()
+  it('renders no warmup rows (feature removed)', () => {
+    const { container } = render(<RoutineView plan={planRest} />)
+    expect(container.querySelectorAll('.warmup-row').length).toBe(0)
+    expect(screen.queryByText(/워밍업/)).toBeNull()
   })
 
   it('renders rest time for main exercise (strength → 3–5분)', () => {
-    render(<RoutineView plan={planWithWarmup} />)
+    render(<RoutineView plan={planRest} />)
     expect(screen.getAllByText(/세트 간 휴식/).length).toBeGreaterThan(0)
     expect(screen.getByText(/세트 간 휴식 3–5분/)).toBeInTheDocument()
   })
 
   it('renders rest time for accessory (hypertrophy → 1–2분)', () => {
-    render(<RoutineView plan={planWithWarmup} />)
+    render(<RoutineView plan={planRest} />)
     expect(screen.getByText(/세트 간 휴식 1–2분/)).toBeInTheDocument()
   })
 
-  it('exercises without warmup field render no warmup rows', () => {
-    // The existing plan fixture has no warmup field — should show 0 warmup rows
-    render(<RoutineView plan={planWithWarmup} />)
-    // The working set row has "1" as label (not "워밍업 1") — verify working set still renders
+  it('renders the working set', () => {
+    render(<RoutineView plan={planRest} />)
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
   })
 })
