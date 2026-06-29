@@ -13,7 +13,7 @@ import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
-import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
+import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS, canonicalToken } from './muscleVolume.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -94,6 +94,7 @@ export function generate(profile) {
   const variationOverride = profile.variationOverride ?? {}
   const excludedExercises = profile.excludedExercises ?? []
   const accessoryPicks = profile.accessoryPicks ?? []   // hybrid: user-preferred accessories, force-included by select()
+  const accessoryOverrides = profile.accessoryOverrides ?? {}   // per-body-part swap (RoutineView 변경 버튼)
   const cueNeed = profile.cueNeed ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
@@ -325,8 +326,18 @@ export function generate(profile) {
       // above use the original selection order, so this is purely cosmetic —
       // no set-count/volume change.
       const accessoriesOrdered = orderByPriority(accessoriesTagged, { priorityLift: profile.priorityLift, goalBias })
+      // Per-body-part override: swap an accessory to the user-chosen exercise for its
+      // body part (RoutineView 변경 버튼). Keeps the quality-based scheme; only the
+      // exercise identity changes. Empty overrides → unchanged.
+      const accessoriesFinal = accessoriesOrdered.map((a) => {
+        const bp = canonicalToken((a.primaryMuscle || '').split('/')[0])
+        const name = accessoryOverrides[bp]
+        if (!name || name === a.name) return a
+        const ex = byName(name)
+        return ex ? { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null } : a
+      })
 
-      return { ...s, exercises: kept, accessories: accessoriesOrdered, notes }
+      return { ...s, exercises: kept, accessories: accessoriesFinal, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────

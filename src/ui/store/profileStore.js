@@ -32,6 +32,7 @@ export const DEFAULT_PROFILE = {
   deloadEnabled: true,
   excludedExercises: [],
   accessoryPicks: [],   // user-chosen accessory exercise names (hybrid: force-included, engine auto-fills rest)
+  accessoryOverrides: {},   // per-body-part swap: { canonicalMuscle: exerciseName } — replaces that part's accessory
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
@@ -261,6 +262,7 @@ export const useProfileStore = create(
             deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             accessoryPicks: p.accessoryPicks ?? current.profile.accessoryPicks,
+            accessoryOverrides: { ...current.profile.accessoryOverrides, ...(p.accessoryOverrides || {}) },
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
             units: p.units ?? current.profile.units,

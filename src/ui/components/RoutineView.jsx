@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
@@ -9,7 +9,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
-import AccessoryPicker from './AccessoryPicker.jsx' // accessory swap on the generated routine
+import { bodyPartOf, bodyPartLabel, exercisesForBodyPart } from '../lib/accessoryGroups.js' // per-row accessory swap
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -56,16 +56,44 @@ function ExerciseRow({ ex, units, week, day }) {
   )
 }
 
-function AccessoryRow({ acc }) {
+function AccessoryRow({ acc, onRegenerate }) {
   const scheme = acc.scheme
+  const equipment = useProfileStore((s) => s.profile.equipment ?? [])
+  const overrides = useProfileStore((s) => s.profile.accessoryOverrides ?? {})
+  const setField = useProfileStore((s) => s.setField)
+  const [open, setOpen] = useState(false)
+  const bp = bodyPartOf(acc.primaryMuscle)
+  const options = useMemo(() => exercisesForBodyPart(bp, equipment), [bp, equipment])
+  const choose = (name) => {
+    setField('accessoryOverrides', { ...overrides, [bp]: name })
+    setOpen(false); onRegenerate?.()
+  }
+  const recommend = () => {
+    const next = { ...overrides }; delete next[bp]
+    setField('accessoryOverrides', next)
+    setOpen(false); onRegenerate?.()
+  }
   return (
     <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
+        <span className="badge acc-bodypart">{bodyPartLabel(bp)}</span>
         <span className="acc-name">{exerciseName(acc.name)}</span>
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         <span className="acc-feel">체감</span>
+        <button type="button" className="btn-mini acc-change" onClick={() => setOpen((o) => !o)}>변경</button>
       </div>
+      {open && (
+        <div className="acc-chooser">
+          <span className="acc-chooser-label">{bodyPartLabel(bp)} 운동:</span>
+          <button type="button" className="btn-mini acc-recommend" onClick={recommend}>추천(자동)</button>
+          {options.map((nm) => (
+            <button key={nm} type="button" className="btn-mini" disabled={nm === acc.name} onClick={() => choose(nm)}>
+              {exerciseName(nm)}
+            </button>
+          ))}
+        </div>
+      )}
       {scheme && scheme.note && <div className="acc-scheme-note">{scheme.note}</div>}
       {acc.quality && (
         <div className="acc-rest">세트 간 휴식 {restLabel(acc.quality)}</div>
@@ -125,8 +153,6 @@ export default function RoutineView({ plan, onRegenerate }) {
       {plan.overload && <OverloadBanner overload={plan.overload} checkinLog={checkinLog} />}
       {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
-      {/* Accessory picker lives HERE (in the generated routine): toggling re-generates live */}
-      <AccessoryPicker onChange={onRegenerate} />
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
           <h3>{wk.index}주차</h3>
@@ -159,7 +185,7 @@ export default function RoutineView({ plan, onRegenerate }) {
                 {(view.accessories ?? []).length > 0 && (
                   <div className="accessories">
                     <h5>보조운동</h5>
-                    <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} />)}</ul>
+                    <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} />)}</ul>
                   </div>
                 )}
                 {view.notes && view.notes.length > 0 && (

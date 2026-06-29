@@ -70,13 +70,16 @@ describe('RoutineView', () => {
     const accText = [...container.querySelectorAll('.accessory-row')].map((r) => r.textContent).join(' ')
     expect(accText).toMatch(/레그 프레스/)
   })
-  it('hosts the AccessoryPicker; toggling an accessory triggers re-generation', () => {
+  it('each accessory has a 변경 button; choosing 추천(자동) re-generates the routine', () => {
     const onRegenerate = vi.fn()
     const { container } = render(<RoutineView plan={plan} onRegenerate={onRegenerate} />)
-    const box = container.querySelector('.accessory-picker input[type=checkbox]')
-    expect(box).toBeTruthy()                 // picker is in the generated routine view
-    fireEvent.click(box)
-    expect(onRegenerate).toHaveBeenCalled()  // change re-generates the routine live
+    const changeBtn = container.querySelector('.accessory-row .acc-change')
+    expect(changeBtn).toBeTruthy()           // per-accessory 변경 button in the routine
+    fireEvent.click(changeBtn)               // open the body-part chooser
+    const recommend = container.querySelector('.acc-chooser .acc-recommend')
+    expect(recommend).toBeTruthy()
+    fireEvent.click(recommend)               // 추천(자동) → updates overrides + re-generates
+    expect(onRegenerate).toHaveBeenCalled()
   })
   it('renders session notes when present', () => {
     render(<RoutineView plan={plan} />)

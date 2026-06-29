@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { resolveE1rm, generate, deficitBaseWeight } from './generate.js'
 import { byName } from './exercises.js'
 import { PRESETS, ZONES } from './quality.js'
-import { MUSCLES } from './muscleVolume.js'
+import { MUSCLES, canonicalToken } from './muscleVolume.js'
+import dbJson from '../data/exercises.json' with { type: 'json' }
 
 const profile = {
   lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
@@ -83,6 +84,21 @@ describe('generate v3', () => {
     const all = plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
     expect(all.length).toBeGreaterThan(0)
     expect(all.every((e) => Number.isFinite(e.weight))).toBe(true)
+  })
+  it('accessoryOverrides swaps a body part to the chosen exercise', () => {
+    const base = { lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+      years: 3, daysPerWeek: 4, fatigue: 1, mesoWeeks: 2, deloadEnabled: false,
+      equipment: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'], qualities: { power: 0, strength: 0, hypertrophy: 1, endurance: 0 } }
+    const acc0 = generate(base).weeks[0].sessions.flatMap((s) => s.accessories)[0]
+    const bp = canonicalToken((acc0.primaryMuscle || '').split('/')[0])
+    const alt = dbJson.exercises.find((e) => e.category === 'accessory' && !e.advanced
+      && e.name !== acc0.name && canonicalToken((e.primaryMuscle || '').split('/')[0]) === bp)
+    expect(alt).toBeTruthy()
+    const accs = generate({ ...base, accessoryOverrides: { [bp]: alt.name } })
+      .weeks[0].sessions.flatMap((s) => s.accessories)
+    const bpAccs = accs.filter((a) => canonicalToken((a.primaryMuscle || '').split('/')[0]) === bp)
+    expect(bpAccs.length).toBeGreaterThan(0)
+    expect(bpAccs.every((a) => a.name === alt.name)).toBe(true)   // that body part now uses the override
   })
   it('deadlift reps are capped at 6 across all qualities (high-rep blends too)', () => {
     for (const q of [{ hypertrophy: 1 }, { endurance: 1 }, { strength: 0.5, hypertrophy: 0.5 }]) {
