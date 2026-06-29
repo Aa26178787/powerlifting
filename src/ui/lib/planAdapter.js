@@ -23,6 +23,7 @@ export function toEngineProfile(form) {
     deloadEnabled: form.deloadEnabled,
     variationOverride: form.variationOverride ?? {},
     excludedExercises: form.excludedExercises ?? [],
+    accessoryPicks: form.accessoryPicks ?? [],
     cueNeed: form.cueNeed ?? {},
     accessoryPreference: form.accessoryPreference,
     frequency: form.frequency,

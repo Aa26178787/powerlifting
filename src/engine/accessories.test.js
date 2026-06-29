@@ -243,3 +243,18 @@ describe('orderByPriority', () => {
     expect(out.map((a) => a.name)).toEqual(['B', 'A', 'C'])
   })
 })
+
+describe('accessories.select userPicks (hybrid)', () => {
+  const base = { equipmentAvailable: ['barbell', 'rack', 'bench', 'cables', 'dumbbells'], regionStatus: {}, stickingPoint: 'none' }
+  it('force-includes a user-picked accessory that auto-select would not surface', () => {
+    // Barbell Curl (biceps, general) is low-scored for squat; without a pick it is not chosen.
+    const auto = select({ lift: 'squat', style: { bar: 'low' }, goalBias: 0, maxCount: 2, ...base })
+    expect(auto.some((e) => e.name === 'Barbell Curl')).toBe(false)
+    const picked = select({ lift: 'squat', style: { bar: 'low' }, goalBias: 0, maxCount: 2, userPicks: ['Barbell Curl'], ...base })
+    expect(picked.some((e) => e.name === 'Barbell Curl')).toBe(true)
+  })
+  it('empty userPicks is bit-identical to no userPicks', () => {
+    const args = { lift: 'squat', style: { bar: 'low' }, goalBias: 0, maxCount: 3, ...base }
+    expect(select({ ...args, userPicks: [] })).toEqual(select(args))
+  })
+})

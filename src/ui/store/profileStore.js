@@ -31,6 +31,7 @@ export const DEFAULT_PROFILE = {
   mesoWeeks: 4,
   deloadEnabled: true,
   excludedExercises: [],
+  accessoryPicks: [],   // user-chosen accessory exercise names (hybrid: force-included, engine auto-fills rest)
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
@@ -259,6 +260,7 @@ export const useProfileStore = create(
             trainingDays: p.trainingDays ?? current.profile.trainingDays,
             deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
+            accessoryPicks: p.accessoryPicks ?? current.profile.accessoryPicks,
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
             units: p.units ?? current.profile.units,

@@ -24,7 +24,7 @@ function prefBonus(type, pref) {
 
 const STICK_W_ACC = { full: 0.75, position: 0.5, causeMiss: 0.35, none: 0 }   // heuristic
 
-export function select({ lift, style, stickingPoint, cause = undefined, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null, muscleLedger = null, muscleBands = null, deficitWeight = 0 }) {
+export function select({ lift, style, stickingPoint, cause = undefined, equipmentAvailable, sessionTimeLimit, mainTimeMin = 0, goalBias = 0, regionStatus, excluded = [], accessoryPreference = 'machine', maxCount = null, muscleLedger = null, muscleBands = null, deficitWeight = 0, userPicks = [] }) {
   const weights = emphasis(lift, style)
   const pool = query({ category: 'accessory', equipmentAvailable, excludeAdvanced: true })
     .filter((e) => e.targetLift === lift || e.targetLift === 'general')
@@ -61,14 +61,25 @@ export function select({ lift, style, stickingPoint, cause = undefined, equipmen
     cap = Math.min(5, Math.max(minCap, 3 + goalBias))
   }
 
+  // Hybrid: user-picked accessories (present in this lift's pool) are force-included
+  // FIRST, in scored order, up to the cap — they bypass the diversity/MRV deferral.
+  // Empty userPicks → this loop is a no-op → behavior bit-identical to auto-select.
+  const chosen = []
+  const seenMuscles = new Set()
+  if (userPicks.length) {
+    const pickSet = new Set(userPicks)
+    for (const ex of sorted) {
+      if (chosen.length >= cap) break
+      if (pickSet.has(ex.name)) { chosen.push(ex); seenMuscles.add(ex.primaryMuscle) }
+    }
+  }
   // Diversity guard: greedily pick, deferring repeats of already-chosen primaryMuscle.
   // Also defer exercises whose prime mover would exceed MRV in the weekly ledger.
   // Only allow deferred exercises if the pool is exhausted before reaching cap.
-  const chosen = []
   const deferred = []
-  const seenMuscles = new Set()
   for (const ex of sorted) {
     if (chosen.length >= cap) break
+    if (chosen.includes(ex)) continue   // already force-included as a user pick
     if (seenMuscles.has(ex.primaryMuscle) ||
         (muscleLedger && isOverMrv(muscleLedger, ex.primaryMuscle, ACCESSORY_EST_SETS))) {
       deferred.push(ex)
@@ -79,7 +90,10 @@ export function select({ lift, style, stickingPoint, cause = undefined, equipmen
   }
   // Fill from deferred only if pool is under-filled (exhausted without hitting cap)
   let di = 0
-  while (chosen.length < cap && di < deferred.length) chosen.push(deferred[di++])
+  while (chosen.length < cap && di < deferred.length) {
+    if (!chosen.includes(deferred[di])) chosen.push(deferred[di])
+    di++
+  }
   return chosen
 }
 

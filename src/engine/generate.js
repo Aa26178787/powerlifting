@@ -94,6 +94,7 @@ export function generate(profile) {
   const peaking = !!(competition.on && competition.date)
   const variationOverride = profile.variationOverride ?? {}
   const excludedExercises = profile.excludedExercises ?? []
+  const accessoryPicks = profile.accessoryPicks ?? []   // hybrid: user-preferred accessories, force-included by select()
   const cueNeed = profile.cueNeed ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
@@ -291,6 +292,7 @@ export function generate(profile) {
           muscleLedger: steeringLedger,
           muscleBands: PER_MUSCLE_BANDS,
           deficitWeight: weekDeficitWeight,
+          userPicks: accessoryPicks,
         })
         for (const acc of liftAcc) {
           if (!seenAccNames.has(acc.name)) {
