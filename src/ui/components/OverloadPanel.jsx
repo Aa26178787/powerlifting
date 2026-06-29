@@ -120,7 +120,7 @@ export default function OverloadPanel() {
 
           <label>프리셋
             <select value={o.preset ?? ''} onChange={handlePreset}>
-              <option value="">— 직접 입력 —</option>
+              <option value="">커스텀 (직접 입력)</option>
               {Object.entries(PRESETS).map(([key, p]) => (
                 <option key={key} value={key}>{p.label}</option>
               ))}

@@ -111,6 +111,18 @@ describe('OverloadPanel', () => {
     expect(screen.getAllByText(/성공 시/).length).toBeGreaterThan(0)
   })
 
+  it('preset dropdown offers a 커스텀 option; selecting it returns to manual (preset null)', async () => {
+    render(<OverloadPanel />)
+    await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
+    const select = screen.getByLabelText(/프리셋/)
+    expect(screen.getByText(/커스텀/)).toBeTruthy()
+    // pick a preset, then back to 커스텀 → preset cleared
+    fireEvent.change(select, { target: { value: 'smolovJr' } })
+    expect(useProfileStore.getState().profile.overload.preset).toBe('smolovJr')
+    fireEvent.change(select, { target: { value: '' } })
+    expect(useProfileStore.getState().profile.overload.preset).toBeNull()
+  })
+
   it('clamps targetPct: 0 → 1, 99 → 10', async () => {
     render(<OverloadPanel />)
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
