@@ -77,6 +77,13 @@ export function volumeRampMode(blend, peaking) {
 // one session — the honest path is to add a session for that lift.
 export const PER_SESSION_CAP = { squat: 6, bench: 8, deadlift: 4 }
 
+// Per-lift maximum programmed reps. Deadlifts are kept low-rep (≤6): high-rep
+// pulls accumulate axial/CNS fatigue and degrade bracing/form faster than other
+// lifts. Reps above the cap are clamped and the load is recomputed at the same
+// RPE (fewer reps → heavier), so intensity rises to match. Direction = coaching
+// consensus; the exact cap (6) is a heuristic (근거 약함).
+export const LIFT_REP_CAP = { deadlift: 6 }
+
 // Week-to-week LOAD progression: top-set effective-1RM creeps up to +4% by the
 // last working week (linear), giving visible progressive overload at a constant
 // target RPE. Bounded; deload resets it. Consensus/textbook step (ACSM 2-10%

@@ -7,8 +7,8 @@ import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend, strengthShare }
 import { weekPlan, phaseFor } from './periodizationModel.js'
 import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
-import { volumeRamp, volumeRampMode, loadRamp, PER_SESSION_CAP } from './volume.js'
-import { roundToIncrement } from './e1rm.js'
+import { volumeRamp, volumeRampMode, loadRamp, PER_SESSION_CAP, LIFT_REP_CAP } from './volume.js'
+import { roundToIncrement, loadForRpe } from './e1rm.js'
 
 export function cap(rpe) { return Math.min(9.5, rpe) }
 
@@ -78,24 +78,40 @@ function buildExercise(slot, quality, ctx) {
   const scheme = SCHEMES[key]
   const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss })
   const clampedSets = clampSets(expanded.sets, ceiling)
-  const displayReps = key === 'strengthHypertrophy'
+  // Per-lift rep cap (deadlift ≤6): clamp any numeric reps over the cap and
+  // recompute load at the SAME RPE (fewer reps → heavier) so intensity matches.
+  // pct-anchored sets (rpe null) keep their weight. Lifts without a cap are
+  // value-identical (capR is identity). See LIFT_REP_CAP in volume.js.
+  const repCap = LIFT_REP_CAP[slot.lift]
+  const capR = (r) => (repCap != null && typeof r === 'number' ? Math.min(r, repCap) : r)
+  const cappedSets = repCap == null ? clampedSets : clampedSets.map((s) => {
+    if (typeof s.reps !== 'number' || s.reps <= repCap) return s
+    const weight = s.rpe != null ? Math.min(loadForRpe(eff, repCap, s.rpe), ceiling) : s.weight
+    return { ...s, reps: repCap, weight }
+  })
+  const displayReps = (key === 'strengthHypertrophy'
     ? [ZONES.strength.reps[0], ZONES.hypertrophy.reps[1]]
-    : z.reps
+    : z.reps).map(capR)
+  // Headline weight: for a rep-capped rpe-loaded lift, compute at the capped
+  // anchor so it reflects the heavier capped-rep load (not the zone's anchor).
+  const headlineWeight = (repCap != null && z.loading === 'rpe')
+    ? Math.min(loadForRpe(eff, capR(z.repAnchor), cap(z.rpeTarget)), ceiling)
+    : Math.min(weightFor(quality, eff), ceiling)
   return {
     lift: name,
     baseLift: slot.lift,
     quality,
     reps: displayReps,
-    repAnchor: z.repAnchor,
+    repAnchor: capR(z.repAnchor),
     pct: Math.round((z.pct[0] + z.pct[1]) / 2 * 100),
     rpeTarget,
-    weight: Math.min(weightFor(quality, eff), ceiling),
+    weight: headlineWeight,
     velocity: null,
     autoregulate: true,
     tempo: ex?.tempo ?? null,
     tempoStop: ex?.tempoStop ?? null,
-    scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: clampedSets, note: expanded.note, group: expanded.group },
-    sets: clampedSets.length,
+    scheme: { type: key, evidenceTier: scheme.evidenceTier, sets: cappedSets, note: expanded.note, group: expanded.group },
+    sets: cappedSets.length,
   }
 }
 

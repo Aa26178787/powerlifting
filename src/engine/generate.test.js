@@ -84,6 +84,17 @@ describe('generate v3', () => {
     expect(all.length).toBeGreaterThan(0)
     expect(all.every((e) => Number.isFinite(e.weight))).toBe(true)
   })
+  it('deadlift reps are capped at 6 across all qualities (high-rep blends too)', () => {
+    for (const q of [{ hypertrophy: 1 }, { endurance: 1 }, { strength: 0.5, hypertrophy: 0.5 }]) {
+      const plan = generate({ ...profile, qualities: { power: 0, strength: 0, hypertrophy: 0, endurance: 0, ...q }, daysPerWeek: 6 })
+      const dlReps = plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.exercises)
+        .filter((e) => e.baseLift === 'deadlift')
+        .flatMap((e) => e.scheme.sets.map((set) => set.reps))
+        .filter((r) => typeof r === 'number')
+      expect(dlReps.length).toBeGreaterThan(0)
+      expect(Math.max(...dlReps)).toBeLessThanOrEqual(6)
+    }
+  })
   it('no lift exceeds its MRV in realized weekly volume', () => {
     const hyper = generate({ ...profile, qualities: { power:0, strength:0, hypertrophy:1, endurance:0 }, daysPerWeek: 6 })
     // sum sets per baseLift in week 1
