@@ -13,7 +13,8 @@ import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
-import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS, canonicalToken } from './muscleVolume.js'
+import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
+import { patternOf, pickForPattern } from './movementPattern.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -326,15 +327,18 @@ export function generate(profile) {
       // above use the original selection order, so this is purely cosmetic —
       // no set-count/volume change.
       const accessoriesOrdered = orderByPriority(accessoriesTagged, { priorityLift: profile.priorityLift, goalBias })
-      // Per-body-part override: swap an accessory to the user-chosen exercise for its
-      // body part (RoutineView 변경 버튼). Keeps the quality-based scheme; only the
-      // exercise identity changes. Empty overrides → unchanged.
+      // Movement-pattern override (RoutineView 변경 버튼). Each accessory is stamped
+      // with accSlot = its auto-assigned pattern (stable key). If the user reassigned
+      // that slot to a different pattern, fill it with an exercise of the new pattern
+      // (quality-based scheme kept). Empty overrides → only the accSlot stamp is added.
       const accessoriesFinal = accessoriesOrdered.map((a) => {
-        const bp = canonicalToken((a.primaryMuscle || '').split('/')[0])
-        const name = accessoryOverrides[bp]
-        if (!name || name === a.name) return a
-        const ex = byName(name)
-        return ex ? { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null } : a
+        const slot = patternOf(a.primaryMuscle)
+        const target = accessoryOverrides[slot]
+        if (target && target !== slot) {
+          const ex = pickForPattern(target, equipment)
+          if (ex) return { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null, accSlot: slot }
+        }
+        return { ...a, accSlot: slot }
       })
 
       return { ...s, exercises: kept, accessories: accessoriesFinal, notes }

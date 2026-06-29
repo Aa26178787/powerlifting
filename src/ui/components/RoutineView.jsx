@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
@@ -9,7 +9,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
-import { bodyPartOf, bodyPartLabel, exercisesForBodyPart } from '../lib/accessoryGroups.js' // per-row accessory swap
+import { PATTERNS, patternOf } from '../../engine/movementPattern.js' // per-row accessory pattern swap
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -58,25 +58,25 @@ function ExerciseRow({ ex, units, week, day }) {
 
 function AccessoryRow({ acc, onRegenerate }) {
   const scheme = acc.scheme
-  const equipment = useProfileStore((s) => s.profile.equipment ?? [])
   const overrides = useProfileStore((s) => s.profile.accessoryOverrides ?? {})
   const setField = useProfileStore((s) => s.setField)
   const [open, setOpen] = useState(false)
-  const bp = bodyPartOf(acc.primaryMuscle)
-  const options = useMemo(() => exercisesForBodyPart(bp, equipment), [bp, equipment])
-  const choose = (name) => {
-    setField('accessoryOverrides', { ...overrides, [bp]: name })
+  // accSlot = the slot's auto-assigned pattern (stable override key); current = the
+  // pattern actually shown (may be an override).
+  const slot = acc.accSlot ?? patternOf(acc.primaryMuscle)
+  const current = patternOf(acc.primaryMuscle)
+  const choose = (patternKey) => {
+    setField('accessoryOverrides', { ...overrides, [slot]: patternKey })
     setOpen(false); onRegenerate?.()
   }
   const recommend = () => {
-    const next = { ...overrides }; delete next[bp]
+    const next = { ...overrides }; delete next[slot]
     setField('accessoryOverrides', next)
     setOpen(false); onRegenerate?.()
   }
   return (
     <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
-        <span className="badge acc-bodypart">{bodyPartLabel(bp)}</span>
         <span className="acc-name">{exerciseName(acc.name)}</span>
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
@@ -85,11 +85,11 @@ function AccessoryRow({ acc, onRegenerate }) {
       </div>
       {open && (
         <div className="acc-chooser">
-          <span className="acc-chooser-label">{bodyPartLabel(bp)} 운동:</span>
+          <span className="acc-chooser-label">동작 패턴 변경:</span>
           <button type="button" className="btn-mini acc-recommend" onClick={recommend}>추천(자동)</button>
-          {options.map((nm) => (
-            <button key={nm} type="button" className="btn-mini" disabled={nm === acc.name} onClick={() => choose(nm)}>
-              {exerciseName(nm)}
+          {PATTERNS.map((p) => (
+            <button key={p.key} type="button" className="btn-mini" disabled={p.key === current} onClick={() => choose(p.key)}>
+              {p.label}
             </button>
           ))}
         </div>
