@@ -1,6 +1,6 @@
 # 파워리프팅 루틴 생성기 — 진행 상황 & 로드맵
 
-> 최종 갱신: 2026-06-28 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting
+> 최종 갱신: 2026-06-30 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting · 테스트 754/754 · 빌드 green
 
 근거 기반 개인화 파워리프팅 루틴 생성기. 규칙 기반(결정론적·오프라인·무료) 엔진 + React 웹앱. 모든 수치는 메타분석/RCT/코칭 컨센서스에 근거하며 한계를 UI에 정직하게 고지.
 
@@ -41,28 +41,40 @@
 - **실전 디테일 4종**: 워밍업 세트 자동생성, 세트 간 휴식시간, 운동명 한글화(205/205), 로깅→다음 사이클 피드백(EWMA+클램프, generate 무수정)
 - 전부 다관점 토론(3관점→합성) → 배치 구현(TDD·비트동일 가드) → 정직고지 → `docs/research/` 결정 기록. 미지정/기본값이면 기존 동작 비트동일
 
+### v5 — 오버로딩·프로그래밍 오버홀 + 라우틴 품질/UX (2026-06-29~30)
+4-spec 오버홀(설계 `docs/superpowers/specs/2026-06-29-*`, 연구 `docs/research/2026-06-29-overload-and-programming-evidence.md`), 각 spec→plan→subagent-driven TDD→리뷰→`--no-ff` 병합:
+- **Spec 1 — 프로그래밍 기초**: 근비대 실패근접도↑(목표 RPE 9 vs 근력 8.5), 빈도 근력 독립효과 차등(`recommendedFrequency`), 볼륨 수확체감 가드, 약점우선 보조 순서, 긴 근육길이(스트레치) 강조, 변형 체계화·프리웨이트 특이성, 모델 동등성(LP≈DUP) 정직 카피
+- **Spec 2 — 장기/블록주기화**: mesoWeeks 8→**24**, `planLayout` 블록(>8 ~6주마다 자동 디로드), 블록별 sawtooth 부하/볼륨 램프 + whole-mesocycle phase(끝에서만 피킹), Bosquet realization 테이퍼(피킹 최종주 강도 유지·볼륨 −40%)
+- **Spec 3 — 개인화 분석(additive, 처방 불변)**: `analytics.js` — e1RM ±20% 밴드, Foster monotony/strain, Banister fitness-fatigue 피크예측, ACWR(참고용), `InsightsPanel`
+- **Spec 4 — 오버로딩 모드**: `overload.js`(generate 래퍼) — 목표%→공격성 dose, 정성 위험/EV 티어, 프리셋(Smolov Jr/Russian 충실, 나머지 시드), 쿨다운, 의도적 MRV 초과·realization, `OverloadPanel`/`OverloadBanner`(abort 서킷=checkinLog)
+- **후속 품질/UX 수정**: 데드 전세트 ≤6렙(부하 매칭), 운동 요일 선택(`trainingDays`), 보조 동작계열 중복 제거, 세션 간 회복 간격(`distinctDays` 중앙배치), **메인 하루 ≤2세션·SBD 한날 몰림 방지**(`applyMaxMainPerDay`), 워밍업 제거, 백오프 완화·세트 내 RPE 점증
+- **보조 변경 UX**: 루틴의 각 보조 행에 **변경** 버튼 → **동작 패턴**(힌지/등/밀기…) 또는 **종목 직접 선택** → `accessoryOverrides`로 슬롯 교체·즉시 재생성(`movementPattern.js`)
+- **성능**: 주차 lazy 렌더(접힌 주차=요약만) — 24주 플랜 재생성 8s→0.4s, DOM 30k→1.25k 노드("응답 없음" 해결)
+
 ---
 
 ## 2. 아키텍처 (주요 파일)
 
 ### 엔진 (`src/engine/`, 순수·결정론적·kg)
-- `quality.js` ZONES/블렌드/프리셋 · `periodizationModel.js` 모델/적응형/주차스케일/phaseFor
-- `setSchemes.js` 14 스킴 expand + pickScheme + risingRpe + expandAccessory
+- `quality.js` ZONES/블렌드/프리셋 · `periodizationModel.js` 모델/적응형/phaseFor
+- `setSchemes.js` 14 스킴 expand(탑·백오프 risingRpe) + pickScheme + expandAccessory
 - `standards.js` 진단(상대강도·GL) · `cueVariation.js` 큐→변형
 - `readiness.js`/`applyReadiness.js`/`overreaching.js` SP3
-- `variations.js`/`accessories.js`/`style.js`/`regionStatus.js` 선택·교체
-- `generate.js` 오케스트레이터 · `periodization.js` 주차/세션 빌드 · `deload.js`
-- `exercises.js`(207 DB) · `e1rm.js`/`volume.js`/`tuner.js`/`selector.js`
+- `variations.js`/`accessories.js`(select+userPicks+family dedup)/`style.js`/`regionStatus.js`
+- `generate.js` 오케스트레이터(블록·데드캡·보조 override) · `periodization.js` 블록주기화/세션 빌드 · `deload.js`(회복+realization)
+- `planLayout.js` 블록 형태 · `layoutGenerator.js` 요일 배치(간격 최대·메인 ≤2/일)
+- `overload.js` 오버로딩 래퍼 · `analytics.js` 개인화 분석 · `movementPattern.js` 보조 동작패턴
+- `loadFeedback.js` 로깅→e1RM(EWMA) · `exercises.js`(207 DB) · `e1rm.js`/`volume.js`(밴드+캡)/`tuner.js`
 
 ### UI (`src/ui/`)
-- `store/profileStore.js` zustand(영속, 커스텀 merge — 버전 범프 없이 신규 필드 deep-fill)
-- `wizard/` 8단계(Basics/Lifts/Experience/Goals/Periodization/Style/Equipment/Summary) + StrengthAssessment
-- `components/` RoutineView(세트별 표시+워밍업+휴식+체크인패널+과피로배너+LiftLogRow) · CheckinPanel · LimitsPanel · VolumeWarnings · LiftLogRow(수행 로깅→피드백)
+- `store/profileStore.js` zustand(영속, 커스텀 merge — 버전 범프 없이 신규 필드 deep-fill: trainingDays/overload/accessoryOverrides 등)
+- `wizard/` 8단계(Basics/Lifts/Experience/Goals/Periodization/Style/Equipment/Summary) + StrengthAssessment · StepEquipment(요일 선택·오버로딩 패널은 StepPeriodization)
+- `components/` RoutineView(주차 lazy 렌더+휴식+체크인패널+과피로배너+LiftLogRow · 보조행 부위/변경 버튼) · CheckinPanel · LimitsPanel · VolumeWarnings · LiftLogRow · OverloadPanel/OverloadBanner · InsightsPanel
 - `lib/` planAdapter · exportCsv · units
-- `i18n.js` 한글 라벨 맵(엔진 값은 영어 유지)
+- `i18n.js` 한글 라벨 맵(요일·운동명 포함, 엔진 값은 영어 유지)
 
 ### 테스트/배포
-- Vitest 668 테스트(엔진 골든 + jsdom 컴포넌트), `npm run build`, GitHub Actions → Pages
+- Vitest 754 테스트(엔진 골든 + jsdom 컴포넌트), `npm run build`, GitHub Actions → Pages. 실제 앱 검증은 Edge(playwright)로 위저드 구동·관찰
 
 ---
 
@@ -111,12 +123,16 @@
 
 ## 4. 앞으로 할 것 (로드맵, 우선순위)
 
-### 가까운 우선순위 — ✅ 전부 완료 (2026-06-28)
-- [x] **워밍업 세트 자동 생성** — 40/60/80% × 5/3/2, 빈 바 floor, 메인 종목 (`warmup.js`)
+### 가까운 우선순위 — ✅ 전부 완료 (2026-06-28~30)
 - [x] **세트 간 휴식 시간 표시** — 자질별(`restRange`/`restLabel`)
 - [x] **변형·보조 운동 한글화** — DB 운동명 205/205 i18n(`exerciseName`) + 커버리지 가드
-- [x] **로깅 → 다음 세션 피드백** — `LiftLogRow` 수행 로깅 → `loadFeedback.effectiveLiftE1rm`(EWMA+클램프) → 다음 사이클 부하 반영(planAdapter 주입, generate 무수정). 기존 RpeLogger는 미연결 죽은코드라 삭제·대체
-- [x] **오버로딩 모드 오버홀** — Spec 4 Tasks 1-5 완료: 엔진(`overload.js`), 저장소·라우팅, UI 설정, 표시·배너, 정직 고지. 의도적 과부하(도박수)·MRV 초과·realization 테이퍼·휴리스틱 계수 모두 공개
+- [x] **로깅 → 다음 세션 피드백** — `LiftLogRow` → `loadFeedback.effectiveLiftE1rm`(EWMA+클램프) → 다음 사이클 부하 반영(planAdapter 주입, generate 무수정)
+- [x] **오버로딩 모드 오버홀** — Spec 4 Tasks 1-5: 엔진(`overload.js`)·저장소·라우팅·UI·배너·정직 고지
+- [x] **프로그래밍 기초/장기/분석** — Spec 1(실패근접도·빈도·약점우선·긴길이), Spec 2(24주 블록주기화·Bosquet realization), Spec 3(개인화 분석 advisory)
+- [x] **데드 ≤6렙(부하 매칭)** · **운동 요일 선택**(`trainingDays`) · **메인 하루 ≤2세션·SBD 분산**(`applyMaxMainPerDay`)
+- [x] **보조 변경 UX** — 보조행 변경 버튼 → 동작 패턴/종목 직접 선택(`accessoryOverrides`·`movementPattern.js`), 즉시 재생성
+- [x] **성능** — 주차 lazy 렌더(24주 재생성 8s→0.4s, "응답 없음" 해결)
+- [~] **워밍업 세트** — v4서 자동생성했으나 개인차로 v5에서 제거(작업 세트 중심). `warmup.js` 삭제
 
 ### 중기
 - [x] **대회 피킹/테이퍼 강화** — ✅ 24주 블록주기화(~6주 디로드) + 볼륨 테이퍼(역V·비대회 미적용) + 피킹 탑싱글 시합강도 ramp + realization 테이퍼 구현. 정직 고지 완료(Task 5).
