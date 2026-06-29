@@ -49,6 +49,36 @@ function applyAxialGuard(byDay, D) {
   // 대체 요일 없음(빈도가 전 요일 점유) — 충돌 허용
 }
 
+// Cap main-lift sessions per day (default 2) and avoid piling all of S/B/D onto one
+// day: relocate excess slots to the least-loaded day that doesn't already hold that
+// lift (a lift stays ≤1×/day). Deterministic (ascending day scan, no Date/random).
+// If no room exists (total slots > cap×D, or every other day already has the lift),
+// the overflow is left in place — unavoidable given the day budget.
+export function applyMaxMainPerDay(byDay, D, cap = 2) {
+  for (let guard = 0; guard < 200; guard++) {
+    let moved = false
+    for (const day of [...byDay.keys()].sort((a, b) => a - b)) {
+      const slots = byDay.get(day)
+      while (slots && slots.length > cap) {
+        const slot = slots[slots.length - 1]            // relocate the last-placed slot
+        let target = -1, best = Infinity
+        for (let d = 0; d < D; d++) {
+          if (d === day) continue
+          const ds = byDay.get(d) ?? []
+          if (ds.some((s) => s.lift === slot.lift)) continue   // keep a lift ≤1×/day
+          if (ds.length < best) { best = ds.length; target = d }
+        }
+        if (target === -1 || best >= cap) break          // nowhere with room — leave overflow
+        slots.pop()
+        if (!byDay.has(target)) byDay.set(target, [])
+        byDay.get(target).push(slot)
+        moved = true
+      }
+    }
+    if (!moved) break
+  }
+}
+
 export function buildLayout({ daysPerWeek, frequency }) {
   const D = Math.max(1, daysPerWeek)
   const byDay = new Map()
@@ -61,5 +91,6 @@ export function buildLayout({ daysPerWeek, frequency }) {
     })
   }
   applyAxialGuard(byDay, D)
+  applyMaxMainPerDay(byDay, D, 2)   // ≤2 main lifts/day; avoid all of S/B/D on one day
   return [...byDay.keys()].sort((a, b) => a - b).map((d) => byDay.get(d))
 }

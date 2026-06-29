@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { distinctDays, buildLayout } from './layoutGenerator.js'
+import { distinctDays, buildLayout, applyMaxMainPerDay } from './layoutGenerator.js'
+
+describe('applyMaxMainPerDay (≤2 main lifts/day, no all-S/B/D pile)', () => {
+  it('relocates the excess off a 3-lift day when room exists; keeps all lifts', () => {
+    const byDay = new Map([
+      [0, [{ lift: 'squat', role: 'heavy' }, { lift: 'bench', role: 'heavy' }, { lift: 'deadlift', role: 'heavy' }]],
+      [1, []], [2, []],
+    ])
+    applyMaxMainPerDay(byDay, 3, 2)
+    for (const [, slots] of byDay) expect(slots.length).toBeLessThanOrEqual(2)
+    expect([...byDay.values()].flat().map((s) => s.lift).sort()).toEqual(['bench', 'deadlift', 'squat'])
+  })
+  it('buildLayout keeps ≤2 main lifts per day when the day budget allows', () => {
+    const layout = buildLayout({ daysPerWeek: 4, frequency: { squat: 2, bench: 2, deadlift: 2 } })
+    for (const day of layout) expect(day.length).toBeLessThanOrEqual(2)
+  })
+})
 
 describe('distinctDays', () => {
   it('returns f distinct days within 0..D-1', () => {
