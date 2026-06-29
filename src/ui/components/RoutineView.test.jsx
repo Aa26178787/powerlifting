@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import RoutineView from './RoutineView.jsx'
 import { useProfileStore } from '../store/profileStore.js'
 
@@ -64,9 +64,19 @@ describe('RoutineView', () => {
     expect(container.querySelector('.week.deload')).toBeTruthy()
   })
   it('renders per-set weight in exercise list', () => {
-    render(<RoutineView plan={plan} />)
+    const { container } = render(<RoutineView plan={plan} />)
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
-    expect(screen.getByText(/레그 프레스/)).toBeInTheDocument()
+    // scope to the routine's accessory rows (AccessoryPicker also lists 레그 프레스)
+    const accText = [...container.querySelectorAll('.accessory-row')].map((r) => r.textContent).join(' ')
+    expect(accText).toMatch(/레그 프레스/)
+  })
+  it('hosts the AccessoryPicker; toggling an accessory triggers re-generation', () => {
+    const onRegenerate = vi.fn()
+    const { container } = render(<RoutineView plan={plan} onRegenerate={onRegenerate} />)
+    const box = container.querySelector('.accessory-picker input[type=checkbox]')
+    expect(box).toBeTruthy()                 // picker is in the generated routine view
+    fireEvent.click(box)
+    expect(onRegenerate).toHaveBeenCalled()  // change re-generates the routine live
   })
   it('renders session notes when present', () => {
     render(<RoutineView plan={plan} />)
@@ -162,7 +172,8 @@ describe('RoutineView', () => {
 
   it('CheckinPanel is wrapped in a <details> element (collapsed by default)', () => {
     const { container } = render(<RoutineView plan={plan} />)
-    const details = container.querySelector('details')
+    // the CheckinPanel details (not the AccessoryPicker details) — identify by its content
+    const details = [...container.querySelectorAll('details')].find((d) => d.querySelector('.checkin-panel'))
     expect(details).toBeTruthy()
     // no `open` attribute — collapsed by default
     expect(details.hasAttribute('open')).toBe(false)
@@ -197,11 +208,12 @@ describe('RoutineView: Korean exercise name rendering', () => {
         }],
       }] }],
     }
-    render(<RoutineView plan={planWithDbName} />)
+    const { container } = render(<RoutineView plan={planWithDbName} />)
     // comp lift enum fallback still works
     expect(screen.getByText('프론트 스쿼트')).toBeInTheDocument()
-    // accessory with parenthetical qualifier
-    expect(screen.getByText('굿모닝 (내로우)')).toBeInTheDocument()
+    // accessory with parenthetical qualifier — scope to the routine row (picker lists it too)
+    const accText = [...container.querySelectorAll('.accessory-row')].map((r) => r.textContent).join(' ')
+    expect(accText).toMatch(/굿모닝 \(내로우\)/)
     // no raw English in the rendered names
     expect(screen.queryByText('Front Squat')).not.toBeInTheDocument()
     expect(screen.queryByText('Good Morning (narrow)')).not.toBeInTheDocument()

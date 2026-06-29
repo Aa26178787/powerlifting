@@ -3,7 +3,6 @@ import { useProfileStore } from '../../store/profileStore.js'
 import { regionLabel, statusLabel, VOL, WEEKDAYS, sortWeekdays } from '../../i18n.js'
 import { volumeWarnings } from '../../../engine/volumeOverride.js'
 import VolumeWarnings from '../../components/VolumeWarnings.jsx'
-import AccessoryPicker from '../../components/AccessoryPicker.jsx'
 
 export default function StepEquipment() {
   const p = useProfileStore((s) => s.profile)
@@ -85,8 +84,6 @@ export default function StepEquipment() {
           </label>
         ))}
       </fieldset>
-
-      <AccessoryPicker />
 
       <details className="volume-advanced">
         <summary>{VOL.title}</summary>

@@ -53,7 +53,7 @@ export default function App() {
                 </span>
               )}
             </div>
-            <RoutineView plan={plan} />
+            <RoutineView plan={plan} onRegenerate={regenerate} />
           </div>
         )}
     </div>

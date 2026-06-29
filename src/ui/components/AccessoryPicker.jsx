@@ -33,11 +33,13 @@ const RENDER_ORDER = [
   ...Object.keys(GROUPS).filter((g) => !GROUP_ORDER.includes(g)),
 ]
 
-export default function AccessoryPicker() {
+export default function AccessoryPicker({ onChange }) {
   const picks = useProfileStore((s) => s.profile.accessoryPicks ?? [])
   const setField = useProfileStore((s) => s.setField)
-  const toggle = (name) =>
+  const toggle = (name) => {
     setField('accessoryPicks', picks.includes(name) ? picks.filter((n) => n !== name) : [...picks, name])
+    onChange?.()   // re-generate the routine so the change applies immediately
+  }
 
   return (
     <details className="accessory-picker">

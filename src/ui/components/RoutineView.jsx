@@ -9,6 +9,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
+import AccessoryPicker from './AccessoryPicker.jsx' // accessory swap on the generated routine
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -90,7 +91,7 @@ function AccessoryRow({ acc }) {
   )
 }
 
-export default function RoutineView({ plan }) {
+export default function RoutineView({ plan, onRegenerate }) {
   const checkinLog = useProfileStore((s) => s.checkinLog)
   const logCheckin = useProfileStore((s) => s.logCheckin)
   const units = useProfileStore((s) => s.profile.units ?? 'kg')
@@ -124,6 +125,8 @@ export default function RoutineView({ plan }) {
       {plan.overload && <OverloadBanner overload={plan.overload} checkinLog={checkinLog} />}
       {/* InsightsPanel (S3 Task 2): advisory analytics from liftLog */}
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
+      {/* Accessory picker lives HERE (in the generated routine): toggling re-generates live */}
+      <AccessoryPicker onChange={onRegenerate} />
       {plan.weeks.map((wk) => (
         <div key={wk.index} className={`week${wk.isDeload ? ' deload' : ''}`}>
           <h3>{wk.index}주차</h3>
