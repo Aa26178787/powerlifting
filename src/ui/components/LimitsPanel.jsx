@@ -58,6 +58,7 @@ export default function LimitsPanel() {
         <li><strong>단조로움(monotony)·strain</strong> 지표로 과훈련 경향을 모니터합니다(Foster — 방향 <strong>근거 중</strong>, RPE×반복 부하 프록시는 <strong>근거 약함</strong>).</li>
         <li><strong>예상 피크 시점</strong>은 Fitness-Fatigue 모델(Banister)로 추정합니다 — 모델 방향은 확립됐으나 개인 파라미터는 <strong>근거 약함</strong>인 보조 지표입니다.</li>
         <li><strong>ACWR</strong>(급성:만성 부하비)는 <strong>신뢰성 논란</strong>이 있어 참고용으로만 표시하며 기준(게이트)으로 쓰지 않습니다(<strong>근거 약함</strong>).</li>
+        <li><strong>데드리프트는 모든 세트를 6회 이하로 제한</strong>하고 부하를 그에 맞춰(같은 RPE에서 저반복 = 고중량) 올립니다. 고반복 데드는 축성/중추(CNS) 피로가 크고 자세가 빨리 무너지기 때문입니다. 방향은 코칭 컨센서스이나 <strong>정확한 상한(6회)은 휴리스틱</strong>입니다(<strong>근거 약함</strong>). 다른 종목에는 적용되지 않습니다.</li>
       </ul>
     </details>
   )
