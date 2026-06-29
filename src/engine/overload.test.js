@@ -66,4 +66,13 @@ describe('generateOverload', () => {
   it('is deterministic (two calls equal)', () => {
     expect(JSON.stringify(generateOverload(prof))).toBe(JSON.stringify(generateOverload(prof)))
   })
+  it('bounds selected-lift weekly volume — squat ≤ 24, deadlift ≤ 16 (no multiplicative blow-up)', () => {
+    const weekly = (plan, lift) => plan.weeks[0].sessions.flatMap((s) => s.exercises)
+      .filter((e) => e.baseLift === lift).reduce((n, e) => n + e.sets, 0)
+    const sq = generateOverload({ ...baseProfile, daysPerWeek: 6, overload: { enabled: true, lifts: ['squat'], targetPct: 10, overreachWeeks: 4 } })
+    expect(weekly(sq, 'squat')).toBeLessThanOrEqual(24)        // was ~50 before the cap
+    expect(weekly(sq, 'squat')).toBeGreaterThan(weekly(sq, 'bench'))   // still an overreach vs maintenance
+    const dl = generateOverload({ ...baseProfile, daysPerWeek: 6, overload: { enabled: true, lifts: ['deadlift'], targetPct: 10, overreachWeeks: 4 } })
+    expect(weekly(dl, 'deadlift')).toBeLessThanOrEqual(16)     // deadlift lower (axial fatigue)
+  })
 })

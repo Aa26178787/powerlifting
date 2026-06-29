@@ -5,6 +5,11 @@ import { defaultFrequency } from './frequency.js'
 export const REALISTIC_MAX = 4
 export const BASE_SETS = 5
 export const MAINT_SETS = 3
+// Aggressive-but-bounded overreach ceiling on a selected lift's WEEKLY working
+// sets. Overload deliberately exceeds MRV (~12), but per-session sets × frequency
+// must not blow up multiplicatively (e.g. 9×5=45). ~1.5-2× MRV is the gamble;
+// deadlift lower (axial/CNS fatigue, slower recovery). Heuristic (근거 약함).
+export const OVERLOAD_WEEKLY_CAP = { squat: 24, bench: 24, deadlift: 16 }
 
 export function overloadDose(targetPct, { lifts } = {}) {
   const a = Math.max(0, Math.min(1.5, (Number(targetPct) || 0) / REALISTIC_MAX))
@@ -56,7 +61,14 @@ export function generateOverload(profile) {
   const frequency = { ...defaultFrequency(profile.daysPerWeek), ...(profile.frequency ?? {}) }
   for (const l of cfg.lifts) frequency[l] = Math.min(profile.daysPerWeek, (frequency[l] ?? 0) + dose.freqBump)
   const setsPerSession = {}
-  for (const l of MAIN_LIFTS) setsPerSession[l] = cfg.lifts.includes(l) ? dose.selectedSets : dose.maintSets
+  for (const l of MAIN_LIFTS) {
+    if (!cfg.lifts.includes(l)) { setsPerSession[l] = dose.maintSets; continue }
+    // Bound selected per-session sets so weekly volume (sets × frequency) stays
+    // within OVERLOAD_WEEKLY_CAP — intentional overreach, not a multiplicative blow-up.
+    const f = Math.max(1, frequency[l])
+    const perSessionCap = Math.max(2, Math.floor((OVERLOAD_WEEKLY_CAP[l] ?? 24) / f))
+    setsPerSession[l] = Math.min(dose.selectedSets, perSessionCap)
+  }
   const transformed = {
     ...profile,
     mesoWeeks: cfg.overreachWeeks,
