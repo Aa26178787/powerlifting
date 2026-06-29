@@ -34,6 +34,23 @@ describe('OverloadPanel', () => {
     expect(useProfileStore.getState().profile.overload.enabled).toBe(true)
   })
 
+  it('target% allows free typing: clearing does not snap to 1, commits on blur, clamps out-of-range (regression)', async () => {
+    render(<OverloadPanel />)
+    await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
+    const input = screen.getByLabelText(/목표\s*%/)
+    // default is 4; clearing mid-edit must NOT force targetPct to 1
+    fireEvent.change(input, { target: { value: '' } })
+    expect(useProfileStore.getState().profile.overload.targetPct).not.toBe(1)
+    // typing a value then blurring commits it (not stuck at 1, not jumping to 10)
+    fireEvent.change(input, { target: { value: '7' } })
+    fireEvent.blur(input)
+    expect(useProfileStore.getState().profile.overload.targetPct).toBe(7)
+    // out-of-range clamps on blur
+    fireEvent.change(input, { target: { value: '99' } })
+    fireEvent.blur(input)
+    expect(useProfileStore.getState().profile.overload.targetPct).toBe(10)
+  })
+
   it('selecting a preset fills lifts, targetPct, overreachWeeks in the store', async () => {
     render(<OverloadPanel />)
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
@@ -75,6 +92,7 @@ describe('OverloadPanel', () => {
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
     const input = screen.getByLabelText(/목표\s*%/)
     fireEvent.change(input, { target: { value: '6' } })
+    fireEvent.blur(input)
     expect(useProfileStore.getState().profile.overload.targetPct).toBe(6)
   })
 
@@ -83,6 +101,7 @@ describe('OverloadPanel', () => {
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
     const input = screen.getByLabelText(/과부하 기간/)
     fireEvent.change(input, { target: { value: '5' } })
+    fireEvent.blur(input)
     expect(useProfileStore.getState().profile.overload.overreachWeeks).toBe(5)
   })
 
@@ -96,11 +115,13 @@ describe('OverloadPanel', () => {
     render(<OverloadPanel />)
     await userEvent.setup().click(screen.getByLabelText(/오버로딩 모드/))
     const input = screen.getByLabelText(/목표\s*%/)
-    // below-range: 0 clamps to 1
+    // below-range: 0 clamps to 1 (on blur)
     fireEvent.change(input, { target: { value: '0' } })
+    fireEvent.blur(input)
     expect(useProfileStore.getState().profile.overload.targetPct).toBe(1)
-    // above-range: 99 clamps to 10
+    // above-range: 99 clamps to 10 (on blur)
     fireEvent.change(input, { target: { value: '99' } })
+    fireEvent.blur(input)
     expect(useProfileStore.getState().profile.overload.targetPct).toBe(10)
   })
 

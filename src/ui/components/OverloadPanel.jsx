@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useProfileStore } from '../store/profileStore.js'
 import { PRESETS, applyPreset, overloadDose, overloadRisk, overloadEV } from '../../engine/overload.js'
 
@@ -21,13 +21,25 @@ export default function OverloadPanel() {
     setOverload({ lifts })
   }
 
-  function handleTargetPct(e) {
-    const v = Math.max(1, Math.min(10, Number(e.target.value) || 1))
+  // Number inputs use raw local state while editing and clamp on blur (matching
+  // StepPeriodization). Clamping on every keystroke breaks free typing: clearing
+  // the field would snap to the fallback and intermediate digits would jump to the
+  // bounds. useEffect re-syncs the raw value when the store changes externally
+  // (e.g. a preset fills the fields).
+  const [pctRaw, setPctRaw] = useState(String(o.targetPct))
+  const [weeksRaw, setWeeksRaw] = useState(String(o.overreachWeeks))
+  useEffect(() => { setPctRaw(String(o.targetPct)) }, [o.targetPct])
+  useEffect(() => { setWeeksRaw(String(o.overreachWeeks)) }, [o.overreachWeeks])
+
+  function commitTargetPct() {
+    const v = Math.max(1, Math.min(10, Number(pctRaw) || 1))
+    setPctRaw(String(v))
     setOverload({ targetPct: v })
   }
 
-  function handleOverreachWeeks(e) {
-    const v = Math.max(3, Math.min(8, Number(e.target.value) || 3))
+  function commitOverreachWeeks() {
+    const v = Math.max(3, Math.min(8, Number(weeksRaw) || 3))
+    setWeeksRaw(String(v))
     setOverload({ overreachWeeks: v })
   }
 
@@ -89,8 +101,9 @@ export default function OverloadPanel() {
               min={1}
               max={10}
               step={0.5}
-              value={o.targetPct}
-              onChange={handleTargetPct}
+              value={pctRaw}
+              onChange={(e) => setPctRaw(e.target.value)}
+              onBlur={commitTargetPct}
             />
           </label>
 
@@ -99,8 +112,9 @@ export default function OverloadPanel() {
               type="number"
               min={3}
               max={8}
-              value={o.overreachWeeks}
-              onChange={handleOverreachWeeks}
+              value={weeksRaw}
+              onChange={(e) => setWeeksRaw(e.target.value)}
+              onBlur={commitOverreachWeeks}
             />
           </label>
 
