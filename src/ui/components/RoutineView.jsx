@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel } from '../i18n.js'
+import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel } from '../i18n.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
@@ -142,7 +142,7 @@ export default function RoutineView({ plan }) {
             const view = adjusted[key]?.session ?? s
             return (
               <div key={s.day} className="session">
-                <h4>{s.day}일차</h4>
+                <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
                 <details>
                   <summary>오늘 컨디션 반영</summary>
                   <CheckinPanel

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
-import { regionLabel, statusLabel, VOL } from '../../i18n.js'
+import { regionLabel, statusLabel, VOL, WEEKDAYS, sortWeekdays } from '../../i18n.js'
 import { volumeWarnings } from '../../../engine/volumeOverride.js'
 import VolumeWarnings from '../../components/VolumeWarnings.jsx'
 
@@ -22,10 +22,37 @@ export default function StepEquipment() {
   return (
     <div>
       <label>주당 훈련일
-        <select value={p.daysPerWeek} onChange={(e) => setField('daysPerWeek', Number(e.target.value))}>
+        <select
+          value={p.daysPerWeek}
+          onChange={(e) => { setField('daysPerWeek', Number(e.target.value)); setField('trainingDays', []) }}
+        >
           {[3, 4, 5, 6].map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
       </label>
+
+      <fieldset>
+        <legend>운동 요일 (선택 — 지정 시 훈련일수 자동)</legend>
+        {WEEKDAYS.map((d) => (
+          <label key={d.key}>
+            <input
+              type="checkbox"
+              checked={(p.trainingDays ?? []).includes(d.key)}
+              onChange={() => {
+                const cur = p.trainingDays ?? []
+                const next = sortWeekdays(cur.includes(d.key) ? cur.filter((k) => k !== d.key) : [...cur, d.key])
+                setField('trainingDays', next)
+                if (next.length >= 1) setField('daysPerWeek', next.length)
+              }}
+            />
+            {' '}{d.short}
+          </label>
+        ))}
+        {(p.trainingDays ?? []).length > 0 && (
+          <p style={{ fontSize: '0.85em', color: '#888', margin: '4px 0 0' }}>
+            선택 {p.trainingDays.length}일 → 주당 훈련일 {p.daysPerWeek}일. 루틴 세션이 이 요일에 배정됩니다.
+          </p>
+        )}
+      </fieldset>
 
       <label>1회 운동 시간 제한 (분)
         <input

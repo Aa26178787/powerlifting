@@ -12,6 +12,7 @@ export const DEFAULT_PROFILE = {
   },
   years: 1,
   daysPerWeek: 4,
+  trainingDays: [],   // optional weekday keys (mon..sun) the user trains; [] → abstract "N일차" labels
   fatigue: 2,
   competition: { on: false, date: '' },
   age: null,
@@ -255,6 +256,7 @@ export const useProfileStore = create(
             periodizationModel: p.periodizationModel ?? current.profile.periodizationModel,
             priorityLift: p.priorityLift ?? current.profile.priorityLift,
             mesoWeeks: p.mesoWeeks ?? current.profile.mesoWeeks,
+            trainingDays: p.trainingDays ?? current.profile.trainingDays,
             deloadEnabled: p.deloadEnabled ?? current.profile.deloadEnabled,
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },

@@ -378,6 +378,27 @@ export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
 export const cueLabel = (k) => CUE[k] ?? k
 
+// ── Weekdays (optional per-session day labels) ────────────────────────────────
+// Ordered Mon→Sun. trainingDays stores a subset of these keys; sessions map by
+// index. Empty trainingDays → abstract "N일차" labels (unchanged behavior).
+export const WEEKDAYS = [
+  { key: 'mon', short: '월', full: '월요일' },
+  { key: 'tue', short: '화', full: '화요일' },
+  { key: 'wed', short: '수', full: '수요일' },
+  { key: 'thu', short: '목', full: '목요일' },
+  { key: 'fri', short: '금', full: '금요일' },
+  { key: 'sat', short: '토', full: '토요일' },
+  { key: 'sun', short: '일', full: '일요일' },
+]
+const WEEKDAY_FULL = Object.fromEntries(WEEKDAYS.map((d) => [d.key, d.full]))
+export const weekdayLabel = (k) => WEEKDAY_FULL[k] ?? k
+// Sort a set of weekday keys into Mon→Sun order.
+export const sortWeekdays = (keys = []) => WEEKDAYS.filter((d) => keys.includes(d.key)).map((d) => d.key)
+// Label for session N (1-based): the mapped weekday when trainingDays covers it,
+// else the abstract "N일차".
+export const sessionDayLabel = (day, trainingDays = []) =>
+  trainingDays[day - 1] ? weekdayLabel(trainingDays[day - 1]) : `${day}일차`
+
 // ── Lift-logger UI labels (§7 B6) ─────────────────────────────────────────────
 // Used by LiftLogRow and App toolbar. Korean strings for the logging→feedback loop.
 export const LOG = {

@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import db from '../data/exercises.json' with { type: 'json' }
-import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel, restLabel, exerciseName } from './i18n.js'
+import { regionLabel, statusLabel, styleLabel, liftLabel, qualityLabel, presetLabel, modelLabel, stepLabel, assessLabel, schemeLabel, evidenceLabel, phaseLabel, cueLabel, templateLabel, restLabel, exerciseName, sessionDayLabel, sortWeekdays, WEEKDAYS } from './i18n.js'
+
+describe('weekday session labels', () => {
+  it('sortWeekdays orders Mon→Sun regardless of input order', () => {
+    expect(sortWeekdays(['fri', 'mon', 'wed'])).toEqual(['mon', 'wed', 'fri'])
+  })
+  it('sessionDayLabel maps session index to weekday when trainingDays set', () => {
+    const days = ['mon', 'wed', 'fri']
+    expect(sessionDayLabel(1, days)).toBe('월요일')
+    expect(sessionDayLabel(3, days)).toBe('금요일')
+  })
+  it('sessionDayLabel falls back to N일차 when trainingDays empty or short', () => {
+    expect(sessionDayLabel(2, [])).toBe('2일차')
+    expect(sessionDayLabel(4, ['mon', 'wed'])).toBe('4일차')
+  })
+  it('WEEKDAYS has 7 entries', () => expect(WEEKDAYS).toHaveLength(7))
+})
 
 describe('i18n v2 helpers', () => {
   it('region labels', () => {
