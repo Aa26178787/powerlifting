@@ -152,7 +152,7 @@ export default function StepEquipment() {
                       </select>
                     </label>
                   )}
-                  <label>주 빈도
+                  <label>주 횟수 (0 = 제외)
                     <select value={street.frequency[def.key]} onChange={(e) => setStreetFrequency(def.key, Number(e.target.value))}>
                       {[0, 1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
                     </select>

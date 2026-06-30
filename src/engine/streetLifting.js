@@ -76,7 +76,9 @@ export function placeStreetInSessions(sessions, lifts, frequency = {}) {
   const out = sessions.map((s) => ({ ...s, street: [...(s.street ?? [])] }))
   const dayHasLift = (s, base) => s.exercises.some((e) => e.baseLift === base)
   for (const sl of lifts) {
-    const want = Math.max(1, Math.min(out.length, frequency[sl.lift] ?? 1))
+    const freq = frequency[sl.lift] ?? sl.weeklyFrequency ?? 1
+    if (freq <= 0) continue   // lift turned off → not placed
+    const want = Math.max(1, Math.min(out.length, freq))
     const preferred = sl.lift === 'dip' ? 'bench' : 'deadlift'
     const ranked = [
       ...out.filter((s) => dayHasLift(s, preferred)),
@@ -95,6 +97,9 @@ export function buildStreetWeek(street, bodyweight, weekIndex = 0, totalWeeks = 
   for (const def of STREET_LIFTS) {
     const cfg = street[def.key]
     if (!cfg || cfg.added == null || cfg.reps == null || cfg.rpe == null) continue
+    // Per-lift weekly frequency: 0 = this lift is off (e.g. dips only, no pull-ups).
+    const weeklyFrequency = street.frequency?.[def.key] ?? 1
+    if (weeklyFrequency <= 0) continue
     const k = street.k?.[def.key] ?? def.defaultK
     const baseE1 = streetSystemE1rm(k, bodyweight, cfg.added, cfg.reps, cfg.rpe)
     // Weekly load ramp on work weeks; deload rebuilds from the unramped base at RPE 6.
@@ -102,7 +107,7 @@ export function buildStreetWeek(street, bodyweight, weekIndex = 0, totalWeeks = 
     const scheme = expandStreetLift({ sysE1rm, k, bodyweight, baseSets: 4, backoffRpeDrop, isDeload })
     out.push({
       lift: def.key, label: def.label, exercise: def.exercise, role: 'street',
-      quality: 'strength', bodyweight, k, grip: cfg.grip ?? null,
+      quality: 'strength', bodyweight, k, grip: cfg.grip ?? null, weeklyFrequency,
       scheme: { type: scheme.type, evidenceTier: 'consensus', note: '추가중량 = 벨트 부하 (체중 별도)', sets: scheme.sets },
     })
   }

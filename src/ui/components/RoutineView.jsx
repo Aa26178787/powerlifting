@@ -209,7 +209,7 @@ function AccessoryRow({ acc, onRegenerate, muscleSummary }) {
 // Feature 5: street-lifting block (weighted dip + weighted pull/chin-up), rendered
 // once per week after the sessions. Shows the system load (체중×k + 추가) and the
 // belt/added weight the lifter actually loads.
-function StreetSection({ street, units }) {
+function StreetSection({ street, units, showFreq = false }) {
   const addedLabel = (s) => {
     if (s.mode === 'bodyweight') return '체중만'
     if (s.mode === 'assisted') return `보조 −${toDisplay(s.assistKg, units)}${unitLabel(units)}`
@@ -226,6 +226,7 @@ function StreetSection({ street, units }) {
           <div className="street-lift-header">
             <span className="street-lift-name">{lift.label}</span>
             {lift.grip && <span className="badge">{streetGripLabel(lift.grip)}</span>}
+            {showFreq && lift.weeklyFrequency != null && <span className="badge freq">주 {lift.weeklyFrequency}회</span>}
             <span className="tag evidence">{evidenceLabel(lift.scheme.evidenceTier)}</span>
           </div>
           <div className="set-table-wrap">
@@ -343,7 +344,7 @@ export default function RoutineView({ plan, onRegenerate }) {
           renderBody={() => (
             <>
               {wk.sessions.map((s) => renderSession(wk, s))}
-              {wk.street && wk.street.length > 0 && <StreetSection street={wk.street} units={units} />}
+              {wk.street && wk.street.length > 0 && <StreetSection street={wk.street} units={units} showFreq />}
             </>
           )} />
       ))}

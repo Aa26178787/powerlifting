@@ -290,7 +290,7 @@ describe('RoutineView — street-lifting section', () => {
     weeks: [
       { index: 1, isDeload: false, sessions: [{ day: 1, exercises: [], accessories: [] }],
         street: [
-          { lift: 'dip', label: '가중 딥스', exercise: 'Dips (weighted)', role: 'street', quality: 'strength', bodyweight: 82, k: 0.95, grip: null,
+          { lift: 'dip', label: '가중 딥스', exercise: 'Dips (weighted)', role: 'street', quality: 'strength', bodyweight: 82, k: 0.95, grip: null, weeklyFrequency: 2,
             scheme: { type: 'topSetBackoff', evidenceTier: 'consensus', note: '추가중량 = 벨트 부하 (체중 별도)', sets: [
               { systemWeight: 112.5, addedWeight: 35, reps: 2, rpe: 8.5, label: '탑', mode: 'belt' },
               { systemWeight: 97.5, addedWeight: 20, reps: 5, rpe: 7.5, label: '백오프', mode: 'belt' },
@@ -304,5 +304,6 @@ describe('RoutineView — street-lifting section', () => {
     expect(screen.getByText(/스트리트 리프팅/)).toBeInTheDocument()
     expect(screen.getByText(/가중 딥스/)).toBeInTheDocument()
     expect(screen.getByText(/\+35kg/)).toBeInTheDocument()   // belt added weight
+    expect(screen.getByText(/주 2회/)).toBeInTheDocument()    // per-lift weekly frequency badge
   })
 })
