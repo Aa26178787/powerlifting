@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
 import { normalizeBlend, QUALITIES } from '../../../engine/quality.js'
-import { qualityLabel } from '../../i18n.js'
+import { qualityLabel, BACKOFF } from '../../i18n.js'
 import OverloadPanel from '../../components/OverloadPanel.jsx'
 
 export default function StepPeriodization() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
+  const setBackoffRpeDrop = useProfileStore((s) => s.setBackoffRpeDrop)
   const [mesoRaw, setMesoRaw] = useState(String(p.mesoWeeks))
 
   const n = normalizeBlend(p.qualities)
@@ -52,6 +53,18 @@ export default function StepPeriodization() {
         />
         {' '}디로드 포함
       </label>
+
+      <label>{BACKOFF.label}
+        <select
+          value={String(p.backoffRpeDrop ?? 0)}
+          onChange={(e) => setBackoffRpeDrop(Number(e.target.value))}
+        >
+          {[0, 0.5, 1, 1.5, 2, 2.5].map((v) => (
+            <option key={v} value={String(v)}>{BACKOFF.opts[v]}</option>
+          ))}
+        </select>
+      </label>
+      <p style={{ fontSize: '0.85em', color: '#888', margin: '2px 0 0' }}>{BACKOFF.hint}</p>
 
       <label>
         <input

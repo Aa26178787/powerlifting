@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
-import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel } from '../i18n.js'
+import React, { useState, useMemo } from 'react'
+import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel, fitVerdictLabel, accessoryFitReason } from '../i18n.js'
+import { byName } from '../../engine/exercises.js'
+import { judgeAccessoryFit } from '../../engine/accessoryFit.js'
 import { useProfileStore } from '../store/profileStore.js'
 import { detectOverreaching } from '../../engine/overreaching.js'
 import { toDisplay, unitLabel } from '../lib/units.js'
@@ -10,6 +12,12 @@ import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
 import { PATTERNS, patternOf, exercisesForPattern } from '../../engine/movementPattern.js' // per-row accessory swap
+import { allEquipment } from '../../engine/exercises.js' // picker shows full catalog (override bypasses equip filter)
+
+// The manual swap picker lists the FULL catalog regardless of the user's selected
+// equipment: a user-picked accessory is force-included by generate() (byName bypasses
+// the equipment filter), so limiting the picker would hide reachable choices.
+const ALL_EQUIP = allEquipment()
 
 // ExerciseRow now receives week+day so LiftLogRow can tag the log entry.
 function ExerciseRow({ ex, units, week, day }) {
@@ -56,12 +64,40 @@ function ExerciseRow({ ex, units, week, day }) {
   )
 }
 
-function AccessoryRow({ acc, onRegenerate }) {
+function AccessoryRow({ acc, onRegenerate, muscleSummary }) {
   const scheme = acc.scheme
   const overrides = useProfileStore((s) => s.profile.accessoryOverrides ?? {})
-  const equipment = useProfileStore((s) => s.profile.equipment ?? [])
   const setField = useProfileStore((s) => s.setField)
+  const schemeOverrides = useProfileStore((s) => s.profile.accessorySchemeOverrides ?? {})
+  const setAccessoryScheme = useProfileStore((s) => s.setAccessoryScheme)
+  const clearAccessoryScheme = useProfileStore((s) => s.clearAccessoryScheme)
+  const styleAll = useProfileStore((s) => s.profile.style ?? {})
+  const regionStatus = useProfileStore((s) => s.profile.regionStatus ?? {})
+  const stickAll = useProfileStore((s) => s.profile.stickingPoint ?? {})
   const [open, setOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [fitOpen, setFitOpen] = useState(false)
+
+  // Feature 4: advisory fit-judge. The supporting lift = the accessory's targetLift
+  // (general accessories → no style emphasis, region/MRV checks still apply).
+  const fitEx = byName(acc.name)
+  const fitLift = fitEx && ['squat', 'bench', 'deadlift'].includes(fitEx.targetLift) ? fitEx.targetLift : null
+  const fit = useMemo(() => judgeAccessoryFit({
+    name: acc.name, lift: fitLift, style: fitLift ? (styleAll[fitLift] ?? {}) : {},
+    regionStatus, quality: acc.quality, muscleSummary, equipment: ALL_EQUIP,
+    stickingPoint: fitLift ? (stickAll[fitLift] ?? 'none') : 'none',
+  }), [acc.name, fitLift, styleAll, regionStatus, acc.quality, muscleSummary, stickAll])
+  const fitIcon = { good: '✓', ok: '·', caution: '⚠', avoid: '⛔' }[fit.verdict]
+  // Feature 3: per-accessory sets/reps edit, keyed by the displayed (final) name.
+  const ovCur = schemeOverrides[acc.name]
+  const [eSets, setESets] = useState(String(ovCur?.sets ?? scheme?.sets?.length ?? 3))
+  const [eReps, setEReps] = useState(String(ovCur?.reps ?? scheme?.sets?.[0]?.reps ?? 10))
+  const [eRpe, setERpe] = useState(ovCur?.rpe != null ? String(ovCur.rpe) : '')
+  const saveEdit = () => {
+    setAccessoryScheme(acc.name, { sets: Number(eSets), reps: Number(eReps), rpe: eRpe === '' ? null : Number(eRpe) })
+    setEditOpen(false); onRegenerate?.()
+  }
+  const resetEdit = () => { clearAccessoryScheme(acc.name); setEditOpen(false); onRegenerate?.() }
   // accSlot = the slot's auto-assigned pattern (stable override key); current = the
   // pattern actually shown (may be an override).
   const slot = acc.accSlot ?? patternOf(acc.primaryMuscle)
@@ -82,8 +118,45 @@ function AccessoryRow({ acc, onRegenerate }) {
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         <span className="acc-feel">체감</span>
+        {ovCur && <span className="badge edited">수정됨</span>}
+        {fit.verdict !== 'ok' && (
+          <button type="button" className={`badge fit fit-${fit.verdict}`} onClick={() => setFitOpen((o) => !o)}
+            title="적합도 안내 (참고용 · 차단하지 않음)">
+            적합도 {fitVerdictLabel(fit.verdict)} {fitIcon}
+          </button>
+        )}
         <button type="button" className="btn-mini acc-change" onClick={() => setOpen((o) => !o)}>변경</button>
+        <button type="button" className="btn-mini acc-edit-toggle" onClick={() => setEditOpen((o) => !o)}>세트·반복</button>
       </div>
+      {fitOpen && (
+        <div className="acc-fit">
+          <ul className="acc-fit-reasons">
+            {fit.reasons.length
+              ? fit.reasons.map((r, i) => <li key={i} data-severity={r.severity}>{accessoryFitReason(r.code, r)}</li>)
+              : <li>특이사항 없음 — 무난한 선택입니다.</li>}
+          </ul>
+          {(fit.verdict === 'caution' || fit.verdict === 'avoid') && fit.suggestions.length > 0 && (
+            <button type="button" className="btn-mini fit-suggest" onClick={() => choose(fit.suggestions[0])}>
+              추천으로 교체: {exerciseName(fit.suggestions[0])}
+            </button>
+          )}
+          <p className="acc-fit-note" style={{ fontSize: '0.8em', color: '#888', margin: '2px 0 0' }}>
+            참고용 안내입니다. 차단하지 않으며 최종 선택은 본인 판단이 우선입니다. (근거 약함)
+          </p>
+        </div>
+      )}
+      {editOpen && (
+        <div className="acc-edit">
+          <label>세트<input type="number" min="1" max="8" value={eSets} onChange={(e) => setESets(e.target.value)} style={{ width: '3.5em', marginLeft: '0.3em' }} /></label>
+          <label>반복<input type="number" min="3" max="30" value={eReps} onChange={(e) => setEReps(e.target.value)} style={{ width: '3.5em', marginLeft: '0.3em' }} /></label>
+          <label>RPE<input type="number" min="5" max="10" step="0.5" value={eRpe} placeholder="자동" onChange={(e) => setERpe(e.target.value)} style={{ width: '3.5em', marginLeft: '0.3em' }} /></label>
+          <button type="button" className="btn-mini" onClick={saveEdit}>저장</button>
+          <button type="button" className="btn-mini" onClick={resetEdit}>초기화</button>
+          <span className="acc-edit-hint" style={{ fontSize: '0.8em', color: '#888' }}>
+            권장 {acc.quality === 'endurance' ? '12–25회' : '6–15회'} · 2–5세트 (벗어나면 자극·피로 균형이 깨질 수 있음)
+          </span>
+        </div>
+      )}
       {open && (
         <div className="acc-chooser">
           <span className="acc-chooser-label">동작 패턴 변경:</span>
@@ -97,7 +170,7 @@ function AccessoryRow({ acc, onRegenerate }) {
             <select value="" onChange={(e) => { if (e.target.value) choose(e.target.value) }}>
               <option value="">— 선택 —</option>
               {PATTERNS.map((p) => {
-                const exs = exercisesForPattern(p.key, equipment)
+                const exs = exercisesForPattern(p.key, ALL_EQUIP)
                 return exs.length ? (
                   <optgroup key={p.key} label={p.label}>
                     {exs.map((ex) => <option key={ex.name} value={ex.name}>{exerciseName(ex.name)}</option>)}
@@ -130,6 +203,50 @@ function AccessoryRow({ acc, onRegenerate }) {
         </div>
       )}
     </li>
+  )
+}
+
+// Feature 5: street-lifting block (weighted dip + weighted pull/chin-up), rendered
+// once per week after the sessions. Shows the system load (체중×k + 추가) and the
+// belt/added weight the lifter actually loads.
+function StreetSection({ street, units }) {
+  const addedLabel = (s) => {
+    if (s.mode === 'bodyweight') return '체중만'
+    if (s.mode === 'assisted') return `보조 −${toDisplay(s.assistKg, units)}${unitLabel(units)}`
+    return `+${toDisplay(s.addedWeight, units)}${unitLabel(units)}`
+  }
+  return (
+    <div className="street-section">
+      <h4>스트리트 리프팅 (추가중량 트랙)</h4>
+      <p className="street-note" style={{ fontSize: '0.82em', color: '#888', margin: '0 0 6px' }}>
+        총무게 = 체중×k + 추가중량. 표시 무게는 벨트에 다는 추가중량입니다. 정식 4번째 메인 리프트가 아닌 보조 트랙입니다.
+      </p>
+      {street.map((lift, li) => (
+        <div key={li} className="street-lift">
+          <div className="street-lift-header">
+            <span className="street-lift-name">{lift.label}</span>
+            {lift.grip && <span className="badge">{lift.grip}</span>}
+            <span className="tag evidence">{evidenceLabel(lift.scheme.evidenceTier)}</span>
+          </div>
+          <div className="set-table-wrap">
+            <table className="set-table street">
+              <thead><tr><th>세트</th><th>총무게</th><th>추가중량</th><th>반복</th><th>RPE</th></tr></thead>
+              <tbody>
+                {lift.scheme.sets.map((s, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
+                    <td className="num">{toDisplay(s.systemWeight, units)}{unitLabel(units)}</td>
+                    <td className="num">{addedLabel(s)}</td>
+                    <td className="num">{s.reps}</td>
+                    <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -201,7 +318,7 @@ export default function RoutineView({ plan, onRegenerate }) {
         {(view.accessories ?? []).length > 0 && (
           <div className="accessories">
             <h5>보조운동</h5>
-            <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} />)}</ul>
+            <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} muscleSummary={wk.muscleVolume} />)}</ul>
           </div>
         )}
         {view.notes && view.notes.length > 0 && (
@@ -223,7 +340,12 @@ export default function RoutineView({ plan, onRegenerate }) {
       <InsightsPanel log={liftLog} e1rm={e1rmMap} />
       {plan.weeks.map((wk, wi) => (
         <WeekBlock key={wk.index} wk={wk} defaultOpen={wi === firstOpenIdx}
-          renderBody={() => wk.sessions.map((s) => renderSession(wk, s))} />
+          renderBody={() => (
+            <>
+              {wk.sessions.map((s) => renderSession(wk, s))}
+              {wk.street && wk.street.length > 0 && <StreetSection street={wk.street} units={units} />}
+            </>
+          )} />
       ))}
     </section>
   )

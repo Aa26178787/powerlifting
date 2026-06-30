@@ -85,6 +85,13 @@ export const VOL = {
   timeWarning: '시간 제한 설정 시 실제 보조 개수는 더 적을 수 있음',
 }
 
+// ── Backoff-intensity knob (Feature 2) ──────────────────────────────────────
+export const BACKOFF = {
+  label: '백오프 강도',
+  hint: '메인 리프트 백오프(보조) 세트를 목표보다 얼마나 가볍게 할지 — 기본은 현재 출력을 유지합니다.',
+  opts: { 0: '기본 (권장)', 0.5: '살짝 가볍게', 1: '가볍게', 1.5: '더 가볍게', 2: '많이 가볍게', 2.5: '아주 가볍게' },
+}
+
 export function volumeWarningLabel(code, values = {}) {
   switch (code) {
     case 'underMev':    return `시작주 주간 ${values.weekly ?? ''}세트 < MEV(${values.mev ?? ''})`
@@ -350,6 +357,39 @@ const EXERCISE_NAME = {
   'Farmer\'s Walk':                          '파머스 워크',
   'Yoke Walk':                               '요크 워크',
   'Belt Squat March':                        '벨트 스쿼트 마치',
+  // ── Catalog expansion (forearms/grip · delts · machine push · glute/adductor · core · street assist) ──
+  'Wrist Curl':                              '리스트 컬',
+  'Reverse Wrist Curl':                      '리버스 리스트 컬',
+  'Wrist Roller':                            '리스트 롤러',
+  'Plate Pinch Hold':                        '플레이트 핀치 홀드',
+  'Dead Hang':                               '데드 행 (매달리기)',
+  'Reverse Pec Deck':                        '리버스 펙덱',
+  'Prone Incline Rear Delt Raise':           '프론 인클라인 리어델트 레이즈',
+  'Cable Y-Raise':                           '케이블 Y-레이즈',
+  'Machine Lateral Raise':                   '머신 레터럴 레이즈',
+  'Lean-Away Cable Lateral Raise':           '린어웨이 케이블 레터럴 레이즈',
+  'Upright Row (cable/EZ)':                  '업라이트 로우 (케이블/EZ)',
+  'Machine Shoulder Press':                  '머신 숄더 프레스',
+  'Machine Chest Press':                     '머신 체스트 프레스',
+  'Incline Machine Press':                   '인클라인 머신 프레스',
+  'Low-to-High Cable Fly':                   '로우-투-하이 케이블 플라이',
+  'Straight-Arm Pulldown':                   '스트레이트암 풀다운',
+  'Reverse-Grip Lat Pulldown':               '리버스 그립 랫 풀다운',
+  'Hip Abduction (Machine)':                 '힙 어브덕션 (머신)',
+  'Cable Glute Kickback':                    '케이블 글루트 킥백',
+  'Banded Lateral Walk':                     '밴드 레터럴 워크',
+  'Hip Adduction (Machine)':                 '힙 어덕션 (머신)',
+  'Copenhagen Plank':                        '코펜하겐 플랭크',
+  'Standing Leg Curl (Machine)':             '스탠딩 레그 컬 (머신)',
+  'Suitcase Carry':                          '슈트케이스 캐리',
+  'Hanging Knee Raise':                      '행잉 니 레이즈',
+  'Reverse Crunch':                          '리버스 크런치',
+  'Scapular Pull-Up':                        '스캐퓰러 풀업',
+  'Ring Dips':                               '링 딥스',
+  'Straight-Bar Dip':                        '스트레이트바 딥',
+  'Deficit Push-Up':                         '디피싯 푸시업',
+  'Banded Pull-Up':                          '밴드 풀업',
+  'Archer Pull-Up':                          '아처 풀업',
 }
 
 // exerciseName: DB exercise name (or comp lift enum) → Korean label.
@@ -377,6 +417,22 @@ export const schemeLabel = (k) => SCHEME[k] ?? k
 export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
 export const cueLabel = (k) => CUE[k] ?? k
+
+// ── Accessory fit-judge (Feature 4) ─────────────────────────────────────────
+const FIT_VERDICT = { good: '적합', ok: '무난', caution: '주의', avoid: '피하기' }
+export const fitVerdictLabel = (k) => FIT_VERDICT[k] ?? k
+export function accessoryFitReason(code, v = {}) {
+  switch (code) {
+    case 'regionInjury': return `${regionLabel(v.region)} 부위가 심한 통증/부상 상태 — 피하세요`
+    case 'regionPain':   return `${regionLabel(v.region)} 부위에 통증 — 무게를 줄이거나 교체를 고려하세요`
+    case 'overMrv':      return '이 부위의 주간 볼륨이 권장 상한(MRV)을 넘었습니다 — 세트 축소 권장'
+    case 'emphasisMatch':return '이 스타일이 강조하는 부위에 잘 맞는 보조운동입니다'
+    case 'emphasisOff':  return '이 스타일에서는 비중이 낮은 부위입니다 (필수는 아님)'
+    case 'stickMatch':   return '약점 구간(스티킹포인트)과 일치합니다'
+    case 'offTarget':    return '주로 다른 메인 종목을 보조하는 운동입니다'
+    default:             return code
+  }
+}
 
 // ── Weekdays (optional per-session day labels) ────────────────────────────────
 // Ordered Mon→Sun. trainingDays stores a subset of these keys; sessions map by

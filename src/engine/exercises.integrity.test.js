@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import db from '../data/exercises.json' with { type: 'json' }
 import { canonicalToken, creditMuscles } from './muscleVolume.js'
 import { causeOf, CAUSE_VOCAB, POSITION_CAUSES, CANON_TO_CAUSE } from './stickingPoint.js'
+import { patternOf } from './movementPattern.js'
 
 // Reverse mapping: cause → set of canonical muscle groups (for contradiction check)
 const CAUSE_TO_CANONS = {}
@@ -17,7 +18,14 @@ const REGIONS = ['lowerBack','knee','shoulder','elbow','wrist','hip','hamstring'
 
 describe('exercise DB integrity', () => {
   it('has a large library', () => {
-    expect(db.exercises.length).toBeGreaterThanOrEqual(150)
+    expect(db.exercises.length).toBeGreaterThanOrEqual(237)
+  })
+  it('every accessory prime-mover token maps to a real movement pattern (not "other")', () => {
+    const unmapped = db.exercises
+      .filter((e) => e.category === 'accessory' && patternOf(e.primaryMuscle) === 'other')
+      .map((e) => `${e.name}: ${e.primaryMuscle}`)
+    if (unmapped.length) console.error('Accessories with no movement pattern:', unmapped)
+    expect(unmapped).toHaveLength(0)
   })
   it('every exercise has valid required tags', () => {
     for (const ex of db.exercises) {

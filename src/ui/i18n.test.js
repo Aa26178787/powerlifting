@@ -96,8 +96,8 @@ describe('exerciseName: EXERCISE_NAME coverage guard', () => {
     expect(untranslated).toHaveLength(0)
   })
 
-  it('total DB exercises is 205 (guard against silent additions)', () => {
-    expect(db.exercises.length).toBe(205)
+  it('total DB exercises is 237 (guard against silent additions)', () => {
+    expect(db.exercises.length).toBe(237)
   })
 })
 

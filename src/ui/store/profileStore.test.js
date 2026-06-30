@@ -600,3 +600,75 @@ describe('liftLog', () => {
     expect(useProfileStore.getState().liftLog).toEqual([])
   })
 })
+
+// ── Feature 2 (backoff) + Feature 3 (accessory sets/reps edit) ───────────────
+describe('backoffRpeDrop + accessorySchemeOverrides', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('DEFAULT_PROFILE has byte-identity-safe defaults', () => {
+    expect(DEFAULT_PROFILE.backoffRpeDrop).toBe(0)
+    expect(DEFAULT_PROFILE.accessorySchemeOverrides).toEqual({})
+  })
+  it('setBackoffRpeDrop clamps to [0,2.5] and snaps to 0.5', () => {
+    const s = () => useProfileStore.getState()
+    s().setBackoffRpeDrop(-1);  expect(s().profile.backoffRpeDrop).toBe(0)
+    s().setBackoffRpeDrop(9);   expect(s().profile.backoffRpeDrop).toBe(2.5)
+    s().setBackoffRpeDrop(1.3); expect(s().profile.backoffRpeDrop).toBe(1.5)
+  })
+  it('setAccessoryScheme clamps sets[1,8]/reps[3,30]/rpe[5,10]; clearAccessoryScheme removes', () => {
+    const s = () => useProfileStore.getState()
+    s().setAccessoryScheme('Barbell Curl', { sets: 99, reps: 2, rpe: 11 })
+    expect(s().profile.accessorySchemeOverrides['Barbell Curl']).toEqual({ sets: 8, reps: 3, rpe: 10 })
+    s().setAccessoryScheme('Barbell Curl', { sets: 0, reps: 40 })   // rpe omitted in patch → kept from merge then re-clamped
+    expect(s().profile.accessorySchemeOverrides['Barbell Curl'].sets).toBe(1)
+    expect(s().profile.accessorySchemeOverrides['Barbell Curl'].reps).toBe(30)
+    s().clearAccessoryScheme('Barbell Curl')
+    expect(s().profile.accessorySchemeOverrides['Barbell Curl']).toBeUndefined()
+  })
+  it('rehydrates a pre-feature profile → new fields default safely', async () => {
+    localStorage.clear()
+    const old = {
+      state: { profile: { lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } }, years: 3, daysPerWeek: 4, fatigue: 2 }, plan: null },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const p = useProfileStore.getState().profile
+    expect(p.backoffRpeDrop).toBe(0)
+    expect(p.accessorySchemeOverrides).toEqual({})
+  })
+})
+
+// ── Feature 5 (street lifting) ───────────────────────────────────────────────
+describe('streetLifting', () => {
+  beforeEach(() => { useProfileStore.getState().reset(); localStorage.clear() })
+
+  it('DEFAULT_PROFILE has a disabled street block with k/frequency/lift sub-objects', () => {
+    const sl = DEFAULT_PROFILE.streetLifting
+    expect(sl.enabled).toBe(false)
+    expect(sl.k).toEqual({ dip: 0.95, pullup: 0.90 })
+    expect(sl.dip).toHaveProperty('added')
+    expect(sl.pullup).toHaveProperty('grip')
+  })
+  it('setters update enabled / lift inputs / k (clamped) / frequency (clamped)', () => {
+    const s = () => useProfileStore.getState()
+    s().setStreetEnabled(true);                 expect(s().profile.streetLifting.enabled).toBe(true)
+    s().setStreetLift('dip', { added: 40, reps: 1, rpe: 10 })
+    expect(s().profile.streetLifting.dip).toEqual({ added: 40, reps: 1, rpe: 10 })
+    s().setStreetK('pullup', 9);                expect(s().profile.streetLifting.k.pullup).toBe(1.2)   // clamp ≤1.2
+    s().setStreetFrequency('dip', 9);           expect(s().profile.streetLifting.frequency.dip).toBe(4) // clamp ≤4
+  })
+  it('rehydrates a pre-feature profile → nested street defaults filled, no crash', async () => {
+    localStorage.clear()
+    const old = {
+      state: { profile: { lifts: { squat: { oneRM: 100 }, bench: { oneRM: 80 }, deadlift: { oneRM: 120 } }, years: 3, daysPerWeek: 4, fatigue: 2 }, plan: null },
+      version: 0,
+    }
+    localStorage.setItem('powerlifting-profile', JSON.stringify(old))
+    await useProfileStore.persist.rehydrate()
+    const sl = useProfileStore.getState().profile.streetLifting
+    expect(sl.enabled).toBe(false)
+    expect(sl.k.dip).toBe(0.95)
+    expect(sl.pullup.grip).toBe('pronated')
+  })
+})
