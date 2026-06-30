@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { streetSystemE1rm, addedFromSystem, expandStreetLift, buildStreetWeek, STREET_LIFTS, STREET_MICRO_INC } from './streetLifting.js'
+import { streetSystemE1rm, addedFromSystem, expandStreetLift, buildStreetWeek, placeStreetInSessions, STREET_LIFTS, STREET_MICRO_INC } from './streetLifting.js'
 import { e1rmFrom } from './e1rm.js'
 import { MAIN_LIFTS } from './exercises.js'
 import { generate } from './generate.js'
@@ -94,5 +94,47 @@ describe('generate — street integration', () => {
   it('enabled but no bodyweight → no street key (safe)', () => {
     const plan = generate({ ...profile, bodyweight: null, streetLifting: { enabled: true, k: { dip: 0.95, pullup: 0.9 }, frequency: {}, dip: { added: 40, reps: 1, rpe: 10 }, pullup: {} } })
     expect(plan.weeks.every((w) => w.street === undefined)).toBe(true)
+  })
+})
+
+describe('placeStreetInSessions (integrated placement)', () => {
+  const sessions = [
+    { day: 1, exercises: [{ baseLift: 'bench' }, { baseLift: 'deadlift' }], accessories: [] },
+    { day: 2, exercises: [{ baseLift: 'squat' }], accessories: [] },
+  ]
+  const lifts = [{ lift: 'dip', label: '가중 딥스' }, { lift: 'pullup', label: '가중 풀업/친업' }]
+  it('dip → bench day, pullup → deadlift day', () => {
+    const out = placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
+    expect(out[0].street.map((l) => l.lift).sort()).toEqual(['dip', 'pullup'])  // day1 has bench+deadlift
+    expect(out[1].street).toEqual([])
+  })
+  it('frequency spreads a lift across additional sessions', () => {
+    const out = placeStreetInSessions(sessions, [{ lift: 'dip' }], { dip: 2 })
+    const withDip = out.filter((s) => s.street.some((l) => l.lift === 'dip'))
+    expect(withDip).toHaveLength(2)
+  })
+  it('does not mutate the input sessions', () => {
+    placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
+    expect(sessions[0].street).toBeUndefined()
+  })
+})
+
+describe('generate — street placement modes', () => {
+  const profile = {
+    years: 2, daysPerWeek: 4, fatigue: 2, mesoWeeks: 3, deloadEnabled: false, bodyweight: 80,
+    lifts: { squat: { oneRM: 180 }, bench: { oneRM: 120 }, deadlift: { oneRM: 220 } },
+  }
+  const street = (placement) => ({ enabled: true, placement, k: { dip: 0.95, pullup: 0.9 }, frequency: { dip: 1, pullup: 1 }, dip: { added: 40, reps: 1, rpe: 10 }, pullup: { added: 30, reps: 1, rpe: 10, grip: 'pronated' } })
+
+  it('block mode → per-week wk.street, sessions have no street', () => {
+    const plan = generate({ ...profile, streetLifting: street('block') })
+    expect(plan.weeks[0].street.length).toBe(2)
+    expect(plan.weeks[0].sessions.every((s) => s.street === undefined)).toBe(true)
+  })
+  it('integrated mode → sessions carry street, no wk.street block', () => {
+    const plan = generate({ ...profile, streetLifting: street('integrated') })
+    expect(plan.weeks[0].street).toBeUndefined()
+    const allStreet = plan.weeks[0].sessions.flatMap((s) => s.street ?? [])
+    expect(allStreet.map((l) => l.lift).sort()).toEqual(['dip', 'pullup'])
   })
 })

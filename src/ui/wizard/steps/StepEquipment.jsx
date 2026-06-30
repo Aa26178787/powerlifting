@@ -25,6 +25,7 @@ export default function StepEquipment() {
   const applyVolumeRecommendation = useProfileStore((s) => s.applyVolumeRecommendation)
   const clearVolumeOverride = useProfileStore((s) => s.clearVolumeOverride)
   const setStreetEnabled = useProfileStore((s) => s.setStreetEnabled)
+  const setStreetPlacement = useProfileStore((s) => s.setStreetPlacement)
   const setStreetLift = useProfileStore((s) => s.setStreetLift)
   const setStreetK = useProfileStore((s) => s.setStreetK)
   const setStreetFrequency = useProfileStore((s) => s.setStreetFrequency)
@@ -116,6 +117,12 @@ export default function StepEquipment() {
             {!p.bodyweight && (
               <p style={{ color: '#b00', fontSize: '0.85em' }}>⚠ 1단계에서 체중을 입력해야 무게가 계산됩니다.</p>
             )}
+            <label>배치 방식
+              <select value={street.placement ?? 'block'} onChange={(e) => setStreetPlacement(e.target.value)}>
+                <option value="block">별도 블록 (주 단위 · 원하는 날 직접 끼워넣기)</option>
+                <option value="integrated">세션 통합 (딥→벤치 날, 풀업→데드 날 자동 배치)</option>
+              </select>
+            </label>
             {STREET_LIFTS.map((def) => {
               const cfg = street[def.key]
               return (

@@ -53,6 +53,7 @@ export const DEFAULT_PROFILE = {
   // Disabled by default → no street output → byte-identical plan. Uses top-level bodyweight.
   streetLifting: {
     enabled: false,
+    placement: 'block',   // 'block' = separate per-week section · 'integrated' = into bench/deadlift days
     k: { dip: 0.95, pullup: 0.90 },
     frequency: { dip: 2, pullup: 2 },
     dip: { added: null, reps: null, rpe: null },
@@ -239,6 +240,8 @@ export const useProfileStore = create(
       // Street-lifting setters (Feature 5).
       setStreetEnabled: (bool) =>
         set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, enabled: !!bool } } })),
+      setStreetPlacement: (mode) =>
+        set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, placement: mode === 'integrated' ? 'integrated' : 'block' } } })),
       setStreetLift: (key, patch) =>
         set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, [key]: { ...s.profile.streetLifting[key], ...patch } } } })),
       setStreetK: (key, value) =>

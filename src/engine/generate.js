@@ -15,7 +15,7 @@ import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
 import { patternOf, pickForPattern } from './movementPattern.js'
-import { buildStreetWeek } from './streetLifting.js'
+import { buildStreetWeek, placeStreetInSessions } from './streetLifting.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -380,10 +380,15 @@ export function generate(profile) {
   // or no bodyweight → no `street` key → output byte-identical to prior versions.
   const street = profile.streetLifting
   const finalWeeks = (street?.enabled && profile.bodyweight)
-    ? weeks.map((wk) => ({
-        ...wk,
-        street: buildStreetWeek(street, profile.bodyweight, wk.index - 1, mesoWeeks, { backoffRpeDrop, isDeload: wk.isDeload }),
-      }))
+    ? weeks.map((wk) => {
+        const lifts = buildStreetWeek(street, profile.bodyweight, wk.index - 1, mesoWeeks, { backoffRpeDrop, isDeload: wk.isDeload })
+        if (!lifts.length) return wk
+        // 'integrated' → attach into the relevant training sessions (dip→bench day,
+        // pullup→deadlift day); 'block' (default) → one separate per-week section.
+        return street.placement === 'integrated'
+          ? { ...wk, sessions: placeStreetInSessions(wk.sessions, lifts, street.frequency ?? {}) }
+          : { ...wk, street: lifts }
+      })
     : weeks
 
   return { template: 'custom', model, weeks: finalWeeks }

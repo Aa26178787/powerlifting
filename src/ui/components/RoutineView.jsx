@@ -320,6 +320,7 @@ export default function RoutineView({ plan, onRegenerate }) {
             <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} muscleSummary={wk.muscleVolume} />)}</ul>
           </div>
         )}
+        {(s.street ?? []).length > 0 && <StreetSection street={s.street} units={units} />}
         {view.notes && view.notes.length > 0 && (
           <p className="notes">⚠️ {view.notes.join(' · ')}</p>
         )}
