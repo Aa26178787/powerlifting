@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel, fitVerdictLabel, accessoryFitReason } from '../i18n.js'
+import { exerciseName, templateLabel, qualityLabel, schemeLabel, evidenceLabel, restLabel, sessionDayLabel, fitVerdictLabel, accessoryFitReason, streetGripLabel } from '../i18n.js'
 import { byName } from '../../engine/exercises.js'
 import { judgeAccessoryFit } from '../../engine/accessoryFit.js'
 import { useProfileStore } from '../store/profileStore.js'
@@ -219,23 +219,22 @@ function StreetSection({ street, units }) {
     <div className="street-section">
       <h4>스트리트 리프팅 (추가중량 트랙)</h4>
       <p className="street-note" style={{ fontSize: '0.82em', color: '#888', margin: '0 0 6px' }}>
-        총무게 = 체중×k + 추가중량. 표시 무게는 벨트에 다는 추가중량입니다. 정식 4번째 메인 리프트가 아닌 보조 트랙입니다.
+        표시 무게는 <strong>벨트에 다는 추가중량(체중 미포함)</strong>입니다. 정식 4번째 메인 리프트가 아닌 보조 트랙입니다.
       </p>
       {street.map((lift, li) => (
         <div key={li} className="street-lift">
           <div className="street-lift-header">
             <span className="street-lift-name">{lift.label}</span>
-            {lift.grip && <span className="badge">{lift.grip}</span>}
+            {lift.grip && <span className="badge">{streetGripLabel(lift.grip)}</span>}
             <span className="tag evidence">{evidenceLabel(lift.scheme.evidenceTier)}</span>
           </div>
           <div className="set-table-wrap">
             <table className="set-table street">
-              <thead><tr><th>세트</th><th>총무게</th><th>추가중량</th><th>반복</th><th>RPE</th></tr></thead>
+              <thead><tr><th>세트</th><th>추가중량(벨트)</th><th>반복</th><th>RPE</th></tr></thead>
               <tbody>
                 {lift.scheme.sets.map((s, i) => (
                   <tr key={i}>
                     <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
-                    <td className="num">{toDisplay(s.systemWeight, units)}{unitLabel(units)}</td>
                     <td className="num">{addedLabel(s)}</td>
                     <td className="num">{s.reps}</td>
                     <td className="num">{s.rpe != null ? s.rpe : '—'}</td>

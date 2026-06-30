@@ -418,6 +418,10 @@ export const evidenceLabel = (k) => EVIDENCE[k] ?? k
 export const phaseLabel = (k) => PHASE[k] ?? k
 export const cueLabel = (k) => CUE[k] ?? k
 
+// ── Street-lifting grip labels (Feature 5) ──────────────────────────────────
+const STREET_GRIP = { pronated: '오버핸드(풀업)', neutral: '뉴트럴', supine: '언더핸드(친업)' }
+export const streetGripLabel = (k) => STREET_GRIP[k] ?? k
+
 // ── Accessory fit-judge (Feature 4) ─────────────────────────────────────────
 const FIT_VERDICT = { good: '적합', ok: '무난', caution: '주의', avoid: '피하기' }
 export const fitVerdictLabel = (k) => FIT_VERDICT[k] ?? k
