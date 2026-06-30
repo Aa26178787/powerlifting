@@ -109,10 +109,11 @@ describe('placeStreetInSessions (integrated placement)', () => {
     { day: 2, exercises: [{ baseLift: 'squat' }], accessories: [] },
   ]
   const lifts = [{ lift: 'dip', label: '가중 딥스' }, { lift: 'pullup', label: '가중 풀업/친업' }]
-  it('dip → bench day, pullup → deadlift day', () => {
+  it('spreads to separate days (the combined day does not get both lifts)', () => {
     const out = placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
-    expect(out[0].street.map((l) => l.lift).sort()).toEqual(['dip', 'pullup'])  // day1 has bench+deadlift
-    expect(out[1].street).toEqual([])
+    expect(out.every((s) => s.street.length <= 1)).toBe(true)                  // no stacking
+    expect(out.flatMap((s) => s.street.map((l) => l.lift)).sort()).toEqual(['dip', 'pullup'])
+    expect(new Set(out.filter((s) => s.street.length).map((s) => s.day)).size).toBe(2)  // two different days
   })
   it('frequency spreads a lift across additional sessions', () => {
     const out = placeStreetInSessions(sessions, [{ lift: 'dip' }], { dip: 2 })
@@ -138,6 +139,20 @@ describe('placeStreetInSessions (integrated placement)', () => {
     expect(dipDay).toBe(3)                         // dip → the OTHER bench day, avoiding the stack
     // no session holds both
     expect(out.every((s) => s.street.length <= 1)).toBe(true)
+  })
+  it('4-day SBD at frequency 2: each lift on 2 separate days, no session gets both', () => {
+    const sbd = [
+      { day: 1, exercises: [{ baseLift: 'bench' }, { baseLift: 'deadlift' }] },
+      { day: 2, exercises: [{ baseLift: 'squat' }] },
+      { day: 3, exercises: [{ baseLift: 'bench' }] },
+      { day: 4, exercises: [{ baseLift: 'squat' }] },
+    ]
+    const out = placeStreetInSessions(sbd, [{ lift: 'dip' }, { lift: 'pullup' }], { dip: 2, pullup: 2 })
+    expect(out.every((s) => s.street.length <= 1)).toBe(true)          // 4 placements, 4 days → no stacking
+    expect(out.filter((s) => s.street.some((l) => l.lift === 'dip'))).toHaveLength(2)
+    expect(out.filter((s) => s.street.some((l) => l.lift === 'pullup'))).toHaveLength(2)
+    // every session has at most one street lift → dip & pull-up never share a day
+    expect(out.every((s) => new Set(s.street.map((l) => l.lift)).size === s.street.length)).toBe(true)
   })
   it('does not mutate the input sessions', () => {
     placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
