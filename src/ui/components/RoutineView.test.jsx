@@ -281,3 +281,28 @@ describe('RoutineView rest times (no warmup)', () => {
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
   })
 })
+
+// Feature 5: street-lifting block rendering
+describe('RoutineView — street-lifting section', () => {
+  beforeEach(() => { useProfileStore.setState({ checkinLog: [] }) })
+  const streetPlan = {
+    template: 'custom',
+    weeks: [
+      { index: 1, isDeload: false, sessions: [{ day: 1, exercises: [], accessories: [] }],
+        street: [
+          { lift: 'dip', label: '가중 딥스', exercise: 'Dips (weighted)', role: 'street', quality: 'strength', bodyweight: 82, k: 0.95, grip: null,
+            scheme: { type: 'topSetBackoff', evidenceTier: 'consensus', note: '추가중량 = 벨트 부하 (체중 별도)', sets: [
+              { systemWeight: 112.5, addedWeight: 35, reps: 2, rpe: 8.5, label: '탑', mode: 'belt' },
+              { systemWeight: 97.5, addedWeight: 20, reps: 5, rpe: 7.5, label: '백오프', mode: 'belt' },
+            ] } },
+        ] },
+    ],
+  }
+  it('renders the street section with the lift label and added (belt) weight', () => {
+    const { container } = render(<RoutineView plan={streetPlan} />)
+    container.querySelectorAll('details.week').forEach((d) => { if (!d.open) { d.open = true; fireEvent(d, new Event('toggle')) } })
+    expect(screen.getByText(/스트리트 리프팅/)).toBeInTheDocument()
+    expect(screen.getByText(/가중 딥스/)).toBeInTheDocument()
+    expect(screen.getByText(/\+35kg/)).toBeInTheDocument()   // belt added weight
+  })
+})

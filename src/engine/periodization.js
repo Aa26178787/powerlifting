@@ -5,7 +5,7 @@ import { volumeScale } from './regionStatus.js'
 import { byName, equipmentSatisfies } from './exercises.js'
 import { ZONES, weightFor, weeklyQualitySchedule, classifyBlend, strengthShare } from './quality.js'
 import { weekPlan, phaseFor } from './periodizationModel.js'
-import { SCHEMES, pickScheme, schemeSeed } from './setSchemes.js'
+import { SCHEMES, pickScheme, schemeSeed, clampBackoffRpe } from './setSchemes.js'
 import { cueVariation } from './cueVariation.js'
 import { volumeRamp, volumeRampMode, loadRamp, PER_SESSION_CAP, LIFT_REP_CAP } from './volume.js'
 import { roundToIncrement, loadForRpe } from './e1rm.js'
@@ -76,7 +76,7 @@ function buildExercise(slot, quality, ctx) {
   const seed = schemeSeed(slot.lift, slot.role)
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, seed, concurrent, hypShare: 1 - ss })
   const scheme = SCHEMES[key]
-  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss })
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss, backoffRpeDrop: ctx.backoffRpeDrop ?? 0 })
   const clampedSets = clampSets(expanded.sets, ceiling)
   // Per-lift rep cap (deadlift ≤6): clamp any numeric reps over the cap and
   // recompute load at the SAME RPE (fewer reps → heavier) so intensity matches.
@@ -86,7 +86,12 @@ function buildExercise(slot, quality, ctx) {
   const capR = (r) => (repCap != null && typeof r === 'number' ? Math.min(r, repCap) : r)
   const cappedSets = repCap == null ? clampedSets : clampedSets.map((s) => {
     if (typeof s.reps !== 'number' || s.reps <= repCap) return s
-    const weight = s.rpe != null ? Math.min(loadForRpe(eff, repCap, s.rpe), ceiling) : s.weight
+    // s.rpe is a per-set fatigue-ramp label that risingRpe can floor as low as 5
+    // (e.g. a heavily-lightened backoff via backoffRpeDrop). loadForRpe→pctOf1RM is
+    // only defined for RPE 6–10, so clamp into the chart domain before recomputing
+    // the capped-rep load. Default plans never reach <6 here (deadlift backoff RPE
+    // stays ≥6.5), so this is a no-op for the existing 754-test baseline.
+    const weight = s.rpe != null ? Math.min(loadForRpe(eff, repCap, clampBackoffRpe(s.rpe)), ceiling) : s.weight
     return { ...s, reps: repCap, weight }
   })
   const displayReps = (key === 'strengthHypertrophy'

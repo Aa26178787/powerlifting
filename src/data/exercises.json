@@ -3154,6 +3154,437 @@
       "stress": [
         "knee"
       ]
+    },
+    {
+      "name": "Wrist Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "forearms",
+      "equipment": [
+        "barbell/dumbbells"
+      ],
+      "stress": [
+        "wrist",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Reverse Wrist Curl",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "forearms",
+      "equipment": [
+        "barbell/dumbbells"
+      ],
+      "stress": [
+        "wrist",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Wrist Roller",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "forearms/grip",
+      "equipment": [
+        "wrist roller"
+      ],
+      "stress": [
+        "wrist",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Plate Pinch Hold",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "grip/forearms",
+      "equipment": [
+        "plates"
+      ],
+      "stress": [
+        "wrist"
+      ]
+    },
+    {
+      "name": "Dead Hang",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "grip/forearms",
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Reverse Pec Deck",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Prone Incline Rear Delt Raise",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts/upper-back",
+      "equipment": [
+        "dumbbells",
+        "incline bench"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Cable Y-Raise",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "rear-delts/upper-back",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Machine Lateral Raise",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "shoulders (lat delt)",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Lean-Away Cable Lateral Raise",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "shoulders (lat delt)",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Upright Row (cable/EZ)",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "shoulders (lat delt)/traps",
+      "equipment": [
+        "cables/ez bar"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Machine Shoulder Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "shoulders",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Machine Chest Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "chest",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
+    },
+    {
+      "name": "Incline Machine Press",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "upper-chest",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
+    },
+    {
+      "name": "Low-to-High Cable Fly",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "upper-chest",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
+    },
+    {
+      "name": "Straight-Arm Pulldown",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Reverse-Grip Lat Pulldown",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "elbow",
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Hip Abduction (Machine)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "glutes",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hip"
+      ]
+    },
+    {
+      "name": "Cable Glute Kickback",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "glutes",
+      "equipment": [
+        "cables"
+      ],
+      "stress": [
+        "hip"
+      ]
+    },
+    {
+      "name": "Banded Lateral Walk",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "glutes",
+      "equipment": [
+        "band"
+      ],
+      "stress": [
+        "hip"
+      ]
+    },
+    {
+      "name": "Hip Adduction (Machine)",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "adductors",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hip"
+      ]
+    },
+    {
+      "name": "Copenhagen Plank",
+      "category": "accessory",
+      "targetLift": "squat",
+      "stickingPoint": "none",
+      "primaryMuscle": "adductors/core",
+      "equipment": [
+        "bench"
+      ],
+      "stress": [
+        "hip"
+      ]
+    },
+    {
+      "name": "Standing Leg Curl (Machine)",
+      "category": "accessory",
+      "targetLift": "deadlift",
+      "stickingPoint": "none",
+      "primaryMuscle": "hamstrings",
+      "equipment": [
+        "machine"
+      ],
+      "stress": [
+        "hamstring",
+        "knee"
+      ]
+    },
+    {
+      "name": "Suitcase Carry",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "obliques/core/grip",
+      "equipment": [
+        "dumbbell/kettlebell"
+      ],
+      "stress": [
+        "wrist"
+      ]
+    },
+    {
+      "name": "Hanging Knee Raise",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs/hip-flexors",
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Reverse Crunch",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "abs/hip-flexors",
+      "equipment": [
+        "bench/bodyweight"
+      ],
+      "stress": []
+    },
+    {
+      "name": "Scapular Pull-Up",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/upper-back",
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder"
+      ]
+    },
+    {
+      "name": "Ring Dips",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "chest/triceps",
+      "equipment": [
+        "rings"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow",
+        "pec"
+      ]
+    },
+    {
+      "name": "Straight-Bar Dip",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "chest/triceps",
+      "equipment": [
+        "dip station"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Deficit Push-Up",
+      "category": "accessory",
+      "targetLift": "bench",
+      "stickingPoint": "none",
+      "primaryMuscle": "chest/triceps",
+      "equipment": [
+        "parallettes/dumbbells"
+      ],
+      "stress": [
+        "shoulder",
+        "pec"
+      ]
+    },
+    {
+      "name": "Banded Pull-Up",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": [
+        "pull-up bar",
+        "bands"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
+    },
+    {
+      "name": "Archer Pull-Up",
+      "category": "accessory",
+      "targetLift": "general",
+      "stickingPoint": "none",
+      "primaryMuscle": "lats/biceps",
+      "equipment": [
+        "pull-up bar"
+      ],
+      "stress": [
+        "shoulder",
+        "elbow"
+      ]
     }
   ]
 }

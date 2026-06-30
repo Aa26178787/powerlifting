@@ -15,6 +15,7 @@ import { phaseFor } from './periodizationModel.js'
 import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
 import { patternOf, pickForPattern } from './movementPattern.js'
+import { buildStreetWeek } from './streetLifting.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
 function accessoryQuality(ex) {
@@ -96,6 +97,8 @@ export function generate(profile) {
   const excludedExercises = profile.excludedExercises ?? []
   const accessoryPicks = profile.accessoryPicks ?? []   // hybrid: user-preferred accessories, force-included by select()
   const accessoryOverrides = profile.accessoryOverrides ?? {}   // per-body-part swap (RoutineView 변경 버튼)
+  const accessorySchemeOverrides = profile.accessorySchemeOverrides ?? {}   // per-accessory sets/reps edit (by name)
+  const backoffRpeDrop = Math.max(0, Math.min(2.5, profile.backoffRpeDrop ?? 0))   // user backoff knob (lighter-only)
   const cueNeed = profile.cueNeed ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
@@ -143,7 +146,7 @@ export function generate(profile) {
     const absCap = PER_SESSION_CAP[priorityLift] ?? 6
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, absCap, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, backoffRpeDrop, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
 
   // Drive week assembly from planLayout: for ≤8 weeks this is one block (bit-identical
   // to the legacy path); for >8 weeks blocks of ≤BLOCK_LEN work weeks each get their
@@ -334,12 +337,21 @@ export function generate(profile) {
       const accessoriesFinal = accessoriesOrdered.map((a) => {
         const slot = patternOf(a.primaryMuscle)
         const target = accessoryOverrides[slot]
+        let result = { ...a, accSlot: slot }
         if (target && target !== slot && target !== a.name) {
           // override value is either a specific exercise name or a movement pattern key
           const ex = byName(target) ?? pickForPattern(target, equipment)
-          if (ex) return { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null, accSlot: slot }
+          if (ex) result = { ...a, name: ex.name, primaryMuscle: ex.primaryMuscle, tempo: ex.tempo ?? null, accSlot: slot }
         }
-        return { ...a, accSlot: slot }
+        // Feature 3: per-exercise sets/reps edit, keyed by the FINAL (possibly-swapped)
+        // name. Forces a straight scheme with the user's numbers. Skipped on deload
+        // (deload already forces straight×2) → deload weeks stay byte-identical.
+        const schemeOv = !wk.isDeload ? (accessorySchemeOverrides[result.name] ?? null) : null
+        if (schemeOv) {
+          const exp = expandAccessory('straight', { quality: result.quality, override: schemeOv })
+          result = { ...result, scheme: { type: 'straight', evidenceTier: SCHEMES.straight.evidenceTier, sets: exp.sets, note: undefined } }
+        }
+        return result
       })
 
       return { ...s, exercises: kept, accessories: accessoriesFinal, notes }
@@ -364,5 +376,15 @@ export function generate(profile) {
     return { ...wkRest, sessions, muscleVolume: summarize(weekLedger) }
   })
 
-  return { template: 'custom', model, weeks }
+  // Feature 5: opt-in street-lifting block appended to each week. Disabled (default)
+  // or no bodyweight → no `street` key → output byte-identical to prior versions.
+  const street = profile.streetLifting
+  const finalWeeks = (street?.enabled && profile.bodyweight)
+    ? weeks.map((wk) => ({
+        ...wk,
+        street: buildStreetWeek(street, profile.bodyweight, wk.index - 1, mesoWeeks, { backoffRpeDrop, isDeload: wk.isDeload }),
+      }))
+    : weeks
+
+  return { template: 'custom', model, weeks: finalWeeks }
 }

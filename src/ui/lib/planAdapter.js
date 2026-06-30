@@ -7,6 +7,7 @@ export function toEngineProfile(form) {
     lifts: form.lifts,
     years: form.years,
     age: form.age,
+    bodyweight: form.bodyweight,   // required by street-lifting (Feature 5)
     daysPerWeek: form.daysPerWeek,
     fatigue: form.fatigue,
     qualities: form.qualities,
@@ -25,6 +26,9 @@ export function toEngineProfile(form) {
     excludedExercises: form.excludedExercises ?? [],
     accessoryPicks: form.accessoryPicks ?? [],
     accessoryOverrides: form.accessoryOverrides ?? {},
+    accessorySchemeOverrides: form.accessorySchemeOverrides ?? {},
+    backoffRpeDrop: form.backoffRpeDrop ?? 0,
+    streetLifting: form.streetLifting,
     cueNeed: form.cueNeed ?? {},
     accessoryPreference: form.accessoryPreference,
     frequency: form.frequency,

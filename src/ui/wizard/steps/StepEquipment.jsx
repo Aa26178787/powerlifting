@@ -2,7 +2,16 @@ import React from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
 import { regionLabel, statusLabel, VOL, WEEKDAYS, sortWeekdays } from '../../i18n.js'
 import { volumeWarnings } from '../../../engine/volumeOverride.js'
+import { allEquipment } from '../../../engine/exercises.js'
+import { STREET_LIFTS } from '../../../engine/streetLifting.js'
+import { toDisplay, fromInput, unitLabel } from '../../lib/units.js'
 import VolumeWarnings from '../../components/VolumeWarnings.jsx'
+
+// Base equipment = the default barbell gym. "Full gym" expands auto-selection to the
+// whole DB (machine/cable/dumbbell/pull-up accessories). Default OFF keeps the
+// generated plan byte-identical to prior versions.
+const BASE_EQUIP = ['barbell', 'rack', 'bench']
+const FULL_EQUIP = allEquipment()
 
 export default function StepEquipment() {
   const p = useProfileStore((s) => s.profile)
@@ -15,9 +24,15 @@ export default function StepEquipment() {
   const setAccessorySetsPerSession = useProfileStore((s) => s.setAccessorySetsPerSession)
   const applyVolumeRecommendation = useProfileStore((s) => s.applyVolumeRecommendation)
   const clearVolumeOverride = useProfileStore((s) => s.clearVolumeOverride)
+  const setStreetEnabled = useProfileStore((s) => s.setStreetEnabled)
+  const setStreetLift = useProfileStore((s) => s.setStreetLift)
+  const setStreetK = useProfileStore((s) => s.setStreetK)
+  const setStreetFrequency = useProfileStore((s) => s.setStreetFrequency)
 
   const ov = p.volumeOverride
   const warnings = volumeWarnings(p)
+  const u = p.units ?? 'kg'
+  const street = p.streetLifting
 
   return (
     <div>
@@ -73,6 +88,82 @@ export default function StepEquipment() {
           <option value="any">무관</option>
         </select>
       </label>
+
+      <label title="머신·케이블·덤벨·풀업바 등 모든 장비를 사용한다고 가정해 보조운동 종목을 더 다양하게 자동 선택합니다. 끄면 바벨·랙·벤치 기준입니다.">
+        <input
+          type="checkbox"
+          checked={(p.equipment ?? BASE_EQUIP).length > BASE_EQUIP.length}
+          onChange={(e) => setField('equipment', e.target.checked ? [...FULL_EQUIP] : [...BASE_EQUIP])}
+        />
+        {' '}헬스장 전체 장비 사용 (풀짐 — 보조운동 다양화)
+      </label>
+      <p style={{ fontSize: '0.85em', color: '#888', margin: '2px 0 0' }}>
+        끄면 바벨·랙·벤치 기준으로 보조운동을 고릅니다. 켜면 머신·케이블·덤벨 등을 포함해 더 다양하게 추천합니다.
+        (개별 보조운동은 루틴에서 '변경' 버튼으로 항상 전체 목록에서 직접 고를 수 있습니다.)
+      </p>
+
+      <details className="street-advanced">
+        <summary>스트리트 리프팅 (가중 딥스 · 풀업/친업) — 선택</summary>
+        <p style={{ fontSize: '0.85em', color: '#888' }}>
+          체중 기반 종목을 추가중량으로 점진하는 보조 트랙입니다(정식 메인 리프트 아님). 체중 입력이 필요합니다.
+        </p>
+        <label>
+          <input type="checkbox" checked={street.enabled} onChange={(e) => setStreetEnabled(e.target.checked)} />
+          {' '}스트리트 리프팅 사용
+        </label>
+        {street.enabled && (
+          <div>
+            {!p.bodyweight && (
+              <p style={{ color: '#b00', fontSize: '0.85em' }}>⚠ 1단계에서 체중을 입력해야 무게가 계산됩니다.</p>
+            )}
+            {STREET_LIFTS.map((def) => {
+              const cfg = street[def.key]
+              return (
+                <fieldset key={def.key}>
+                  <legend>{def.label}</legend>
+                  <label>최대 테스트 추가중량 ({unitLabel(u)})
+                    <input type="number" min="0" value={cfg.added == null ? '' : toDisplay(cfg.added, u, false)}
+                      onChange={(e) => setStreetLift(def.key, { added: fromInput(e.target.value, u) })}
+                      style={{ width: '5em', marginLeft: '0.3em' }} />
+                  </label>
+                  <label>그 무게로 가능한 반복
+                    <input type="number" min="1" max="12" value={cfg.reps ?? ''}
+                      onChange={(e) => { const n = parseInt(e.target.value, 10); setStreetLift(def.key, { reps: Number.isNaN(n) ? null : n }) }}
+                      style={{ width: '4em', marginLeft: '0.3em' }} />
+                  </label>
+                  <label>그때 RPE
+                    <input type="number" min="6" max="10" step="0.5" value={cfg.rpe ?? ''}
+                      onChange={(e) => { const n = parseFloat(e.target.value); setStreetLift(def.key, { rpe: Number.isNaN(n) ? null : n }) }}
+                      style={{ width: '4em', marginLeft: '0.3em' }} />
+                  </label>
+                  {def.key === 'pullup' && (
+                    <label>그립
+                      <select value={cfg.grip ?? 'pronated'} onChange={(e) => setStreetLift(def.key, { grip: e.target.value })}>
+                        <option value="pronated">오버핸드(풀업)</option>
+                        <option value="neutral">뉴트럴</option>
+                        <option value="supine">언더핸드(친업)</option>
+                      </select>
+                    </label>
+                  )}
+                  <label>주 빈도
+                    <select value={street.frequency[def.key]} onChange={(e) => setStreetFrequency(def.key, Number(e.target.value))}>
+                      {[0, 1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </label>
+                  <details>
+                    <summary style={{ fontSize: '0.82em' }}>고급: 체중계수 k (추정값)</summary>
+                    <label>k
+                      <input type="number" min="0.5" max="1.2" step="0.01" value={street.k[def.key]}
+                        onChange={(e) => setStreetK(def.key, e.target.value)}
+                        style={{ width: '5em', marginLeft: '0.3em' }} />
+                    </label>
+                  </details>
+                </fieldset>
+              )
+            })}
+          </div>
+        )}
+      </details>
 
       <fieldset>
         <legend>종목별 주 빈도 (0 = 제외)</legend>

@@ -658,11 +658,14 @@ describe('accessory deficit-fill gating ramp', () => {
   it('PL 4-week accessory names — deterministic golden, no same-family duplicates per session', () => {
     const pl = generate({ ...base, qualities: PRESETS.powerlifting })
     const names = pl.weeks.map(w => w.sessions.map(s => s.accessories.map(a => a.name)))
+    // Re-baselined after the +32 accessory catalog expansion: cable accessories
+    // (Cable Glute Kickback, Low-to-High Cable Fly) now enter the deterministic pool.
+    // Invariant preserved: no same movement-family twice in a session.
     expect(names).toEqual([
-      [['Cable Fly','Cable Pull-Through'],['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Good Morning (narrow)']],
-      [['Cable Fly','Cable Pull-Through'],['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Good Morning (narrow)']],
-      [['Cable Fly','Cable Pull-Through'],['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Good Morning (narrow)']],
-      [['Cable Fly','Cable Pull-Through'],['Bulgarian Split Squat','Good Morning (narrow)'],['Cable Fly','Overhead Triceps Ext (cable)'],['Bulgarian Split Squat','Good Morning (narrow)']],
+      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Cable Glute Kickback','Bulgarian Split Squat']],
+      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Cable Glute Kickback','Bulgarian Split Squat']],
+      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Bulgarian Split Squat','Good Morning (narrow)']],
+      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Bulgarian Split Squat','Good Morning (narrow)']],
     ])
   })
 

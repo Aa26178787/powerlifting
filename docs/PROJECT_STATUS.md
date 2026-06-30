@@ -1,6 +1,6 @@
 # 파워리프팅 루틴 생성기 — 진행 상황 & 로드맵
 
-> 최종 갱신: 2026-06-30 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting · 테스트 754/754 · 빌드 green
+> 최종 갱신: 2026-06-30 · 라이브: https://aa26178787.github.io/powerlifting/ · 저장소: github.com/Aa26178787/powerlifting · 테스트 805/805 · 빌드 green
 
 근거 기반 개인화 파워리프팅 루틴 생성기. 규칙 기반(결정론적·오프라인·무료) 엔진 + React 웹앱. 모든 수치는 메타분석/RCT/코칭 컨센서스에 근거하며 한계를 UI에 정직하게 고지.
 
@@ -50,6 +50,14 @@
 - **후속 품질/UX 수정**: 데드 전세트 ≤6렙(부하 매칭), 운동 요일 선택(`trainingDays`), 보조 동작계열 중복 제거, 세션 간 회복 간격(`distinctDays` 중앙배치), **메인 하루 ≤2세션·SBD 한날 몰림 방지**(`applyMaxMainPerDay`), 워밍업 제거, 백오프 완화·세트 내 RPE 점증
 - **보조 변경 UX**: 루틴의 각 보조 행에 **변경** 버튼 → **동작 패턴**(힌지/등/밀기…) 또는 **종목 직접 선택** → `accessoryOverrides`로 슬롯 교체·즉시 재생성(`movementPattern.js`)
 - **성능**: 주차 lazy 렌더(접힌 주차=요약만) — 24주 플랜 재생성 8s→0.4s, DOM 30k→1.25k 노드("응답 없음" 해결)
+
+### v6 — 보조 확장·백오프 조절·적합도 판정·스트리트 리프팅 (2026-06-30, 다관점 심의 기반)
+다관점 Workflow(코칭·아키텍처·회의론) → spec → 인라인 TDD. 연구 `docs/research/2026-06-30-accessories-backoff-fit-street.md`. 신규 옵트인 필드 전부 기본값 = 기존 출력 byte-identical(해시 불변), 805 테스트.
+- **보조운동 +32종**(전완·그립/리어·사이드 델트/머신 프레스/상부가슴/글루트·내전근/코어/스트리트 보조) → DB 237종. 진짜 병목은 **장비 게이팅**(기본 바벨·랙·벤치 → 머신/케이블 보조 자동선택 제외)이었음: ① 변경 피커가 **전체 카탈로그** 노출(override는 장비 필터 우회), ② 옵트인 **"풀짐" 토글**로 자동 선택 확장(기본 off=불변)
+- **메인 백오프 강도 조절**: `backoffRpeDrop` 0~2.5(0=현재 동일, lighter-only), 차트 도메인 [6,10] 클램프. 잠복 크래시 수정(데드 rep-cap 재계산이 RPE<6를 `pctOf1RM`에 투입하던 경로)
+- **보조 세트·반복 편집**: `accessorySchemeOverrides[name]={sets,reps,rpe?}`(클램프 1-8/3-30/5-10), 스트레이트 강제, 디로드 제외
+- **보조 적합도 판정**(`accessoryFit.js`, 순수·차단없음): 부위상태·MRV·강조 일치/이탈·스티킹·타깃 → verdict good/ok/caution/avoid + 동일패턴 추천 상위3 + '추천으로 교체'(명시 클릭만)
+- **스트리트 리프팅**(`streetLifting.js`, 옵트인): 가중 딥스·풀업/친업을 총-시스템 1RM(`sys=k·BW+added`, k 딥.95/풀.90)에 strength top+backoff 적용 → 벨트 추가중량 표시. 메인 리프트 아님(MAIN_LIFTS 리팩터 회피), RoutineView 주차별 별도 섹션
 
 ---
 

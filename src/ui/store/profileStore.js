@@ -33,6 +33,8 @@ export const DEFAULT_PROFILE = {
   excludedExercises: [],
   accessoryPicks: [],   // user-chosen accessory exercise names (hybrid: force-included, engine auto-fills rest)
   accessoryOverrides: {},   // per-body-part swap: { canonicalMuscle: exerciseName } — replaces that part's accessory
+  accessorySchemeOverrides: {},   // per-accessory sets/reps edit: { exerciseName: { sets, reps, rpe? } }
+  backoffRpeDrop: 0,   // user knob: extra RPE drop on main-lift backoff sets (0 = default output; lighter-only, max 2.5)
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
@@ -46,6 +48,15 @@ export const DEFAULT_PROFILE = {
       setsPerSession: { squat: null, bench: null, deadlift: null },
     },
     accessory: { enabled: false, setsPerSession: null },
+  },
+  // Street-lifting (Feature 5): opt-in weighted dip + weighted pull/chin-up block.
+  // Disabled by default → no street output → byte-identical plan. Uses top-level bodyweight.
+  streetLifting: {
+    enabled: false,
+    k: { dip: 0.95, pullup: 0.90 },
+    frequency: { dip: 2, pullup: 2 },
+    dip: { added: null, reps: null, rpe: null },
+    pullup: { added: null, reps: null, rpe: null, grip: 'pronated' },
   },
 }
 
@@ -203,6 +214,40 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, variationOverride: { ...s.profile.variationOverride, [lift]: name } } })),
       setCueNeed: (lift, key) =>
         set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
+      setBackoffRpeDrop: (value) =>
+        set((s) => ({ profile: { ...s.profile, backoffRpeDrop: Math.max(0, Math.min(2.5, Math.round(Number(value) * 2) / 2)) } })),
+      // Per-accessory sets/reps edit. Clamps: sets[1,8], reps[3,30], rpe[5,10]|null (0.5 steps).
+      setAccessoryScheme: (name, patch) =>
+        set((s) => {
+          const cur = s.profile.accessorySchemeOverrides[name] ?? {}
+          const next = { ...cur, ...patch }
+          const clamped = {
+            sets: Math.max(1, Math.min(8, Math.round(Number(next.sets ?? 3)))),
+            reps: Math.max(3, Math.min(30, Math.round(Number(next.reps ?? 10)))),
+          }
+          if (next.rpe != null && next.rpe !== '') {
+            clamped.rpe = Math.max(5, Math.min(10, Math.round(Number(next.rpe) * 2) / 2))
+          }
+          return { profile: { ...s.profile, accessorySchemeOverrides: { ...s.profile.accessorySchemeOverrides, [name]: clamped } } }
+        }),
+      clearAccessoryScheme: (name) =>
+        set((s) => {
+          const next = { ...s.profile.accessorySchemeOverrides }
+          delete next[name]
+          return { profile: { ...s.profile, accessorySchemeOverrides: next } }
+        }),
+      // Street-lifting setters (Feature 5).
+      setStreetEnabled: (bool) =>
+        set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, enabled: !!bool } } })),
+      setStreetLift: (key, patch) =>
+        set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, [key]: { ...s.profile.streetLifting[key], ...patch } } } })),
+      setStreetK: (key, value) =>
+        set((s) => {
+          const v = Math.max(0.5, Math.min(1.2, Number(value)))
+          return { profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, k: { ...s.profile.streetLifting.k, [key]: v } } } }
+        }),
+      setStreetFrequency: (key, value) =>
+        set((s) => ({ profile: { ...s.profile, streetLifting: { ...s.profile.streetLifting, frequency: { ...s.profile.streetLifting.frequency, [key]: Math.max(0, Math.min(4, Math.round(Number(value)))) } } } })),
       setUnits: (units) =>
         set((s) => ({ profile: { ...s.profile, units } })),
       logCheckin: (entry) =>
@@ -263,8 +308,18 @@ export const useProfileStore = create(
             excludedExercises: p.excludedExercises ?? current.profile.excludedExercises,
             accessoryPicks: p.accessoryPicks ?? current.profile.accessoryPicks,
             accessoryOverrides: { ...current.profile.accessoryOverrides, ...(p.accessoryOverrides || {}) },
+            accessorySchemeOverrides: { ...current.profile.accessorySchemeOverrides, ...(p.accessorySchemeOverrides || {}) },
+            streetLifting: {
+              ...current.profile.streetLifting,
+              ...(p.streetLifting || {}),
+              k: { ...current.profile.streetLifting.k, ...(p.streetLifting?.k || {}) },
+              frequency: { ...current.profile.streetLifting.frequency, ...(p.streetLifting?.frequency || {}) },
+              dip: { ...current.profile.streetLifting.dip, ...(p.streetLifting?.dip || {}) },
+              pullup: { ...current.profile.streetLifting.pullup, ...(p.streetLifting?.pullup || {}) },
+            },
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
+            backoffRpeDrop: p.backoffRpeDrop ?? current.profile.backoffRpeDrop,
             units: p.units ?? current.profile.units,
             accessoryPreference: p.accessoryPreference ?? current.profile.accessoryPreference,
             volumeOverride: {

@@ -13,15 +13,26 @@ export function risingRpe(target, count) {
     Math.max(5, Math.round((target - (count - 1 - i) * 0.5) * 2) / 2))
 }
 
+// User-adjustable backoff: an extra RPE drop applied on top of each scheme's
+// built-in −1 step (lighter-only; the complaint is "backoff too heavy"). The
+// effective backoff RPE is snapped to 0.5 and clamped to [6,10] BEFORE any
+// loadForRpe/pctOf1RM call — the Tuchscherer chart is only defined for RPE 6–10,
+// so the clamp prevents a chart-domain crash at large drops. backoffRpeDrop=0
+// reproduces the prior output exactly.
+export function clampBackoffRpe(rpe) {
+  return Math.min(10, Math.max(6, Math.round(rpe * 2) / 2))
+}
+
 function straight({ quality, e1rm, zone, baseSets }) {
   const w = weightFor(quality, e1rm)
   return { sets: risingRpe(zone.rpeTarget, baseSets).map((rpe) => ({ weight: w, reps: zone.repAnchor, rpe })) }
 }
-function topSetBackoff({ e1rm, zone, baseSets }) {
+function topSetBackoff({ e1rm, zone, baseSets, backoffRpeDrop = 0 }) {
   const top = r(e1rm * zone.pct[1])
   // Fix B: backoff is RPE-derived (consistent with its rpe label) rather than a
   // fixed 0.88× multiplier. Null-safe: pct-loaded zones fall back to the old multiplier.
-  const backoffRpe = zone.rpeTarget == null ? null : zone.rpeTarget - 1
+  // backoffRpeDrop (user knob) lowers it further, clamped to the chart domain.
+  const backoffRpe = zone.rpeTarget == null ? null : clampBackoffRpe(zone.rpeTarget - 1 - backoffRpeDrop)
   const sets = [{ weight: top, reps: zone.reps[0], rpe: zone.rpeTarget, label: '탑' }]
   // Back-off sets share one (lighter) load; RPE RISES across them to the target as
   // fatigue accumulates (e.g. 7→7.5→8), instead of a flat RPE on every set.
@@ -31,7 +42,7 @@ function topSetBackoff({ e1rm, zone, baseSets }) {
   })
   return { sets }
 }
-function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3 }) {
+function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3, backoffRpeDrop = 0 }) {
   // Fix A: RPE-derived top single (chart-accurate, same helper as strengthHypertrophy).
   // Fix C: In peak phase, ramp the top-single RPE 8.5→9.5 over peak weeks, rounded
   //   to 0.5 steps and capped at 9.5 (never 100% 1RM; ceiling clamp in periodization
@@ -46,7 +57,10 @@ function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 
   const top = loadForRpe(e1rm, 1, topRpe)
   const sets = [{ weight: top, reps: 1, rpe: topRpe, label: '탑싱글' }]
   // Fix A: backoff also RPE-derived (3 reps @ RPE 8.0) instead of top×0.85.
-  for (let i = 1; i < baseSets; i++) sets.push({ weight: loadForRpe(e1rm, 3, 8.0), reps: 3, rpe: 8, label: '백오프' })
+  // backoffRpeDrop (user knob) lowers it further, clamped to the chart domain.
+  const backRpe = clampBackoffRpe(8.0 - backoffRpeDrop)
+  const backW = loadForRpe(e1rm, 3, backRpe)
+  for (let i = 1; i < baseSets; i++) sets.push({ weight: backW, reps: 3, rpe: backRpe, label: '백오프' })
   return { sets }
 }
 function ascendingPyramid({ e1rm, zone, baseSets }) {
@@ -116,12 +130,13 @@ function widowmaker({ e1rm }) {
 function contrastPAP(ctx) {
   return { sets: topSingleBackoff(ctx).sets, note: '폭발 종목과 세트 교대 (180s, ≥48h 회복)', group: 'contrast' }
 }
-function strengthHypertrophy({ e1rm, baseSets, heavyShare = null }) {
+function strengthHypertrophy({ e1rm, baseSets, heavyShare = null, backoffRpeDrop = 0 }) {
   const sZ = ZONES.strength, hZ = ZONES.hypertrophy
   const top  = r(e1rm * sZ.pct[1])                        // ~0.92 — preserved for all heavyShare
   // Back-off is a genuine reduction after the heavy top sets: one RPE below the
   // hypertrophy target (was hZ.rpeTarget=9 → too taxing right after heavy doubles).
-  const backRpe = hZ.rpeTarget - 1
+  // backoffRpeDrop (user knob) lowers it further, clamped to the chart domain.
+  const backRpe = clampBackoffRpe(hZ.rpeTarget - 1 - backoffRpeDrop)
   const back = loadForRpe(e1rm, hZ.repAnchor, backRpe)
   const N = Math.max(2, baseSets)
   // heavyShare=null → current 1:(N-1) split. When passed (concurrent/PB) → blend-faithful.
@@ -209,8 +224,19 @@ const ACCESSORY_REPS = {
   endurance: { reps: 15, rpe: 8 },
 }
 
-export function expandAccessory(key, { quality = 'hypertrophy', baseSets = 3 } = {}) {
+export function expandAccessory(key, { quality = 'hypertrophy', baseSets = 3, override = null } = {}) {
   const base = ACCESSORY_REPS[quality] ?? ACCESSORY_REPS.hypertrophy
+  // User edit (Feature 3): a per-exercise {sets,reps,rpe?} override forces a plain
+  // straight scheme with the user's numbers (special schemes have no editable
+  // sets×reps shape). RPE is optional → falls back to the quality default. The
+  // per-set RPE still ramps (risingRpe) to reflect fatigue. override=null is a
+  // no-op → byte-identical to the prior behavior.
+  if (override) {
+    const sets = Math.max(1, override.sets ?? baseSets)
+    const reps = override.reps ?? base.reps
+    const rpe = override.rpe ?? base.rpe
+    return { sets: risingRpe(rpe, sets).map((r) => ({ reps, rpe: r })) }
+  }
   // Scheme-level note is omitted for accessories — the scheme label already
   // names the structure; per-set notes carry the actionable detail.
   switch (key) {
