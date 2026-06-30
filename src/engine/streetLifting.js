@@ -89,11 +89,17 @@ export function placeStreetInSessions(sessions, lifts, frequency = {}) {
     if (freq <= 0) continue   // lift turned off → not placed
     const want = Math.max(1, Math.min(out.length, freq))
     const pref = preferredOf(sl.lift)
-    // score = preferred day (2) + currently free of street work (1): an EMPTY
-    // preferred day beats an already-occupied one, spreading the two lifts apart.
-    const score = (s) => (dayHasLift(s, pref) ? 2 : 0) + (s.street.length === 0 ? 1 : 0)
-    const ranked = out.map((s, i) => ({ s, i })).sort((a, b) => score(b.s) - score(a.s) || a.i - b.i)
-    for (let j = 0; j < want && j < ranked.length; j++) ranked[j].s.street.push(sl)
+    // Spread-first scoring: each street lift already on a day costs −3, the preferred
+    // (bench/deadlift) day adds +2. Occupancy dominates the preferred bonus, so the
+    // least-loaded days fill first — even at frequency ≥2 the lifts land on separate
+    // days while still favouring the ideal day among equally-loaded options. Only
+    // when placements exceed available days do days double up.
+    // Ranking is recomputed BEFORE each pick so multi-session frequencies stay spread.
+    for (let n = 0; n < want; n++) {
+      const score = (s) => -3 * s.street.length + (dayHasLift(s, pref) ? 2 : 0)
+      const best = out.map((s, i) => ({ s, i })).sort((a, b) => score(b.s) - score(a.s) || a.i - b.i)[0]
+      if (best) best.s.street.push(sl)
+    }
   }
   return out
 }
