@@ -64,6 +64,11 @@ describe('buildStreetWeek', () => {
     expect(buildStreetWeek({ ...street, enabled: false }, 80, 0, 4, {})).toEqual([])
     expect(buildStreetWeek(street, null, 0, 4, {})).toEqual([])
   })
+  it('attaches per-lift weeklyFrequency and skips a lift with frequency 0', () => {
+    const out = buildStreetWeek({ ...street, frequency: { dip: 3, pullup: 0 } }, 80, 0, 4, {})
+    expect(out.map((l) => l.lift)).toEqual(['dip'])     // pullup off
+    expect(out[0].weeklyFrequency).toBe(3)
+  })
   it('the two street lifts are NOT main lifts', () => {
     for (const def of STREET_LIFTS) expect(MAIN_LIFTS).not.toContain(def.key)
   })
@@ -112,6 +117,10 @@ describe('placeStreetInSessions (integrated placement)', () => {
     const out = placeStreetInSessions(sessions, [{ lift: 'dip' }], { dip: 2 })
     const withDip = out.filter((s) => s.street.some((l) => l.lift === 'dip'))
     expect(withDip).toHaveLength(2)
+  })
+  it('frequency 0 → lift not placed in any session', () => {
+    const out = placeStreetInSessions(sessions, [{ lift: 'dip' }, { lift: 'pullup' }], { dip: 0, pullup: 1 })
+    expect(out.flatMap((s) => s.street).map((l) => l.lift)).toEqual(['pullup'])
   })
   it('does not mutate the input sessions', () => {
     placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
