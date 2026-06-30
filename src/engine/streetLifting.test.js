@@ -123,6 +123,22 @@ describe('placeStreetInSessions (integrated placement)', () => {
     const out = placeStreetInSessions(sessions, [{ lift: 'dip' }, { lift: 'pullup' }], { dip: 0, pullup: 1 })
     expect(out.flatMap((s) => s.street).map((l) => l.lift)).toEqual(['pullup'])
   })
+  it('4-day SBD: dip & pull-up land on DIFFERENT days (not both on the bench+deadlift day)', () => {
+    const sbd = [
+      { day: 1, exercises: [{ baseLift: 'bench' }, { baseLift: 'deadlift' }] },  // combined day
+      { day: 2, exercises: [{ baseLift: 'squat' }] },
+      { day: 3, exercises: [{ baseLift: 'bench' }] },                            // second bench day
+      { day: 4, exercises: [{ baseLift: 'squat' }] },
+    ]
+    const out = placeStreetInSessions(sbd, [{ lift: 'dip' }, { lift: 'pullup' }], { dip: 1, pullup: 1 })
+    const dipDay = out.find((s) => s.street.some((l) => l.lift === 'dip')).day
+    const pullDay = out.find((s) => s.street.some((l) => l.lift === 'pullup')).day
+    expect(dipDay).not.toBe(pullDay)              // no stacking
+    expect(pullDay).toBe(1)                        // pull-up → the (only) deadlift day
+    expect(dipDay).toBe(3)                         // dip → the OTHER bench day, avoiding the stack
+    // no session holds both
+    expect(out.every((s) => s.street.length <= 1)).toBe(true)
+  })
   it('does not mutate the input sessions', () => {
     placeStreetInSessions(sessions, lifts, { dip: 1, pullup: 1 })
     expect(sessions[0].street).toBeUndefined()

@@ -209,12 +209,68 @@ function AccessoryRow({ acc, onRegenerate, muscleSummary }) {
 // Feature 5: street-lifting block (weighted dip + weighted pull/chin-up), rendered
 // once per week after the sessions. Shows the system load (체중×k + 추가) and the
 // belt/added weight the lifter actually loads.
-function StreetSection({ street, units, showFreq = false }) {
+// One street lift row, with an advisory fit-judge (region/joint safety mainly —
+// dips & pull-ups load shoulder/elbow). Street lifts can't be swapped, so we show
+// the verdict + reasons only (no alternative suggestions).
+function StreetLiftRow({ lift, units, showFreq }) {
+  const styleAll = useProfileStore((s) => s.profile.style ?? {})
+  const regionStatus = useProfileStore((s) => s.profile.regionStatus ?? {})
+  const [fitOpen, setFitOpen] = useState(false)
+  const supLift = lift.lift === 'dip' ? 'bench' : 'deadlift'   // dip supports press, pull-up supports pull
+  const fit = useMemo(() => judgeAccessoryFit({
+    name: lift.exercise, lift: supLift, style: styleAll[supLift] ?? {},
+    regionStatus, quality: 'strength', equipment: ALL_EQUIP,
+  }), [lift.exercise, supLift, styleAll, regionStatus])
+  const fitIcon = { good: '✓', ok: '·', caution: '⚠', avoid: '⛔' }[fit.verdict]
   const addedLabel = (s) => {
     if (s.mode === 'bodyweight') return '체중만'
     if (s.mode === 'assisted') return `보조 −${toDisplay(s.assistKg, units)}${unitLabel(units)}`
     return `+${toDisplay(s.addedWeight, units)}${unitLabel(units)}`
   }
+  return (
+    <div className="street-lift">
+      <div className="street-lift-header">
+        <span className="street-lift-name">{lift.label}</span>
+        {lift.grip && <span className="badge">{streetGripLabel(lift.grip)}</span>}
+        {showFreq && lift.weeklyFrequency != null && <span className="badge freq">주 {lift.weeklyFrequency}회</span>}
+        {fit.verdict !== 'ok' && (
+          <button type="button" className={`badge fit fit-${fit.verdict}`} onClick={() => setFitOpen((o) => !o)}
+            title="적합도(부위 안전) 안내 · 참고용">적합도 {fitVerdictLabel(fit.verdict)} {fitIcon}</button>
+        )}
+        <span className="tag evidence">{evidenceLabel(lift.scheme.evidenceTier)}</span>
+      </div>
+      {fitOpen && (
+        <div className="acc-fit">
+          <ul className="acc-fit-reasons">
+            {fit.reasons.length
+              ? fit.reasons.map((r, i) => <li key={i} data-severity={r.severity}>{accessoryFitReason(r.code, r)}</li>)
+              : <li>특이사항 없음.</li>}
+          </ul>
+          <p style={{ fontSize: '0.8em', color: '#888', margin: '2px 0 0' }}>
+            참고용 안내입니다(근거 약함). 차단하지 않으며 통증·컨디션은 본인 판단이 우선입니다.
+          </p>
+        </div>
+      )}
+      <div className="set-table-wrap">
+        <table className="set-table street">
+          <thead><tr><th>세트</th><th>추가중량(벨트)</th><th>반복</th><th>RPE</th></tr></thead>
+          <tbody>
+            {lift.scheme.sets.map((s, i) => (
+              <tr key={i}>
+                <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
+                <td className="num">{addedLabel(s)}</td>
+                <td className="num">{s.reps}</td>
+                <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function StreetSection({ street, units, showFreq = false }) {
   return (
     <div className="street-section">
       <h4>스트리트 리프팅 (추가중량 트랙)</h4>
@@ -222,29 +278,7 @@ function StreetSection({ street, units, showFreq = false }) {
         표시 무게는 <strong>벨트에 다는 추가중량(체중 미포함)</strong>입니다. 정식 4번째 메인 리프트가 아닌 보조 트랙입니다.
       </p>
       {street.map((lift, li) => (
-        <div key={li} className="street-lift">
-          <div className="street-lift-header">
-            <span className="street-lift-name">{lift.label}</span>
-            {lift.grip && <span className="badge">{streetGripLabel(lift.grip)}</span>}
-            {showFreq && lift.weeklyFrequency != null && <span className="badge freq">주 {lift.weeklyFrequency}회</span>}
-            <span className="tag evidence">{evidenceLabel(lift.scheme.evidenceTier)}</span>
-          </div>
-          <div className="set-table-wrap">
-            <table className="set-table street">
-              <thead><tr><th>세트</th><th>추가중량(벨트)</th><th>반복</th><th>RPE</th></tr></thead>
-              <tbody>
-                {lift.scheme.sets.map((s, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}{s.label ? <span className="set-label"> {s.label}</span> : ''}</td>
-                    <td className="num">{addedLabel(s)}</td>
-                    <td className="num">{s.reps}</td>
-                    <td className="num">{s.rpe != null ? s.rpe : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StreetLiftRow key={li} lift={lift} units={units} showFreq={showFreq} />
       ))}
     </div>
   )

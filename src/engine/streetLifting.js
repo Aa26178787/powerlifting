@@ -20,8 +20,8 @@ import { loadRamp } from './volume.js'
 export const STREET_MICRO_INC = 1.25   // belt/microplate increment (kg)
 
 export const STREET_LIFTS = [
-  { key: 'dip',    exercise: 'Dips (weighted)',          label: '가중 딥스',       defaultK: 0.95 },
-  { key: 'pullup', exercise: 'Weighted Pull-Up/Chin-Up', label: '가중 풀업/친업',  defaultK: 0.90 },
+  { key: 'dip',    exercise: 'Dips (weighted)',          label: '중량 딥스',       defaultK: 0.95 },
+  { key: 'pullup', exercise: 'Weighted Pull-Up/Chin-Up', label: '중량 풀업/친업',  defaultK: 0.90 },
 ]
 
 // Total-system e1RM from the moved mass (k·BW + added) at the tested reps/RPE.
@@ -75,16 +75,25 @@ export function expandStreetLift({ sysE1rm, k, bodyweight, baseSets = 4, backoff
 export function placeStreetInSessions(sessions, lifts, frequency = {}) {
   const out = sessions.map((s) => ({ ...s, street: [...(s.street ?? [])] }))
   const dayHasLift = (s, base) => s.exercises.some((e) => e.baseLift === base)
-  for (const sl of lifts) {
-    const freq = frequency[sl.lift] ?? sl.weeklyFrequency ?? 1
+  const preferredOf = (lift) => (lift === 'dip' ? 'bench' : 'deadlift')
+  // Place the MORE CONSTRAINED lift first (fewest preferred-day candidates). In a
+  // 4-day SBD the pull/chin-up has only one pulling (deadlift) day, so it is placed
+  // first; the dip then has TWO bench days and skips the one the pull-up took — so
+  // a combined bench+deadlift day doesn't get both lifts unless frequency forces it.
+  const meta = lifts.map((sl, idx) => ({
+    sl, idx,
+    freq: frequency[sl.lift] ?? sl.weeklyFrequency ?? 1,
+    cand: out.filter((s) => dayHasLift(s, preferredOf(sl.lift))).length,
+  })).sort((a, b) => a.cand - b.cand || a.idx - b.idx)
+  for (const { sl, freq } of meta) {
     if (freq <= 0) continue   // lift turned off → not placed
     const want = Math.max(1, Math.min(out.length, freq))
-    const preferred = sl.lift === 'dip' ? 'bench' : 'deadlift'
-    const ranked = [
-      ...out.filter((s) => dayHasLift(s, preferred)),
-      ...out.filter((s) => !dayHasLift(s, preferred)),
-    ]
-    for (let i = 0; i < want && i < ranked.length; i++) ranked[i].street.push(sl)
+    const pref = preferredOf(sl.lift)
+    // score = preferred day (2) + currently free of street work (1): an EMPTY
+    // preferred day beats an already-occupied one, spreading the two lifts apart.
+    const score = (s) => (dayHasLift(s, pref) ? 2 : 0) + (s.street.length === 0 ? 1 : 0)
+    const ranked = out.map((s, i) => ({ s, i })).sort((a, b) => score(b.s) - score(a.s) || a.i - b.i)
+    for (let j = 0; j < want && j < ranked.length; j++) ranked[j].s.street.push(sl)
   }
   return out
 }

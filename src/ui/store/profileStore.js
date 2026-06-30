@@ -55,7 +55,7 @@ export const DEFAULT_PROFILE = {
     enabled: false,
     placement: 'integrated',   // default: woven INTO the training sessions (dip→bench day, pullup→deadlift day). 'block' = separate per-week section.
     k: { dip: 0.95, pullup: 0.90 },
-    frequency: { dip: 2, pullup: 2 },
+    frequency: { dip: 1, pullup: 1 },   // 1×/wk default keeps dip & pull-up on separate days in a 4-day SBD
     dip: { added: null, reps: null, rpe: null },
     pullup: { added: null, reps: null, rpe: null, grip: 'pronated' },
   },

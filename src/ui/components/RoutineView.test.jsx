@@ -290,7 +290,7 @@ describe('RoutineView — street-lifting section', () => {
     weeks: [
       { index: 1, isDeload: false, sessions: [{ day: 1, exercises: [], accessories: [] }],
         street: [
-          { lift: 'dip', label: '가중 딥스', exercise: 'Dips (weighted)', role: 'street', quality: 'strength', bodyweight: 82, k: 0.95, grip: null, weeklyFrequency: 2,
+          { lift: 'dip', label: '중량 딥스', exercise: 'Dips (weighted)', role: 'street', quality: 'strength', bodyweight: 82, k: 0.95, grip: null, weeklyFrequency: 2,
             scheme: { type: 'topSetBackoff', evidenceTier: 'consensus', note: '추가중량 = 벨트 부하 (체중 별도)', sets: [
               { systemWeight: 112.5, addedWeight: 35, reps: 2, rpe: 8.5, label: '탑', mode: 'belt' },
               { systemWeight: 97.5, addedWeight: 20, reps: 5, rpe: 7.5, label: '백오프', mode: 'belt' },
@@ -302,8 +302,19 @@ describe('RoutineView — street-lifting section', () => {
     const { container } = render(<RoutineView plan={streetPlan} />)
     container.querySelectorAll('details.week').forEach((d) => { if (!d.open) { d.open = true; fireEvent(d, new Event('toggle')) } })
     expect(screen.getByText(/스트리트 리프팅/)).toBeInTheDocument()
-    expect(screen.getByText(/가중 딥스/)).toBeInTheDocument()
+    expect(screen.getByText(/중량 딥스/)).toBeInTheDocument()
     expect(screen.getByText(/\+35kg/)).toBeInTheDocument()   // belt added weight
     expect(screen.getByText(/주 2회/)).toBeInTheDocument()    // per-lift weekly frequency badge
+  })
+  it('shows a fit-judge caution on a street lift when a stressed region hurts', () => {
+    useProfileStore.setState((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, shoulder: 2 } } }))
+    try {
+      const { container } = render(<RoutineView plan={streetPlan} />)
+      container.querySelectorAll('details.week').forEach((d) => { if (!d.open) { d.open = true; fireEvent(d, new Event('toggle')) } })
+      // Dips stress the shoulder → fit verdict 주의(caution) badge appears
+      expect(screen.getByText(/적합도 주의/)).toBeInTheDocument()
+    } finally {
+      useProfileStore.setState((s) => ({ profile: { ...s.profile, regionStatus: { ...s.profile.regionStatus, shoulder: 0 } } }))
+    }
   })
 })
