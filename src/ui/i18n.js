@@ -202,7 +202,7 @@ const EXERCISE_NAME = {
   'Push Press':                              '푸시 프레스',
   'Seated Overhead Press':                   '시티드 오버헤드 프레스',
   'Z Press':                                 'Z 프레스',
-  'Dips (weighted)':                         '딥스 (가중)',
+  'Dips (weighted)':                         '딥스 (중량)',
   // ── Deadlift variations ───────────────────────────────────────────────────
   'Conventional Deadlift':                   '컨벤셔널 데드리프트',
   'Sumo Deadlift':                           '스모 데드리프트',
@@ -250,7 +250,7 @@ const EXERCISE_NAME = {
   'Pull-Up (wide)':                          '풀업 (와이드)',
   'Pull-Up (neutral)':                       '풀업 (뉴트럴)',
   'Chin-Up (underhand)':                     '친업 (언더핸드)',
-  'Weighted Pull-Up/Chin-Up':               '가중 풀업/친업',
+  'Weighted Pull-Up/Chin-Up':               '중량 풀업/친업',
   'Face Pull':                               '페이스 풀',
   'Band Pull-Apart':                         '밴드 풀어파트',
   'Rear Delt Fly':                           '리어 델트 플라이',
