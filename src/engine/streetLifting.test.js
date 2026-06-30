@@ -85,15 +85,16 @@ describe('generate — street integration', () => {
     expect(b).toBe(a)
     expect(generate(profile).weeks.every((w) => w.street === undefined)).toBe(true)
   })
-  it('enabled with bodyweight → every week carries a street block with added weights', () => {
+  it('enabled with bodyweight (default placement) → street is woven INTO the sessions', () => {
     const plan = generate({
       ...profile,
       streetLifting: { enabled: true, k: { dip: 0.95, pullup: 0.9 }, frequency: { dip: 2, pullup: 2 }, dip: { added: 40, reps: 1, rpe: 10 }, pullup: { added: 30, reps: 1, rpe: 10, grip: 'pronated' } },
     })
     for (const wk of plan.weeks) {
-      expect(Array.isArray(wk.street)).toBe(true)
-      expect(wk.street.length).toBe(2)
-      expect(wk.street[0].scheme.sets[0]).toHaveProperty('addedWeight')
+      expect(wk.street).toBeUndefined()                                  // no detached per-week block by default
+      const lifts = wk.sessions.flatMap((s) => s.street ?? [])
+      expect(lifts.length).toBeGreaterThan(0)
+      expect(lifts[0].scheme.sets[0]).toHaveProperty('addedWeight')
     }
   })
   it('enabled but no bodyweight → no street key (safe)', () => {

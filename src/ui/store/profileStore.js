@@ -53,7 +53,7 @@ export const DEFAULT_PROFILE = {
   // Disabled by default → no street output → byte-identical plan. Uses top-level bodyweight.
   streetLifting: {
     enabled: false,
-    placement: 'block',   // 'block' = separate per-week section · 'integrated' = into bench/deadlift days
+    placement: 'integrated',   // default: woven INTO the training sessions (dip→bench day, pullup→deadlift day). 'block' = separate per-week section.
     k: { dip: 0.95, pullup: 0.90 },
     frequency: { dip: 2, pullup: 2 },
     dip: { added: null, reps: null, rpe: null },

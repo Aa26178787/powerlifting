@@ -646,6 +646,7 @@ describe('streetLifting', () => {
   it('DEFAULT_PROFILE has a disabled street block with k/frequency/lift sub-objects', () => {
     const sl = DEFAULT_PROFILE.streetLifting
     expect(sl.enabled).toBe(false)
+    expect(sl.placement).toBe('integrated')   // default: inside the routine
     expect(sl.k).toEqual({ dip: 0.95, pullup: 0.90 })
     expect(sl.dip).toHaveProperty('added')
     expect(sl.pullup).toHaveProperty('grip')

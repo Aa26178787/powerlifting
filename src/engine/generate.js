@@ -383,11 +383,11 @@ export function generate(profile) {
     ? weeks.map((wk) => {
         const lifts = buildStreetWeek(street, profile.bodyweight, wk.index - 1, mesoWeeks, { backoffRpeDrop, isDeload: wk.isDeload })
         if (!lifts.length) return wk
-        // 'integrated' → attach into the relevant training sessions (dip→bench day,
-        // pullup→deadlift day); 'block' (default) → one separate per-week section.
-        return street.placement === 'integrated'
-          ? { ...wk, sessions: placeStreetInSessions(wk.sessions, lifts, street.frequency ?? {}) }
-          : { ...wk, street: lifts }
+        // Default 'integrated' → woven into the training sessions (dip→bench day,
+        // pullup→deadlift day). Only explicit 'block' → a separate per-week section.
+        return street.placement === 'block'
+          ? { ...wk, street: lifts }
+          : { ...wk, sessions: placeStreetInSessions(wk.sessions, lifts, street.frequency ?? {}) }
       })
     : weeks
 
