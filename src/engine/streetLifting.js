@@ -67,6 +67,26 @@ export function expandStreetLift({ sysE1rm, k, bodyweight, baseSets = 4, backoff
   return { type: 'topSetBackoff', sets }
 }
 
+// Placement 'integrated': attach each street lift to actual training sessions
+// instead of a separate per-week block. Dips pair with the pressing (bench) day,
+// pull/chin-ups with the pulling (deadlift) day; frequency[lift] sessions get it,
+// preferred days first, the rest filled in layout order. Returns NEW session
+// objects each with a `street` array (empty when none assigned). Pure.
+export function placeStreetInSessions(sessions, lifts, frequency = {}) {
+  const out = sessions.map((s) => ({ ...s, street: [...(s.street ?? [])] }))
+  const dayHasLift = (s, base) => s.exercises.some((e) => e.baseLift === base)
+  for (const sl of lifts) {
+    const want = Math.max(1, Math.min(out.length, frequency[sl.lift] ?? 1))
+    const preferred = sl.lift === 'dip' ? 'bench' : 'deadlift'
+    const ranked = [
+      ...out.filter((s) => dayHasLift(s, preferred)),
+      ...out.filter((s) => !dayHasLift(s, preferred)),
+    ]
+    for (let i = 0; i < want && i < ranked.length; i++) ranked[i].street.push(sl)
+  }
+  return out
+}
+
 // Build the appended street block for ONE week. Returns [] when disabled, no
 // bodyweight, or no lift has complete inputs (added/reps/rpe all present).
 export function buildStreetWeek(street, bodyweight, weekIndex = 0, totalWeeks = 3, { backoffRpeDrop = 0, isDeload = false } = {}) {
