@@ -1,0 +1,54 @@
+name: Build Android APK
+
+# Manual trigger, or on a version tag (v*). The debug APK is uploaded as a
+# downloadable artifact (sideload with "install from unknown sources").
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build web bundle (Vite → dist/)
+        run: npm run build
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate Android project (Capacitor)
+        run: npx cap add android
+
+      - name: Copy web assets into the native project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: powerlifting-routine-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

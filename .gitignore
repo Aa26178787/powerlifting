@@ -4,5 +4,9 @@ dist/
 *.local
 .claude/
 
+# Capacitor native project — generated fresh in CI (npx cap add android)
+/android/
+/ios/
+
 # Subagent-driven dev scratch (ledger, briefs, reports, diffs)
 .superpowers/
