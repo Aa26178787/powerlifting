@@ -28,6 +28,7 @@ export function toEngineProfile(form) {
     accessoryOverrides: form.accessoryOverrides ?? {},
     accessorySchemeOverrides: form.accessorySchemeOverrides ?? {},
     backoffRpeDrop: form.backoffRpeDrop ?? 0,
+    backoffPct: form.backoffPct ?? {},
     streetLifting: form.streetLifting,
     cueNeed: form.cueNeed ?? {},
     accessoryPreference: form.accessoryPreference,

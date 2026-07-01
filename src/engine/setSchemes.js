@@ -27,7 +27,7 @@ function straight({ quality, e1rm, zone, baseSets }) {
   const w = weightFor(quality, e1rm)
   return { sets: risingRpe(zone.rpeTarget, baseSets).map((rpe) => ({ weight: w, reps: zone.repAnchor, rpe })) }
 }
-function topSetBackoff({ e1rm, zone, baseSets, backoffRpeDrop = 0 }) {
+function topSetBackoff({ e1rm, zone, baseSets, backoffRpeDrop = 0, backoffPct = null }) {
   const top = r(e1rm * zone.pct[1])
   // Fix B: backoff is RPE-derived (consistent with its rpe label) rather than a
   // fixed 0.88× multiplier. Null-safe: pct-loaded zones fall back to the old multiplier.
@@ -36,13 +36,15 @@ function topSetBackoff({ e1rm, zone, baseSets, backoffRpeDrop = 0 }) {
   const sets = [{ weight: top, reps: zone.reps[0], rpe: zone.rpeTarget, label: '탑' }]
   // Back-off sets share one (lighter) load; RPE RISES across them to the target as
   // fatigue accumulates (e.g. 7→7.5→8), instead of a flat RPE on every set.
-  const backW = backoffRpe == null ? r(top * 0.88) : loadForRpe(e1rm, zone.reps[1], backoffRpe)
+  // backoffPct (user-set weight): backoff = that fraction of the top set (overrides RPE).
+  const backW = backoffPct != null ? r(top * backoffPct)
+    : (backoffRpe == null ? r(top * 0.88) : loadForRpe(e1rm, zone.reps[1], backoffRpe))
   risingRpe(backoffRpe, Math.max(0, baseSets - 1)).forEach((rpe) => {
     sets.push({ weight: backW, reps: zone.reps[1], rpe, label: '백오프' })
   })
   return { sets }
 }
-function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3, backoffRpeDrop = 0 }) {
+function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 0, totalWeeks = 3, backoffRpeDrop = 0, backoffPct = null }) {
   // Fix A: RPE-derived top single (chart-accurate, same helper as strengthHypertrophy).
   // Fix C: In peak phase, ramp the top-single RPE 8.5→9.5 over peak weeks, rounded
   //   to 0.5 steps and capped at 9.5 (never 100% 1RM; ceiling clamp in periodization
@@ -59,7 +61,7 @@ function topSingleBackoff({ e1rm, baseSets, phase = 'accumulation', weekIndex = 
   // Fix A: backoff also RPE-derived (3 reps @ RPE 8.0) instead of top×0.85.
   // backoffRpeDrop (user knob) lowers it further, clamped to the chart domain.
   const backRpe = clampBackoffRpe(8.0 - backoffRpeDrop)
-  const backW = loadForRpe(e1rm, 3, backRpe)
+  const backW = backoffPct != null ? r(top * backoffPct) : loadForRpe(e1rm, 3, backRpe)
   for (let i = 1; i < baseSets; i++) sets.push({ weight: backW, reps: 3, rpe: backRpe, label: '백오프' })
   return { sets }
 }
@@ -130,14 +132,15 @@ function widowmaker({ e1rm }) {
 function contrastPAP(ctx) {
   return { sets: topSingleBackoff(ctx).sets, note: '폭발 종목과 세트 교대 (180s, ≥48h 회복)', group: 'contrast' }
 }
-function strengthHypertrophy({ e1rm, baseSets, heavyShare = null, backoffRpeDrop = 0 }) {
+function strengthHypertrophy({ e1rm, baseSets, heavyShare = null, backoffRpeDrop = 0, backoffPct = null }) {
   const sZ = ZONES.strength, hZ = ZONES.hypertrophy
   const top  = r(e1rm * sZ.pct[1])                        // ~0.92 — preserved for all heavyShare
   // Back-off is a genuine reduction after the heavy top sets: one RPE below the
   // hypertrophy target (was hZ.rpeTarget=9 → too taxing right after heavy doubles).
   // backoffRpeDrop (user knob) lowers it further, clamped to the chart domain.
+  // backoffPct (user-set weight): backoff = that fraction of the heavy top (overrides RPE).
   const backRpe = clampBackoffRpe(hZ.rpeTarget - 1 - backoffRpeDrop)
-  const back = loadForRpe(e1rm, hZ.repAnchor, backRpe)
+  const back = backoffPct != null ? r(top * backoffPct) : loadForRpe(e1rm, hZ.repAnchor, backRpe)
   const N = Math.max(2, baseSets)
   // heavyShare=null → current 1:(N-1) split. When passed (concurrent/PB) → blend-faithful.
   // Lower clamp 1: top-end + PB strength preserved. Upper clamp N-1: moderate ≥1 always.

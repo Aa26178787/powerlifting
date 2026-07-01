@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import { useProfileStore } from '../../store/profileStore.js'
 import { normalizeBlend, QUALITIES } from '../../../engine/quality.js'
-import { qualityLabel, BACKOFF } from '../../i18n.js'
+import { qualityLabel, liftLabel, BACKOFF } from '../../i18n.js'
 import OverloadPanel from '../../components/OverloadPanel.jsx'
 
 export default function StepPeriodization() {
   const p = useProfileStore((s) => s.profile)
   const setField = useProfileStore((s) => s.setField)
   const setBackoffRpeDrop = useProfileStore((s) => s.setBackoffRpeDrop)
+  const setBackoffPct = useProfileStore((s) => s.setBackoffPct)
   const [mesoRaw, setMesoRaw] = useState(String(p.mesoWeeks))
 
   const n = normalizeBlend(p.qualities)
@@ -65,6 +66,26 @@ export default function StepPeriodization() {
         </select>
       </label>
       <p style={{ fontSize: '0.85em', color: '#888', margin: '2px 0 0' }}>{BACKOFF.hint}</p>
+
+      <fieldset>
+        <legend>백오프 무게 직접 지정 (탑 세트의 %)</legend>
+        <p style={{ fontSize: '0.85em', color: '#888', margin: '0 0 4px' }}>
+          자동은 목표 RPE로 무게를 정합니다. %를 고르면 해당 종목 백오프를 <strong>탑 세트의 그 비율</strong>로 고정합니다(주차 램프에 맞춰 함께 오름).
+        </p>
+        {['squat', 'bench', 'deadlift'].map((lift) => (
+          <label key={lift}>{liftLabel(lift)}
+            <select
+              value={p.backoffPct?.[lift] == null ? '' : String(p.backoffPct[lift])}
+              onChange={(e) => setBackoffPct(lift, e.target.value === '' ? null : Number(e.target.value))}
+            >
+              <option value="">자동 (RPE)</option>
+              {[0.65, 0.70, 0.75, 0.80, 0.85, 0.90].map((v) => (
+                <option key={v} value={String(v)}>{Math.round(v * 100)}%</option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </fieldset>
 
       <label>
         <input

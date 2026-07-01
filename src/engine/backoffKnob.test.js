@@ -53,6 +53,54 @@ describe('backoffRpeDrop knob — lighter-only effect', () => {
   })
 })
 
+describe('backoffPct — user-set backoff weight as a fraction of the top set', () => {
+  const round = (x) => Math.round(x / 2.5) * 2.5
+  it('topSetBackoff: backoff weight = round(top × pct), top unchanged', () => {
+    const s0 = SCHEMES.topSetBackoff.expand(baseCtx()).sets
+    const s = SCHEMES.topSetBackoff.expand(baseCtx({ backoffPct: 0.8 })).sets
+    const top = topOf(s).weight
+    expect(topOf(s).weight).toBe(topOf(s0).weight)          // top untouched
+    expect(backoffsOf(s).every((x) => x.weight === round(top * 0.8))).toBe(true)
+  })
+  it('strengthHypertrophy + topSingleBackoff honor backoffPct', () => {
+    const sh = SCHEMES.strengthHypertrophy.expand(baseCtx({ backoffPct: 0.75 })).sets
+    const shTop = sh.find((x) => /탑/.test(x.label)).weight
+    expect(sh.find((x) => /백오프/.test(x.label)).weight).toBe(round(shTop * 0.75))
+    const ts = SCHEMES.topSingleBackoff.expand(baseCtx({ backoffPct: 0.7 })).sets
+    const tsTop = ts.find((x) => x.label === '탑싱글').weight
+    expect(backoffsOf(ts)[0].weight).toBe(round(tsTop * 0.7))
+  })
+  it('backoffPct null → identical to omitting it', () => {
+    for (const key of ['topSetBackoff', 'topSingleBackoff', 'strengthHypertrophy']) {
+      expect(SCHEMES[key].expand(baseCtx({ backoffPct: null }))).toEqual(SCHEMES[key].expand(baseCtx()))
+    }
+  })
+})
+
+describe('generate — per-lift backoffPct', () => {
+  const profile = {
+    years: 2, daysPerWeek: 4, fatigue: 2, mesoWeeks: 3, deloadEnabled: false,
+    lifts: { squat: { oneRM: 200 }, bench: { oneRM: 140 }, deadlift: { oneRM: 240 } },
+    qualities: { power: 0.1, strength: 0.7, hypertrophy: 0.2, endurance: 0 },
+  }
+  it('empty backoffPct → byte-identical to no override', () => {
+    expect(JSON.stringify(generate({ ...profile, backoffPct: {} }))).toBe(JSON.stringify(generate(profile)))
+  })
+  it('a lift with backoffPct set → its backoff sets are that fraction of the top', () => {
+    const plan = generate({ ...profile, backoffPct: { squat: 0.7 } })
+    for (const wk of plan.weeks) for (const s of wk.sessions) for (const e of s.exercises) {
+      if (e.baseLift !== 'squat') continue
+      const sets = e.scheme.sets
+      const top = sets.find((x) => /탑/.test(x.label ?? ''))
+      const backs = sets.filter((x) => /백오프/.test(x.label ?? ''))
+      if (top && backs.length) {
+        const expected = Math.round((top.weight * 0.7) / 2.5) * 2.5
+        expect(backs.every((b) => b.weight === expected)).toBe(true)
+      }
+    }
+  })
+})
+
 describe('backoffRpeDrop knob — chart-domain safety (fuzz)', () => {
   const profile = {
     years: 2, daysPerWeek: 4, fatigue: 2,
