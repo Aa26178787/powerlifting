@@ -40,6 +40,12 @@ jobs:
       - name: Copy web assets into the native project
         run: npx cap sync android
 
+      - name: Korean app name (launcher label)
+        run: node scripts/android-branding.mjs
+
+      - name: Generate app icons (adaptive + legacy)
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0f1720' --iconBackgroundColorDark '#0f1720'
+
       - name: Build debug APK
         run: |
           cd android
