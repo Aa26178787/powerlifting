@@ -645,7 +645,10 @@ describe('accessory deficit-fill gating ramp', () => {
     const ath = count(PRESETS.athletic)
     const pb = count(PRESETS.powerbuilding)
     const bb = count(PRESETS.bodybuilding)
-    expect(ath).toBe(pl)          // power-dominant stays SBD-lean
+    // power-dominant stays SBD-lean like PL (both un-bumped); the per-session
+    // pattern-dedup can differ by a couple of accessories between the two.
+    expect(Math.abs(ath - pl)).toBeLessThanOrEqual(2)
+    expect(ath).toBeLessThan(pb)  // lean, not deficit-bumped
     expect(pb).toBeGreaterThan(pl)
     expect(bb).toBeGreaterThan(pb) // full gradient
   })
@@ -659,7 +662,9 @@ describe('accessory deficit-fill gating ramp', () => {
     // every accessory at 3 sets the steering ledger is identical each week, so the
     // deterministic selection repeats across all 4 weeks. No same movement-family
     // twice in a session.
-    const wk = [['Cable Fly', 'Cable Pull-Through'], ['Cable Glute Kickback', 'Bulgarian Split Squat'], ['Cable Fly', 'Low-to-High Cable Fly'], ['Cable Glute Kickback', 'Bulgarian Split Squat']]
+    // 3rd session's 2nd chest fly (Low-to-High Cable Fly) is dropped by the per-session
+    // display pattern-dedup (both 밀기(가슴)) → that session shows a single accessory.
+    const wk = [['Cable Fly', 'Cable Pull-Through'], ['Cable Glute Kickback', 'Bulgarian Split Squat'], ['Cable Fly'], ['Cable Glute Kickback', 'Bulgarian Split Squat']]
     expect(names).toEqual([wk, wk, wk, wk])
   })
 
