@@ -14,7 +14,7 @@ import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
 import { expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
-import { patternOf, pickForPattern } from './movementPattern.js'
+import { patternOf, pickForPattern, displayPatternLabel } from './movementPattern.js'
 import { buildStreetWeek, placeStreetInSessions } from './streetLifting.js'
 
 // Accessories support hypertrophy by default; core/ab work trends to endurance.
@@ -350,7 +350,20 @@ export function generate(profile) {
         return result
       })
 
-      return { ...s, exercises: kept, accessories: accessoriesFinal, notes }
+      // Display polish: suppress a second accessory showing the SAME movement pattern
+      // in one session (e.g. two "밀기(어깨)" or two "수직 당기기") — keep the
+      // higher-priority one. Runs AFTER selection/steering/deficit so the volume
+      // engine is unchanged; only the shown list (and its reported ledger) is trimmed.
+      // No backfill: a session favours pattern diversity over raw accessory count.
+      const seenDisplayPatterns = new Set()
+      const accessoriesDeduped = accessoriesFinal.filter((a) => {
+        const p = displayPatternLabel(a)
+        if (seenDisplayPatterns.has(p)) return false
+        seenDisplayPatterns.add(p)
+        return true
+      })
+
+      return { ...s, exercises: kept, accessories: accessoriesDeduped, notes }
     })
 
     // ── Phase 4: per-muscle volume ledger (additive reporting field) ──────────
