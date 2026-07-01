@@ -12,7 +12,7 @@ import { bandForBlend, BANDS, PER_SESSION_CAP } from './volume.js'
 import { buildLayout } from './layoutGenerator.js'
 import { defaultFrequency, recommendedFrequency } from './frequency.js'
 import { phaseFor } from './periodizationModel.js'
-import { pickScheme, expandAccessory, SCHEMES } from './setSchemes.js'
+import { expandAccessory, SCHEMES } from './setSchemes.js'
 import { newLedger, addToLedger, summarize, PER_MUSCLE_BANDS } from './muscleVolume.js'
 import { patternOf, pickForPattern } from './movementPattern.js'
 import { buildStreetWeek, placeStreetInSessions } from './streetLifting.js'
@@ -53,17 +53,18 @@ export function deficitBaseWeight({ dom, n }) {
   return DEFICIT_FULL * ramp
 }
 
-function withAccessoryScheme(accessories, { weekIndex, advanced, phase, isDeload }) {
-  return accessories.map((a, i) => {
+function withAccessoryScheme(accessories, { isDeload }) {
+  // Readability: auto-selected accessories always use a plain STRAIGHT scheme
+  // (uniform "N세트 × M회 @RPE"). The special intensity techniques (rest-pause /
+  // drop-set / myo-reps) were confusing when mixed into the accessory list; they
+  // remain available per-exercise via the sets/reps editor (accessorySchemeOverrides).
+  return accessories.map((a) => {
     const quality = accessoryQuality(a)
-    const key = isDeload
-      ? 'straight'
-      : pickScheme({ quality, role: 'accessory', phase, advanced, weekIndex: weekIndex + i })
-    const expanded = expandAccessory(key, { quality, baseSets: isDeload ? 2 : 3 })
+    const expanded = expandAccessory('straight', { quality, baseSets: isDeload ? 2 : 3 })
     return {
       ...a,
       quality,
-      scheme: { type: key, evidenceTier: SCHEMES[key].evidenceTier, sets: expanded.sets, note: expanded.note },
+      scheme: { type: 'straight', evidenceTier: SCHEMES.straight.evidenceTier, sets: expanded.sets, note: expanded.note },
     }
   })
 }
@@ -310,12 +311,7 @@ export function generate(profile) {
       // accessory's ACTUAL realized set count (restPause=1, straight=3, myoReps=4,
       // deload-straight=2) rather than a flat estimate. Subsequent sessions in the
       // same week then see accurate accumulated load for deficit/overflow decisions.
-      const accessories = withAccessoryScheme(allRaw, {
-        weekIndex: wk.index - 1,
-        advanced,
-        phase,
-        isDeload: wk.isDeload,
-      })
+      const accessories = withAccessoryScheme(allRaw, { isDeload: wk.isDeload })
       const accessoriesTagged = goalBias >= 0
         ? accessories.map((a) => {
             const note = lengthenedNote(a)
