@@ -100,6 +100,7 @@ export function generate(profile) {
   const accessoryOverrides = profile.accessoryOverrides ?? {}   // per-body-part swap (RoutineView 변경 버튼)
   const accessorySchemeOverrides = profile.accessorySchemeOverrides ?? {}   // per-accessory sets/reps edit (by name)
   const backoffRpeDrop = Math.max(0, Math.min(2.5, profile.backoffRpeDrop ?? 0))   // user backoff knob (lighter-only)
+  const backoffPct = profile.backoffPct ?? {}   // per-lift backoff weight as a fraction of the top set (null = RPE-derived)
   const cueNeed = profile.cueNeed ?? {}
   const model = (!profile.periodizationModel || profile.periodizationModel === 'auto')
     ? 'adaptive'
@@ -147,7 +148,7 @@ export function generate(profile) {
     const absCap = PER_SESSION_CAP[priorityLift] ?? 6
     cappedSetsPerSession[priorityLift] = Math.max(1, Math.min(cappedSetsPerSession[priorityLift] + 1, absCap, Math.floor(mrv / sc)))
   }
-  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, backoffRpeDrop, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
+  const ctx = { e1rm, setsPerSession: cappedSetsPerSession, mrv, style, stickingPoint, stickingCause, equipment, advanced, regionStatus, blend, model, competition, variationOverride, excludedExercises, cueNeed, backoffRpeDrop, backoffPct, peaking, totalWeeks: mesoWeeks, years, volumeOverridden, volumeMode: fixed ? 'fixed' : 'rampFromFloor' }
 
   // Drive week assembly from planLayout: for ≤8 weeks this is one block (bit-identical
   // to the legacy path); for >8 weeks blocks of ≤BLOCK_LEN work weeks each get their

@@ -76,7 +76,7 @@ function buildExercise(slot, quality, ctx) {
   const seed = schemeSeed(slot.lift, slot.role)
   const key = pickScheme({ quality, role, phase, advanced: !!ctx.advanced, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, seed, concurrent, hypShare: 1 - ss })
   const scheme = SCHEMES[key]
-  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss, backoffRpeDrop: ctx.backoffRpeDrop ?? 0 })
+  const expanded = scheme.expand({ quality, e1rm: eff, zone: z, baseSets, weekIndex: ctx.phaseWeekIndex ?? ctx.weekIndex ?? 0, phase, totalWeeks: ctx.phaseTotalWeeks ?? ctx.totalWeeks ?? 3, heavyShare: ss, backoffRpeDrop: ctx.backoffRpeDrop ?? 0, backoffPct: ctx.backoffPct?.[slot.lift] ?? null })
   const clampedSets = clampSets(expanded.sets, ceiling)
   // Per-lift rep cap (deadlift ≤6): clamp any numeric reps over the cap and
   // recompute load at the SAME RPE (fewer reps → heavier) so intensity matches.

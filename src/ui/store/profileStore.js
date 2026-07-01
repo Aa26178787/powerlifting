@@ -35,6 +35,7 @@ export const DEFAULT_PROFILE = {
   accessoryOverrides: {},   // per-body-part swap: { canonicalMuscle: exerciseName } — replaces that part's accessory
   accessorySchemeOverrides: {},   // per-accessory sets/reps edit: { exerciseName: { sets, reps, rpe? } }
   backoffRpeDrop: 0,   // user knob: extra RPE drop on main-lift backoff sets (0 = default output; lighter-only, max 2.5)
+  backoffPct: { squat: null, bench: null, deadlift: null },   // per-lift backoff weight = fraction of top set (null = RPE-derived, current)
   variationOverride: { squat: null, bench: null, deadlift: null },
   cueNeed: { squat: null, bench: null, deadlift: null },
   units: 'kg',
@@ -217,6 +218,12 @@ export const useProfileStore = create(
         set((s) => ({ profile: { ...s.profile, cueNeed: { ...s.profile.cueNeed, [lift]: key } } })),
       setBackoffRpeDrop: (value) =>
         set((s) => ({ profile: { ...s.profile, backoffRpeDrop: Math.max(0, Math.min(2.5, Math.round(Number(value) * 2) / 2)) } })),
+      // Per-lift backoff weight as a % of the top set (null = auto/RPE-derived). Clamp 50–95%.
+      setBackoffPct: (lift, value) =>
+        set((s) => {
+          const v = value == null || value === '' ? null : Math.max(0.5, Math.min(0.95, Number(value)))
+          return { profile: { ...s.profile, backoffPct: { ...s.profile.backoffPct, [lift]: v } } }
+        }),
       // Per-accessory sets/reps edit. Clamps: sets[1,8], reps[3,30], rpe[5,10]|null (0.5 steps).
       setAccessoryScheme: (name, patch) =>
         set((s) => {
@@ -323,6 +330,7 @@ export const useProfileStore = create(
             variationOverride: { ...current.profile.variationOverride, ...(p.variationOverride || {}) },
             cueNeed: { ...current.profile.cueNeed, ...(p.cueNeed || {}) },
             backoffRpeDrop: p.backoffRpeDrop ?? current.profile.backoffRpeDrop,
+            backoffPct: { ...current.profile.backoffPct, ...(p.backoffPct || {}) },
             units: p.units ?? current.profile.units,
             accessoryPreference: p.accessoryPreference ?? current.profile.accessoryPreference,
             volumeOverride: {
