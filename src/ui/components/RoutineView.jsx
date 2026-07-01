@@ -11,7 +11,7 @@ import CheckinPanel from './CheckinPanel.jsx'
 import LiftLogRow from './LiftLogRow.jsx'
 import InsightsPanel from './InsightsPanel.jsx' // InsightsPanel (S3 Task 2)
 import OverloadBanner from './OverloadBanner.jsx' // Spec 4 Task 4
-import { PATTERNS, patternOf, exercisesForPattern } from '../../engine/movementPattern.js' // per-row accessory swap
+import { PATTERNS, patternOf, exercisesForPattern, displayPatternLabel } from '../../engine/movementPattern.js' // per-row accessory swap
 import { allEquipment } from '../../engine/exercises.js' // picker shows full catalog (override bypasses equip filter)
 
 // The manual swap picker lists the FULL catalog regardless of the user's selected
@@ -114,7 +114,7 @@ function AccessoryRow({ acc, onRegenerate, muscleSummary }) {
   return (
     <li className="accessory-row" data-quality={acc.quality}>
       <div className="acc-header">
-        <span className="acc-name">{exerciseName(acc.name)}</span>
+        <span className="acc-name" title={exerciseName(acc.name)}>{displayPatternLabel(acc)}</span>
         {acc.quality && <span className="badge q" data-quality={acc.quality}>{qualityLabel(acc.quality)}</span>}
         {scheme && <span className="badge scheme">{schemeLabel(scheme.type)}</span>}
         <span className="acc-feel">체감</span>

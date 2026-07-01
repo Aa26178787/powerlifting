@@ -25,7 +25,7 @@ const plan = {
         },
       ], accessories: [
         {
-          name: 'leg press', quality: 'hypertrophy',
+          name: 'leg press', quality: 'hypertrophy', primaryMuscle: 'quads',
           scheme: { type: 'restPause', evidenceTier: 'rct', sets: [{ reps: '10+4+3', rpe: 9, note: '15-20s 후 재개' }] },
         },
       ] },
@@ -74,9 +74,10 @@ describe('RoutineView', () => {
   it('renders per-set weight in exercise list', () => {
     const { container } = render(<RoutineView plan={plan} />)
     expect(screen.getByText(/162\.5/)).toBeInTheDocument()
-    // scope to the routine's accessory rows (AccessoryPicker also lists 레그 프레스)
+    // accessories now show their MOVEMENT PATTERN as the headline (quads → 스쿼트/무릎);
+    // the specific exercise name is on the row's title attribute.
     const accText = [...container.querySelectorAll('.accessory-row')].map((r) => r.textContent).join(' ')
-    expect(accText).toMatch(/레그 프레스/)
+    expect(accText).toMatch(/무릎/)
   })
   it('each accessory has a 변경 button; choosing 추천(자동) re-generates the routine', () => {
     const onRegenerate = vi.fn()
@@ -216,7 +217,7 @@ describe('RoutineView: Korean exercise name rendering', () => {
         }],
         accessories: [{
           name: 'Good Morning (narrow)',
-          quality: 'hypertrophy',
+          quality: 'hypertrophy', primaryMuscle: 'hamstrings/erectors',
           scheme: { type: 'straight', evidenceTier: 'rct', sets: [{ reps: 10, rpe: 7 }] },
         }],
       }] }],
@@ -224,9 +225,10 @@ describe('RoutineView: Korean exercise name rendering', () => {
     const { container } = render(<RoutineView plan={planWithDbName} />)
     // comp lift enum fallback still works
     expect(screen.getByText('프론트 스쿼트')).toBeInTheDocument()
-    // accessory with parenthetical qualifier — scope to the routine row (picker lists it too)
+    // accessory row now shows the movement pattern (hamstrings/erectors → 힌지 / 후면사슬);
+    // the exercise name lives on the title attribute (not rendered text).
     const accText = [...container.querySelectorAll('.accessory-row')].map((r) => r.textContent).join(' ')
-    expect(accText).toMatch(/굿모닝 \(내로우\)/)
+    expect(accText).toMatch(/힌지/)
     // no raw English in the rendered names
     expect(screen.queryByText('Front Squat')).not.toBeInTheDocument()
     expect(screen.queryByText('Good Morning (narrow)')).not.toBeInTheDocument()

@@ -460,18 +460,15 @@ describe('steering layer gating (test 9)', () => {
     }
   })
 
-  // ── steering ledger precision: actual scheme sets, not a flat estimate ──────
-  it('steering uses actual accessory set counts (restPause=1..myoReps=4), deterministic', () => {
+  // ── accessories use a uniform straight scheme (readability) + deterministic ──
+  it('auto accessories are all STRAIGHT (uniform display) and deterministic', () => {
     const hyp = { ...base, qualities: { power: 0, strength: 0.3, hypertrophy: 0.7, endurance: 0 } }
-    // Realized accessory schemes span multiple set counts — so a flat-3 estimate
-    // would mis-account headroom. Confirm the variance exists (non-trivial input).
     const plan = generate(hyp)
-    const setLens = new Set(
-      plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.accessories).map((a) => a.scheme.sets.length)
+    const types = new Set(
+      plan.weeks.flatMap((w) => w.sessions).flatMap((s) => s.accessories).map((a) => a.scheme.type)
     )
-    expect(setLens.size).toBeGreaterThan(1)        // not all 3 → estimate was lossy
-    expect(Math.max(...setLens)).toBeGreaterThan(3) // e.g. myoReps=4 (estimate under-counted)
-    // Reorder (scheme-before-ledger) must keep generation deterministic.
+    expect([...types]).toEqual(['straight'])       // no rest-pause/drop-set/myo-reps mixed in
+    // Deterministic across runs.
     const names = (p) => p.weeks.map((w) => w.sessions.map((s) => s.accessories.map((a) => a.name)))
     expect(names(generate(hyp))).toEqual(names(plan))
   })
@@ -658,15 +655,12 @@ describe('accessory deficit-fill gating ramp', () => {
   it('PL 4-week accessory names — deterministic golden, no same-family duplicates per session', () => {
     const pl = generate({ ...base, qualities: PRESETS.powerlifting })
     const names = pl.weeks.map(w => w.sessions.map(s => s.accessories.map(a => a.name)))
-    // Re-baselined after the +32 accessory catalog expansion: cable accessories
-    // (Cable Glute Kickback, Low-to-High Cable Fly) now enter the deterministic pool.
-    // Invariant preserved: no same movement-family twice in a session.
-    expect(names).toEqual([
-      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Cable Glute Kickback','Bulgarian Split Squat']],
-      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Cable Glute Kickback','Bulgarian Split Squat']],
-      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Bulgarian Split Squat','Good Morning (narrow)']],
-      [['Cable Fly','Cable Pull-Through'],['Cable Glute Kickback','Bulgarian Split Squat'],['Cable Fly','Low-to-High Cable Fly'],['Bulgarian Split Squat','Good Morning (narrow)']],
-    ])
+    // Re-baselined after accessories were made uniform STRAIGHT (readability): with
+    // every accessory at 3 sets the steering ledger is identical each week, so the
+    // deterministic selection repeats across all 4 weeks. No same movement-family
+    // twice in a session.
+    const wk = [['Cable Fly', 'Cable Pull-Through'], ['Cable Glute Kickback', 'Bulgarian Split Squat'], ['Cable Fly', 'Low-to-High Cable Fly'], ['Cable Glute Kickback', 'Bulgarian Split Squat']]
+    expect(names).toEqual([wk, wk, wk, wk])
   })
 
   // §4.4 — PB peaking taper: deficit-fill monotonically decreasing (RED: accumTotal=0 before patch)
