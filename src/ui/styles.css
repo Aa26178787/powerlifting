@@ -75,8 +75,11 @@ label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { display:
 .lift-log-backoff .backoff-target { color:var(--text-muted); }
 .lift-log-backoff .backoff-adjusted { color:var(--accent); font-weight:600; }
 .lift-log-advisory, .lift-log-e1rm-badge { margin-top:var(--s1); font-size:var(--f0); color:var(--text-muted); }
-.checkin-block { margin:var(--s3) 0; }
-.checkin-block > h5 { margin:0 0 var(--s1); font-size:var(--f1); }
+.checkin-block { margin:0 0 var(--s3); padding:var(--s2) var(--s3); background:var(--accent-weak); border:1px solid var(--border); border-radius:var(--r1); }
+.checkin-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:var(--s2) var(--s3); }
+.checkin-head h4 { margin:0; font-size:var(--f2); }
+.checkin-head h5 { margin:0; font-size:var(--f1); color:var(--text-muted); }
+.checkin-head .readiness-badge { margin-left:auto; }
 @media (max-width:560px){ .stepper-label { display:none; } .blend-row { grid-template-columns:60px 1fr 40px; } }
 .routine-view h2 { display:flex; align-items:baseline; flex-wrap:wrap; gap:var(--s3); }
 .week { background:transparent; border:none; padding:0; margin:var(--s5) 0; }
