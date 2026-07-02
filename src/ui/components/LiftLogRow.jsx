@@ -103,8 +103,8 @@ export default function LiftLogRow({ ex, week, day, units }) {
   }
 
   return (
-    <details className="lift-log-row">
-      <summary>수행 기록</summary>
+    <div className="lift-log-row open">
+      <div className="lift-log-title">수행 기록 (실제 수행 입력)</div>
       <div className="lift-log-inputs">
         <label>
           실제 무게 ({unitLabel(units)})
@@ -167,6 +167,6 @@ export default function LiftLogRow({ ex, week, day, units }) {
           추정 1RM {toDisplay(seed, units)}{unitLabel(units)} → {toDisplay(effectiveE1rm, units)}{unitLabel(units)} · 재생성 시 반영
         </div>
       )}
-    </details>
+    </div>
   )
 }

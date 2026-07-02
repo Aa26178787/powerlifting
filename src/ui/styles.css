@@ -64,6 +64,19 @@ label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { display:
 .checkin-regions label { justify-content:space-between; gap:var(--s1); white-space:nowrap; }
 .checkin-regions select { min-width:48px; }
 .checkin-apply { margin-top:var(--s2); }
+
+/* Always-open input areas (수행 기록 / 오늘 컨디션) — shown directly, no fold/expand */
+.lift-log-row.open { background:#fafbfc; border:1px solid var(--border); border-radius:var(--r1); padding:var(--s2) var(--s3); margin:var(--s2) 0; }
+.lift-log-title { font-size:var(--f1); font-weight:600; margin-bottom:var(--s2); color:var(--text); }
+.lift-log-inputs { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s3); align-items:flex-end; }
+.lift-log-inputs > label { display:flex; flex-direction:column; gap:2px; font-size:var(--f0); color:var(--text-muted); }
+.lift-log-inputs .lift-log-flag { flex-direction:row; align-items:center; }
+.lift-log-backoff { margin-top:var(--s2); font-size:var(--f1); }
+.lift-log-backoff .backoff-target { color:var(--text-muted); }
+.lift-log-backoff .backoff-adjusted { color:var(--accent); font-weight:600; }
+.lift-log-advisory, .lift-log-e1rm-badge { margin-top:var(--s1); font-size:var(--f0); color:var(--text-muted); }
+.checkin-block { margin:var(--s3) 0; }
+.checkin-block > h5 { margin:0 0 var(--s1); font-size:var(--f1); }
 @media (max-width:560px){ .stepper-label { display:none; } .blend-row { grid-template-columns:60px 1fr 40px; } }
 .routine-view h2 { display:flex; align-items:baseline; flex-wrap:wrap; gap:var(--s3); }
 .week { background:transparent; border:none; padding:0; margin:var(--s5) 0; }

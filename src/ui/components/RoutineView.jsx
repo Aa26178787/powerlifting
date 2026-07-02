@@ -329,8 +329,8 @@ export default function RoutineView({ plan, onRegenerate }) {
     return (
       <div key={s.day} className="session">
         <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
-        <details>
-          <summary>오늘 컨디션 반영</summary>
+        <div className="checkin-block">
+          <h5>오늘 컨디션 반영</h5>
           <CheckinPanel
             session={s}
             weekIndex={wk.index}
@@ -344,7 +344,7 @@ export default function RoutineView({ plan, onRegenerate }) {
               logCheckin({ week: wk.index, day: r.day, readiness: r.readiness })
             }}
           />
-        </details>
+        </div>
         {adjusted[key] && (
           <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
         )}
