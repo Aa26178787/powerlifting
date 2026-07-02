@@ -56,9 +56,11 @@ describe('LiftLogRow', () => {
 
   // ── render / summary ──────────────────────────────────────────────────────────
 
-  it('renders a <details> with 수행 기록 summary for a main lift', () => {
-    render(<LiftLogRow ex={makeEx()} week={1} day={1} units="kg" />)
+  it('renders the 수행 기록 input area openly (not collapsed) for a main lift', () => {
+    const { container } = render(<LiftLogRow ex={makeEx()} week={1} day={1} units="kg" />)
     expect(screen.getByText(/수행 기록/)).toBeInTheDocument()
+    expect(container.querySelector('summary')).toBeNull()          // no fold/expand
+    expect(container.querySelector('.lift-log-inputs')).toBeTruthy() // inputs directly visible
   })
 
   // ── prefill ───────────────────────────────────────────────────────────────────

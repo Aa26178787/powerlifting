@@ -184,18 +184,14 @@ describe('RoutineView', () => {
     expect(badges[0].textContent).toMatch(/%/)
   })
 
-  it('CheckinPanel is wrapped in a <details> element (collapsed by default)', () => {
+  it('CheckinPanel is shown openly (not collapsed behind a details)', () => {
     const { container } = render(<RoutineView plan={plan} />)
-    // the CheckinPanel details (not the AccessoryPicker details) — identify by its content
-    const details = [...container.querySelectorAll('details')].find((d) => /컨디션/.test(d.querySelector(':scope > summary')?.textContent ?? ''))
-    expect(details).toBeTruthy()
-    // no `open` attribute — collapsed by default
-    expect(details.hasAttribute('open')).toBe(false)
-    // summary text is visible
-    expect(details.querySelector('summary')).toBeTruthy()
-    expect(details.querySelector('summary').textContent).toMatch(/컨디션 반영/)
-    // CheckinPanel lives inside the details
-    expect(details.querySelector('.checkin-panel')).toBeTruthy()
+    const block = container.querySelector('.checkin-block')
+    expect(block).toBeTruthy()
+    expect(block.querySelector('h5')?.textContent).toMatch(/컨디션 반영/)
+    // the input panel is directly visible (no summary to click open)
+    expect(block.querySelector('.checkin-panel')).toBeTruthy()
+    expect(block.querySelector('summary')).toBeNull()
   })
 })
 
