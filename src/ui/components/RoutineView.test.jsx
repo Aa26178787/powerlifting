@@ -184,14 +184,16 @@ describe('RoutineView', () => {
     expect(badges[0].textContent).toMatch(/%/)
   })
 
-  it('CheckinPanel is shown openly (not collapsed behind a details)', () => {
+  it('CheckinPanel is a collapsible block (details/summary) at the session top', () => {
     const { container } = render(<RoutineView plan={plan} />)
-    const block = container.querySelector('.checkin-block')
+    const block = container.querySelector('details.checkin-block')
     expect(block).toBeTruthy()
-    expect(block.querySelector('h5')?.textContent).toMatch(/컨디션 반영/)
-    // the input panel is directly visible (no summary to click open)
+    const summary = block.querySelector('summary.checkin-head')
+    expect(summary).toBeTruthy()
+    expect(summary.textContent).toMatch(/컨디션 반영/)
+    // the panel is inside (togglable); day label lives in the summary
     expect(block.querySelector('.checkin-panel')).toBeTruthy()
-    expect(block.querySelector('summary')).toBeNull()
+    expect(summary.querySelector('.session-day')).toBeTruthy()
   })
 })
 
