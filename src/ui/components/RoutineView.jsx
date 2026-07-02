@@ -352,13 +352,14 @@ export default function RoutineView({ plan, onRegenerate }) {
           />
         </details>
         <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
+        {/* Street lifts (integrated) appear right after the MAIN lifts, before accessories */}
+        {(s.street ?? []).length > 0 && <StreetSection street={s.street} units={units} />}
         {(view.accessories ?? []).length > 0 && (
           <div className="accessories">
             <h5>보조운동</h5>
             <ul>{view.accessories.map((a, i) => <AccessoryRow key={i} acc={a} onRegenerate={onRegenerate} muscleSummary={wk.muscleVolume} />)}</ul>
           </div>
         )}
-        {(s.street ?? []).length > 0 && <StreetSection street={s.street} units={units} />}
         {view.notes && view.notes.length > 0 && (
           <p className="notes">⚠️ {view.notes.join(' · ')}</p>
         )}
