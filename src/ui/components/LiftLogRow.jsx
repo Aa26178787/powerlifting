@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { MAIN_LIFTS } from '../../engine/exercises.js'
 import { effectiveLiftE1rm, liftEntries } from '../../engine/loadFeedback.js'
 import { loadAdjustment } from '../../engine/autoreg.js'
+import { adjustedBackoff } from '../../engine/backoffAutoreg.js'
 import { resolveE1rm } from '../../engine/generate.js'
 import { toDisplay, fromInput, unitLabel } from '../lib/units.js'
 import { useProfileStore } from '../store/profileStore.js'
@@ -31,6 +32,15 @@ export default function LiftLogRow({ ex, week, day, units }) {
     : null
   const topKg = topSet?.weight ?? null
 
+  // Backoff sets of this scheme (topSetBackoff / strengthHypertrophy / topSingleBackoff).
+  // Target backoff RPE = the ramp END (max), reps = the backoff set's reps.
+  const backoffSets = sets.filter((s) => s.label?.includes('백오프'))
+  const backoffReps = backoffSets[0]?.reps
+  const backoffTargetRpe = backoffSets.length
+    ? Math.max(...backoffSets.map((s) => s.rpe ?? 0))
+    : null
+  const hasBackoff = backoffSets.length > 0 && Number.isFinite(Number(backoffReps)) && Number.isFinite(backoffTargetRpe)
+
   // All hooks unconditionally — guard comes *after*.
   const [actualWeight, setActualWeight] = useState(toDisplay(topKg, units, false))
   const [actualReps,   setActualReps]   = useState(topSet?.reps ?? '')
@@ -52,6 +62,18 @@ export default function LiftLogRow({ ex, week, day, units }) {
     const adjActualRpe = rpeRef - clampedDelta * 0.5        // back-converted for loadAdjustment API
     advisoryKg = loadAdjustment(rpeRef, adjActualRpe, topKg)
   }
+
+  // --- Top-set-anchored backoff (within-session) ---
+  // Uses the ACTUAL top-set performance the lifter enters (weight/reps/RPE) to
+  // estimate today's 1RM, then loads the prescribed backoff off THAT — so a heavy
+  // day (high actual RPE) or a stale entered 1RM auto-corrects the backoff down.
+  const adjBackoff = hasBackoff
+    ? adjustedBackoff({
+        topWeight: fromInput(actualWeight, units),
+        actualReps, actualRpe,
+        backoffReps, backoffRpe: backoffTargetRpe,
+      })
+    : null
 
   // --- Tier B badge (display-only) ---
   // Show only when there are logged entries for this lift; otherwise badge is trivial.
@@ -124,6 +146,17 @@ export default function LiftLogRow({ ex, week, day, units }) {
           기록
         </button>
       </div>
+      {hasBackoff && (
+        <div className="lift-log-backoff">
+          <div className="backoff-target">탑 목표: {topSet.reps}회 @RPE {rpeRef ?? topSet.rpe}</div>
+          {adjBackoff && (
+            <div className="backoff-adjusted">
+              실제 수행 기준 백오프: <strong>{toDisplay(adjBackoff.backoffWeight, units)}{unitLabel(units)}</strong>
+              {' '}({backoffReps}회 @RPE {backoffTargetRpe}) · 오늘 추정 1RM {toDisplay(adjBackoff.todayE1rm, units)}{unitLabel(units)}
+            </div>
+          )}
+        </div>
+      )}
       {showAdvisory && advisoryKg != null && (
         <div className="lift-log-advisory">
           다음 세션 권장 탑: {toDisplay(advisoryKg, units)}{unitLabel(units)}
