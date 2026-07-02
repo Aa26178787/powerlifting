@@ -328,9 +328,15 @@ export default function RoutineView({ plan, onRegenerate }) {
     const view = adjusted[key]?.session ?? s
     return (
       <div key={s.day} className="session">
-        <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
+        {/* One condition check-in per session, pinned at the very top (day + 컨디션) */}
         <div className="checkin-block">
-          <h5>오늘 컨디션 반영</h5>
+          <div className="checkin-head">
+            <h4>{sessionDayLabel(s.day, profile.trainingDays ?? [])}</h4>
+            <h5>오늘 컨디션 반영</h5>
+            {adjusted[key] && (
+              <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
+            )}
+          </div>
           <CheckinPanel
             session={s}
             weekIndex={wk.index}
@@ -345,9 +351,6 @@ export default function RoutineView({ plan, onRegenerate }) {
             }}
           />
         </div>
-        {adjusted[key] && (
-          <span className="readiness-badge">오늘 readiness {Math.round(adjusted[key].readiness * 100)}%</span>
-        )}
         <ul>{view.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} units={units} week={wk.index} day={s.day} />)}</ul>
         {(view.accessories ?? []).length > 0 && (
           <div className="accessories">
