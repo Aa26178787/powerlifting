@@ -81,6 +81,45 @@ const SEED_LOGS = [
 ];
 
 const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
+const MAIN_LIFTS = ["스쿼트", "벤치", "데드"];
+
+/* ───────── 신호1: AMRAP 초과렙 → 인상폭 배율 (3대 전용, 완전 자동) ───────── */
+const AMRAP_TARGET = {
+  "1주": { 스쿼트: 12, 벤치: 12, 데드: 5 },
+  "2주": { 스쿼트: 8, 벤치: 8, 데드: 5 },
+  "3주": { 스쿼트: 5, 벤치: 5, 데드: 5 },
+};
+const amrapMultiplier = (excess) => {
+  if (excess >= 4) return 2;
+  if (excess >= 2) return 1;
+  if (excess >= 0) return 0.5;
+  return 0;
+};
+// 해당 사이클의 실현 배율 — 3주(86.5%)>2주>1주 순으로 가장 최근 기록된 AMRAP 세트 사용, 기록 없으면 null(판단 불가 → 기본 배율 1 적용)
+const cycleAmrapMultiplier = (lift, cyc, logs) => {
+  for (const wkKey of ["3주", "2주", "1주"]) {
+    const log = logs.find((l) => l.lift === lift && l.cyc === String(cyc) && l.wk === wkKey && l.setIdx === 2);
+    if (log) return amrapMultiplier(log.reps - AMRAP_TARGET[wkKey][lift]);
+  }
+  return null;
+};
+
+/* ───────── 신호2: 3주차 고정렙 세트 RPE 여유 → TM 재산정 권장 플래그 (알림 전용, 자동 미적용) ───────── */
+const PRESCRIBED_RPE_W3 = 8;
+const signal2Flag = (lift, logs) => {
+  const candidates = logs.filter((l) => l.lift === lift && l.wk === "3주" && (l.setIdx === 0 || l.setIdx === 1));
+  if (!candidates.length) return null;
+  const maxCyc = Math.max(...candidates.map((l) => Number(l.cyc)));
+  const rows = candidates.filter((l) => Number(l.cyc) === maxCyc && l.rpe !== "" && l.rpe != null);
+  if (!rows.length) return null;
+  let flagOn = false, freeze = false;
+  for (const l of rows) {
+    const diff = PRESCRIBED_RPE_W3 - Number(l.rpe);
+    if (diff >= 1.5) flagOn = true;
+    if (diff <= 0) freeze = true;
+  }
+  return { cyc: maxCyc, flagOn, freeze };
+};
 const PLATE = {
   1: { c: "#C9463D", label: "볼륨" }, // 25kg 빨강
   2: { c: "#3B6FB5", label: "브릿지" }, // 20kg 파랑
@@ -148,10 +187,24 @@ function App() {
       const e = e1rm(Number(v.w), Number(v.reps), v.rpe === "" ? "" : Number(v.rpe));
       const auto = e ? Math.round(e * 0.9 * 10) / 10 : null;
       const base = v.manual !== "" && v.manual != null ? Number(v.manual) : auto;
-      out[k] = { e, auto, applied: base != null ? base + (cycle - 1) * Number(v.inc || 0) : null };
+      let applied = null;
+      if (base != null) {
+        if (MAIN_LIFTS.includes(k)) {
+          // 신호1(AMRAP 초과렙 배율)만 반영 — 사이클마다 실현된 인상폭을 base부터 누적
+          const baseCycle = v.baseCycle || 1;
+          applied = base;
+          for (let c = baseCycle; c < cycle; c++) {
+            const mult = cycleAmrapMultiplier(k, c, logs);
+            applied += Number(v.inc || 0) * (mult == null ? 1 : mult);
+          }
+        } else {
+          applied = base + (cycle - 1) * Number(v.inc || 0); // 중딥·중량풀업은 기존 방식 그대로
+        }
+      }
+      out[k] = { e, auto, applied };
     }
     return out;
-  }, [S, cycle]);
+  }, [S, cycle, logs]);
 
   const tm = (k) => TM[k]?.applied;
 
@@ -685,7 +738,11 @@ function LogTab({ logs, save, cycle, week, S }) {
 
 /* ───────── 설정 탭 ───────── */
 function Settings({ S, save, TM, cycle, logs }) {
-  const upd = (k, field, val) => save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], [field]: val } } });
+  const upd = (k, field, val) => {
+    const patch = { ...S.lifts[k], [field]: val };
+    if (field === "manual" && val !== "") patch.baseCycle = cycle; // 수동TM 수정 = 지금부터 재기준 (과거 인상폭 이중 반영 방지)
+    save({ ...S, lifts: { ...S.lifts, [k]: patch } });
+  };
 
   return (
     <div style={{ padding: "6px 16px" }}>
@@ -699,6 +756,25 @@ function Settings({ S, save, TM, cycle, logs }) {
               {"  ·  적용 TM "}<b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(TM[k].applied)}</b>
             </div>
           </div>
+          {MAIN_LIFTS.includes(k) && (() => {
+            const mult = cycleAmrapMultiplier(k, cycle, logs);
+            const previewInc = Number(v.inc || 0) * (mult == null ? 1 : mult);
+            const flag = signal2Flag(k, logs);
+            return (
+              <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>
+                다음 사이클 인상폭 예상: <b style={{ color: "#ECEDEF" }}>+{fmt(previewInc)}kg</b>
+                {mult == null ? " (AMRAP 기록 없음 · 기본 배율 적용)" : ` (배율 ${mult}×)`}
+                {flag?.flagOn && (
+                  <div style={{ color: "#D8A62A", fontWeight: 700, marginTop: 3 }}>
+                    ⚠ TM 재산정 권장 — {flag.cyc}사이클 3주차 RPE 여유 큼 (수동TM 직접 수정 시 반영)
+                  </div>
+                )}
+                {flag && !flag.flagOn && flag.freeze && (
+                  <div style={{ color: "#8B909A", marginTop: 3 }}>동결/보수적 검토 대상 ({flag.cyc}사이클 3주차)</div>
+                )}
+              </div>
+            );
+          })()}
           <div style={{ display: "flex", gap: 6 }}>
             {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동TM"], ["inc", "인상폭"]].map(([f, l]) => (
               <div key={f} style={{ flex: 1 }}>
@@ -726,7 +802,7 @@ function Settings({ S, save, TM, cycle, logs }) {
           <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>대회일 (예상)</div>
           <input type="date" value={S.compDate || ""} onChange={(e) => save({ ...S, compDate: e.target.value })} style={inputStyle} />
         </div>
-        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>적용 TM은 사이클마다 인상폭만큼 자동 상승 · AMRAP 부진 시 인상폭 0으로 동결</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대(스쿼트·벤치·데드): AMRAP 초과렙에 따라 인상폭 배율(0~2×) 자동 반영 · "TM 재산정 권장" 뜨면 수동TM을 직접 눌러 갱신해야 실제 반영(자동 변경 안 됨)</div>
         <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중딥·중량 풀업 인상폭은 실측 데이터가 적어 추정값(딥 2.5/풀업 1.25) — 사이클 지날수록 실제 속도로 조정하세요</div>
       </Card>
 
