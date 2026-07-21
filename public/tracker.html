@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>파워리프팅 4주 사이클 트래커</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  html, body { margin:0; padding:0; background:#141519; }
+  #root { min-height:100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+
+/* ───────── Firebase (기기 간 동기화) ───────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyDgrV_uAxNq-RSwzlWPVjoABh8teG1VjO8",
+  authDomain: "powerlifting-dc801.firebaseapp.com",
+  projectId: "powerlifting-dc801",
+  storageBucket: "powerlifting-dc801.firebasestorage.app",
+  messagingSenderId: "236514787587",
+  appId: "1:236514787587:web:ca0111bc685ef33b622936",
+  measurementId: "G-ELEYW5C71S",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection("powerlifting").doc("main");
+
+/* ───────── 계산 유틸 ───────── */
+const r25 = (x) => Math.ceil((x - 1.25 - 1e-9) / 2.5) * 2.5; // 2.5kg 반올림(경계 내림)
+const KG2LB = 2.2046226218;
+const KG25_IN_LB = Math.round(2.5 * KG2LB); // 2.5kg ≈ 6lb (10/25/45lb만 있어 5lb 불가, 마이크로 kg원판으로 보충)
+const r5 = (x) => Math.round(x / 5) * 5; // 5lb 반올림
+const toDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const e1rm = (w, reps, rpe) => {
+  if (!w || !reps) return null;
+  const rr = rpe === "" || rpe == null ? 10 : Number(rpe);
+  return Math.round(w * (1 + (Number(reps) + (10 - rr)) / 30) * 10) / 10;
+};
+const fmt = (x) => (x == null || isNaN(x) ? "—" : Number(x) % 1 === 0 ? String(x) : x.toFixed(1));
+const withCount = (rep) => {
+  if (typeof rep !== "string") return rep;
+  if (rep.includes("초")) return rep;
+  const m = rep.match(/^(\d+(?:~\d+)?\+?)/);
+  if (!m) return rep;
+  return rep.slice(0, m[0].length) + "회" + rep.slice(m[0].length);
+};
+
+/* ───────── 기본 데이터 ───────── */
+const DEFAULT_SETTINGS = {
+  startDate: "2026-07-06",
+  bodyweight: 67.5,
+  compDate: "2026-12-12", // 대회일(가장 이른 후보로 보수적 설정)
+  lifts: {
+    스쿼트: { w: 142.5, reps: 2, rpe: 9, manual: 140, inc: 5 },
+    벤치: { w: 80, reps: 12, rpe: 9, manual: 106.5, inc: 2.5 },
+    데드: { w: 185, reps: 1, rpe: 9, manual: 175, inc: 5 },
+    중딥: { w: 41, reps: 3, rpe: 8.5, manual: "", inc: 2.5 }, // 사이클당 추정 증량(실측 기반 조정 가능)
+    "중량 풀업": { w: 17.5, reps: 3, rpe: 8, manual: "", inc: 1.25 }, // 사이클당 추정 증량(실측 기반 조정 가능)
+  },
+  singles: { 스쿼트: "", 벤치: "", 데드: "" }, // 3주차 싱글 기입 (빈칸=자동)
+};
+
+const SEED_LOGS = [
+  { id: 1, cyc: "0", wk: "-", lift: "스쿼트", w: 142.5, reps: 2, rpe: 9, memo: "전환주 테스트" },
+  { id: 2, cyc: "0", wk: "1주", lift: "벤치", w: 80, reps: 12, rpe: 9, memo: "통과 +1렙, TM 검증" },
+  { id: 3, cyc: "0", wk: "-", lift: "중딥", w: 41, reps: 3, rpe: 8.5, memo: "90lbs 3×3 탑" },
+  { id: 4, cyc: "0", wk: "-", lift: "중량 풀업", w: 17.5, reps: 3, rpe: 8, memo: "탑 테스트, 백오프 10×8×3" },
+  { id: 5, cyc: "0", wk: "1주", lift: "데드", w: 130, reps: 8, rpe: 8.5, memo: "캡 준수, 하단 약점 체감" },
+  { id: 6, cyc: "1", wk: "2주", lift: "스쿼트", w: 115, reps: 8, rpe: 8, memo: "바 스피드 여유 큼 (실질 RPE 6~7 추정)" },
+  { id: 7, cyc: "1", wk: "2주", lift: "벤치", w: 87.5, reps: 8, rpe: "", memo: "첫 시도 5회 후 재시도 성공" },
+  { id: 8, cyc: "1", wk: "2주", lift: "데드", w: 145, reps: 6, rpe: 8.75, memo: "캡6 도달, 하단 약점" },
+  { id: 9, cyc: "1", wk: "2주", lift: "중딥", w: 41, reps: 3, rpe: "", memo: "90lbs 탑 + 백오프 45lbs 3×8" },
+];
+
+const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
+const PLATE = {
+  1: { c: "#C9463D", label: "볼륨" }, // 25kg 빨강
+  2: { c: "#3B6FB5", label: "브릿지" }, // 20kg 파랑
+  3: { c: "#D8A62A", label: "고강도" }, // 15kg 노랑
+  4: { c: "#6E7480", label: "디로드" }, // 회색
+};
+
+/* ───────── 메인 ───────── */
+function App() {
+  const [tab, setTab] = useState("today");
+  const [S, setS] = useState(DEFAULT_SETTINGS);
+  const [logs, setLogs] = useState(SEED_LOGS);
+  const [ready, setReady] = useState(false);
+  const [viewWeek, setViewWeek] = useState(null);
+
+  useEffect(() => {
+    // 로컬 캐시 먼저 표시(오프라인 대비) → 이후 Firestore 실시간 값으로 덮어씀
+    try {
+      const s = localStorage.getItem("pl:settings");
+      if (s) setS(JSON.parse(s));
+    } catch (e) {}
+    try {
+      const l = localStorage.getItem("pl:logs");
+      if (l) setLogs(JSON.parse(l));
+    } catch (e) {}
+
+    const unsub = docRef.onSnapshot(
+      (snap) => {
+        const data = snap.data();
+        if (data?.settings) setS(data.settings);
+        if (data?.logs) setLogs(data.logs);
+        setReady(true);
+      },
+      () => setReady(true) // 오프라인 등 에러 시 로컬 캐시로 계속 진행
+    );
+    return () => unsub();
+  }, []);
+
+  const save = (ns, nl) => {
+    if (ns) setS(ns);
+    if (nl) setLogs(nl);
+    const payload = {};
+    if (ns) payload.settings = ns;
+    if (nl) payload.logs = nl;
+    docRef.set(payload, { merge: true }).catch(() => {});
+    try {
+      if (ns) localStorage.setItem("pl:settings", JSON.stringify(ns));
+      if (nl) localStorage.setItem("pl:logs", JSON.stringify(nl));
+    } catch (e) {}
+  };
+
+  /* 사이클 위치 */
+  const now = new Date();
+  const start = new Date(S.startDate + "T00:00:00");
+  const dayDiff = Math.floor((now - start) / 86400000);
+  const cycle = Math.max(1, Math.floor(dayDiff / 28) + 1);
+  const week = Math.min(4, Math.max(1, Math.floor((((dayDiff % 28) + 28) % 28) / 7) + 1));
+  const dow = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
+  const wk = viewWeek ?? week;
+
+  /* TM 계산 */
+  const TM = useMemo(() => {
+    const out = {};
+    for (const [k, v] of Object.entries(S.lifts)) {
+      const e = e1rm(Number(v.w), Number(v.reps), v.rpe === "" ? "" : Number(v.rpe));
+      const auto = e ? Math.round(e * 0.9 * 10) / 10 : null;
+      const base = v.manual !== "" && v.manual != null ? Number(v.manual) : auto;
+      out[k] = { e, auto, applied: base != null ? base + (cycle - 1) * Number(v.inc || 0) : null };
+    }
+    return out;
+  }, [S, cycle]);
+
+  const tm = (k) => TM[k]?.applied;
+
+  /* 중딥/중량 풀업 파생 무게 */
+  const dipTM_lb = tm("중딥") != null ? tm("중딥") * KG2LB : null;
+  const dipBaseLb = dipTM_lb != null ? r5(dipTM_lb * 0.95) : null; // lb 베이스, 사이클 내내 고정
+  const dBoff = (t) => (t != null ? r5(t * 0.5) : null); // 실측 90→45 = 50% 비율
+  const pullTop1 = tm("중량 풀업") ? r25(tm("중량 풀업") * 0.95) : null;
+  const pullTop2 = pullTop1 != null ? pullTop1 + 2.5 : null;
+  const boff = (t) => (t != null ? Math.max(0, r25(t * 0.525)) : null);
+
+  /* 3주차 싱글 (기입 없으면 92.5% 자동) */
+  const single = (k) => {
+    const man = S.singles?.[k];
+    if (man !== "" && man != null && !isNaN(Number(man))) return Number(man);
+    return tm(k) ? r25(tm(k) * 0.925) : null;
+  };
+
+  /* 주차별 세션 구성 */
+  const weekPlan = (w) => {
+    const P = { 1: [0.6, 0.7, 0.75], 2: [0.675, 0.75, 0.825] }[w];
+    const R = {
+      1: { 스쿼트: ["8", "8", "12+"], 벤치: ["8", "10", "12+"], 데드: ["5", "5", "5+ 캡7"] },
+      2: { 스쿼트: ["5", "5", "8+"], 벤치: ["5", "6", "8+"], 데드: ["4", "4", "5+ 캡6"] },
+    }[w];
+    const main = (lift) => {
+      const nm = lift === "벤치" ? (w >= 3 ? "벤치 · Comp(정지)" : "벤치 · 터치앤고") : lift;
+      return w <= 2
+        ? { name: nm, logName: lift, sets: "각 1세트", detail: P.map((p, i) => ({ pct: `${p * 100}%`, kg: r25(tm(lift) * p), rep: R[lift][i] })) }
+        : w === 3
+        ? {
+            name: nm, logName: lift, sets: "각 1세트", single: true,
+            detail: [
+              { pct: "기입", kg: single(lift), rep: "1 @RPE8" },
+              { pct: "92%", kg: single(lift) ? r25(single(lift) * 0.92) : null, rep: "3" },
+              { pct: "86.5%", kg: single(lift) ? r25(single(lift) * 0.865) : null, rep: "5+" },
+            ],
+          }
+        : { name: nm, logName: lift, sets: "2세트", detail: [{ pct: "75%", kg: r25(tm(lift) * 0.75), rep: "3 (RPE≤7)" }] };
+    };
+
+    const dipAdd = w >= 2 ? 2.5 : 0; // 2주차부터 마이크로 원판 +2.5kg 표시
+    const dTop = w === 1 || w === 2 ? { kg: dipBaseLb, add: dipAdd, rep: "3 ≤RPE8" } : null;
+    const pTop = w === 1 ? { kg: pullTop1, rep: "3 ≤RPE8" } : w === 2 ? { kg: pullTop2, rep: "3 ≤RPE8" } : null;
+    const dB = dBoff(dipBaseLb);
+    const pB = boff(w >= 2 ? pullTop2 : pullTop1);
+    const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
+
+    if (w === 4)
+      return [
+        { day: "월", items: [main("스쿼트")] },
+        { day: "화", items: [main("벤치"), acc("중딥 백오프", dB, "8~12", "1세트", "lb", dipAdd)] },
+        { day: "수", items: [main("데드"), acc("중량 풀업 백오프", pB, "8~12", "1세트")] },
+        { day: "목", items: [{ name: "변형 전부 반토막 또는 휴무", note: true }] },
+        { day: "금", items: [{ name: "가볍게 또는 휴무", note: true }] },
+      ];
+
+    return [
+      { day: "월", items: [main("스쿼트"), acc("스포토 프레스", r25(tm("벤치") * 0.68), "8", "3세트"), acc("숄더프레스 머신", null, "10~12", "4세트"), acc("템포 딥 3-1-1", "맨몸", "6~8 ≤RPE7", "2세트"), acc("펙덱 플라이(가슴)", null, "12~15", "3세트"), acc("시티드 로우 머신", null, "8~12", "4세트"), acc("플랭크/앱휠 코어", null, "30~60초", "3세트")] },
+      {
+        day: "화",
+        items: [
+          main("벤치"),
+          w === 3
+            ? acc("중딥 백오프", dB, "8~12 (탑 생략)", "4세트", "lb", dipAdd)
+            : { name: "중딥", logName: "중딥", acc: true, sets: "탑1+백3", unit: "lb", detail: [{ pct: "95%", kg: dTop.kg, rep: dTop.rep, add: dTop.add }, { pct: "50%", kg: dB, rep: "8~12 ×3", add: dipAdd }] },
+          acc("오버헤드 익스텐션", null, "12~15", "4세트"),
+          acc("사이드 레터럴", null, "15~20", "4세트"),
+          acc("바벨/EZ바 컬", null, "8~12", "4세트"),
+        ],
+      },
+      { day: "수", items: [main("데드"), acc("힙 쓰러스트", null, "8~12", "4세트"), acc("중량 풀업 백오프", pB, "8~12", "3세트"), acc("리버스 펙덱(후면삼각근)", null, "15~20", "4세트"), acc("해머 컬", null, "10~12", "4세트")] },
+      { day: "목", items: [acc("정지 스쿼트", r25(tm("스쿼트") * 0.72), "6", "3세트"), acc("레그 익스텐션", null, "12~15", "4세트"), acc("클로즈그립 벤치", 65, "8", "3세트"), acc("중딥 백오프", dB, "8~12", "4세트", "lb", dipAdd), acc("프론트 레이즈", null, "12~15", "4세트"), acc("페이스풀", null, "15~20", "4세트")] },
+      {
+        day: "금",
+        items: [
+          acc("데피싯 데드 ⇄ RDL", r25(tm("데드") * 0.6), "5 풀ROM (RDL주: 100×8)", "3세트"),
+          acc("라잉 레그컬", null, "10~12", "4세트"),
+          acc("백 익스텐션", null, "12~15", "4세트"),
+          w === 3
+            ? acc("중량 풀업 백오프", pB, "8~12 (탑 생략)", "3세트")
+            : { name: "중량 풀업", logName: "중량 풀업", acc: true, sets: "탑1+백2", detail: [{ pct: "95%", kg: pTop.kg, rep: pTop.rep }, { pct: "52.5%", kg: pB, rep: "8~12 ×2" }] },
+          acc("컨센트레이션 컬", null, "10~12", "4세트"),
+          acc("케이블 푸시다운(삼두)", null, "12~15", "3세트"),
+        ],
+      },
+    ];
+  };
+
+  const plan = useMemo(() => weekPlan(wk), [wk, S, cycle]);
+  const todayItems = plan.find((d) => d.day === dow);
+  const pc = PLATE[wk];
+
+  if (!ready)
+    return <div style={{ background: "#141519", minHeight: "100vh", color: "#8B909A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, sans-serif" }}>불러오는 중…</div>;
+
+  return (
+    <div style={{ background: "#141519", minHeight: "100vh", color: "#ECEDEF", fontFamily: "system-ui, -apple-system, 'Malgun Gothic', sans-serif", paddingBottom: 76 }}>
+      <style>{`
+        *{box-sizing:border-box} input,select{outline:none}
+        input:focus,select:focus{border-color:#D8A62A !important}
+        ::placeholder{color:#4E525C}
+      `}</style>
+
+      {/* 헤더 */}
+      <div style={{ padding: "18px 18px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: "#8B909A", fontWeight: 500 }}>4주 사이클 프로그램</div>
+          <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: 0.5 }}>
+            {cycle}<span style={{ fontSize: 15, color: "#8B909A", fontWeight: 500 }}>사이클</span>{" "}
+            <span style={{ color: pcColor(week) }}>{week}</span><span style={{ fontSize: 15, color: "#8B909A", fontWeight: 500 }}>주차</span>
+          </div>
+        </div>
+        {/* 원판 주차 표시 (시그니처) */}
+        <div style={{ display: "flex", gap: 5 }}>
+          {[1, 2, 3, 4].map((w) => (
+            <div key={w} onClick={() => { setViewWeek(w); setTab("cycle"); }}
+              style={{ width: 26, height: 26, borderRadius: "50%", background: PLATE[w].c, opacity: w === week ? 1 : 0.28, border: "3px solid #141519", boxShadow: w === week ? `0 0 0 2px ${PLATE[w].c}` : "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, color: "#141519", cursor: "pointer" }}>
+              {w}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {tab === "today" && <Today dow={dow} items={todayItems} week={week} logs={logs} save={save} S={S} cycle={cycle} weekPlan={weekPlan} />}
+      {tab === "cycle" && <Cycle plan={plan} wk={wk} setViewWeek={setViewWeek} S={S} save={save} single={single} />}
+      {tab === "log" && <LogTab logs={logs} save={save} cycle={cycle} week={week} S={S} />}
+      {tab === "set" && <Settings S={S} save={save} TM={TM} cycle={cycle} logs={logs} />}
+      {tab === "proj" && <Projection S={S} TM={TM} cycle={cycle} week={week} />}
+
+      {/* 하단 탭 */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#1B1D22", borderTop: "1px solid #2A2D34", display: "flex", zIndex: 50 }}>
+        {[["today", "오늘"], ["cycle", "사이클"], ["log", "기록"], ["proj", "예측"], ["set", "설정"]].map(([k, l]) => (
+          <button key={k} onClick={() => { setTab(k); if (k === "cycle") setViewWeek(null); }}
+            style={{ flex: 1, padding: "13px 0 15px", background: "none", border: "none", color: tab === k ? "#ECEDEF" : "#5B5F69", fontWeight: tab === k ? 700 : 500, fontSize: 13, fontFamily: "inherit", borderTop: tab === k ? "2px solid #D8A62A" : "2px solid transparent", cursor: "pointer" }}>
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const pcColor = (w) => PLATE[w].c;
+
+/* ───────── 오늘 탭 ───────── */
+function Today({ dow, items, week, logs, save, S, cycle, weekPlan }) {
+  const rest = !items;
+  const todayStr = toDateStr(new Date());
+  const [selDate, setSelDate] = useState(todayStr);
+  const isToday = selDate === todayStr;
+
+  // 이번 사이클 28일(1~4주차) 전체를 스크롤로 노출 — 지난 세션 수정 + 앞으로의 루틴(4주차까지) 미리보기
+  const cycleStart = new Date(S.startDate + "T00:00:00");
+  cycleStart.setDate(cycleStart.getDate() + (cycle - 1) * 28);
+  const dateList = Array.from({ length: 28 }, (_, i) => {
+    const d = new Date(cycleStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const WD = ["일", "월", "화", "수", "목", "금", "토"];
+  const logsByDate = (ds) => logs.filter((l) => l.date === ds);
+  const todayBtnRef = React.useRef(null);
+  useEffect(() => {
+    todayBtnRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, []);
+
+  // 선택 날짜(과거)의 예정 루틴 역산 — 같은 사이클/주차 로직으로 계산
+  const selPlanned = (() => {
+    if (isToday) return null;
+    const d = new Date(selDate + "T00:00:00");
+    const start = new Date(S.startDate + "T00:00:00");
+    const dayDiff = Math.floor((d - start) / 86400000);
+    if (dayDiff < 0) return { none: true };
+    const dCycle = Math.floor(dayDiff / 28) + 1;
+    const dWeek = Math.min(4, Math.floor((((dayDiff % 28) + 28) % 28) / 7) + 1);
+    const dDow = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+    const dPlan = weekPlan(dWeek);
+    const dItems = dPlan.find((x) => x.day === dDow);
+    return { cycle: dCycle, week: dWeek, items: dItems, dDow };
+  })();
+
+  return (
+    <div style={{ padding: "6px 16px" }}>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 4, WebkitOverflowScrolling: "touch" }}>
+        {[1, 2, 3, 4].map((w) => (
+          <div key={w} style={{
+            flexShrink: 0, display: "flex", flexDirection: "column", gap: 5,
+            background: "#1B1D22", border: `1px solid ${w === week ? PLATE[w].c + "55" : "#26292F"}`, borderRadius: 12, padding: "7px 8px",
+          }}>
+            <div style={{ fontSize: 9.5, letterSpacing: 1, color: w === week ? PLATE[w].c : "#5B5F69", fontWeight: 700, paddingLeft: 2 }}>
+              {w}주 {PLATE[w].label}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {dateList.slice((w - 1) * 7, w * 7).map((d) => {
+                const ds = toDateStr(d);
+                const has = logsByDate(ds).length > 0;
+                const sel = ds === selDate;
+                const today = ds === todayStr;
+                return (
+                  <button key={ds} ref={today ? todayBtnRef : null} onClick={() => setSelDate(ds)}
+                    style={{
+                      flexShrink: 0, width: 40, padding: "6px 0 5px", borderRadius: 10, border: today && !sel ? "1px solid #D8A62A" : "1px solid transparent",
+                      background: sel ? "#D8A62A" : "#141519", color: sel ? "#141519" : "#ECEDEF", fontFamily: "inherit", cursor: "pointer",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                    }}>
+                    <span style={{ fontSize: 9.5, color: sel ? "#141519" : "#6E7480" }}>{WD[d.getDay()]}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "system-ui, -apple-system, sans-serif" }}>{d.getDate()}</span>
+                    <span style={{ width: 4, height: 4, borderRadius: "50%", background: has ? (sel ? "#141519" : "#4CAF7D") : "transparent" }} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {isToday ? (
+        <>
+          <SectionLabel text={`${dow}요일 세션 — ${PLATE[week].label} 주`} color={pcColor(week)} />
+          {rest ? (
+            <Card><div style={{ color: "#8B909A", padding: "8px 0", textAlign: "center" }}>오늘은 휴식일. 주말 근무 회복에 집중하세요.</div></Card>
+          ) : (
+            items.items.map((it, i) => <TodayCard key={i} it={it} logs={logs} save={save} week={week} cycle={cycle} date={todayStr} S={S} autoSingle />)
+          )}
+          {!rest && (
+            <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.7, padding: "10px 4px" }}>
+              · AMRAP은 바 속도가 확연히 느려지는 렙 +1에서 종료 (데드는 캡 우선, 4렙 이후 리셋 호흡)<br />
+              · 세트 옆 체크를 누르면 기록 탭에 바로 등록됩니다
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <SectionLabel text={`${selDate} 계획 · 기록`} color={selPlanned?.week ? pcColor(selPlanned.week) : "#8B909A"} />
+          {selPlanned?.none ? (
+            <Card><div style={{ color: "#8B909A", padding: "8px 0", textAlign: "center" }}>시작일 이전이에요.</div></Card>
+          ) : !selPlanned?.items ? (
+            <Card><div style={{ color: "#8B909A", padding: "8px 0", textAlign: "center" }}>이 날은 휴식일이었어요.</div></Card>
+          ) : (
+            <>
+              {selPlanned.cycle !== cycle && (
+                <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>· {selPlanned.cycle}사이클 {selPlanned.week}주차 — 참고: 무게는 현재 TM 기준으로 역산돼 당시와 다를 수 있어요</div>
+              )}
+              {selPlanned.items.items.map((it, i) => (
+                <TodayCard key={i} it={it} logs={logs} save={save} week={selPlanned.week} cycle={selPlanned.cycle} date={selDate} S={S} autoSingle={selPlanned.cycle === cycle} />
+              ))}
+            </>
+          )}
+
+          {logsByDate(selDate).length > 0 && (
+            <div style={{ fontSize: 11.5, color: "#6E7480", padding: "4px 4px 10px" }}>
+              · 계획에 없는 기록은 기록 탭에서 삭제할 수 있어요
+            </div>
+          )}
+
+          <button onClick={() => setSelDate(todayStr)} style={{ marginTop: 4, background: "none", border: "1px solid #2A2D34", borderRadius: 8, color: "#8B909A", padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, cursor: "pointer" }}>
+            오늘로 돌아가기
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* 오늘 탭 전용 — 세트별 실제 수행 입력 + 즉시 기록 */
+function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
+  const [inputs, setInputs] = useState({});
+
+  if (!it.detail) {
+    return <Card><div style={{ fontWeight: 700, fontSize: 14 }}>{it.name}</div></Card>;
+  }
+
+  // 자체 선택 무게(목표 kg 없음) 보조운동은 이름·세트·횟수만 간단히 표시
+  const isSimple = it.detail.every((d) => typeof d.kg !== "number");
+  if (isSimple) {
+    const rep = withCount(it.detail[0]?.rep || "");
+    return (
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontWeight: 700, fontSize: 14.5 }}>{it.name}</div>
+          <div style={{ fontSize: 13, color: "#8B909A" }}>{it.sets} · {rep}</div>
+        </div>
+      </Card>
+    );
+  }
+
+  const targetDate = date || toDateStr(new Date());
+  const liftName = it.logName || it.name;
+  // 저장 여부·값은 로컬 세션 기억이 아니라 실제 저장된 logs에서 매번 다시 읽음 (날짜 전환·리마운트에도 안전)
+  const matchedLogs = logs.filter((l) => l.lift === liftName && l.cyc === String(cycle) && l.wk === `${week}주` && l.date === targetDate);
+  // setIdx로 세트를 못박아 매칭 — 다른 세트가 삭제돼도 자리가 밀리지 않음 (레거시 기록엔 setIdx 없어 위치 매칭으로 폴백)
+  const hasTagged = matchedLogs.some((l) => l.setIdx !== undefined);
+  const savedFor = (idx) => (hasTagged ? matchedLogs.find((l) => l.setIdx === idx) : matchedLogs[idx]);
+
+  const setF = (idx, field, val) => setInputs((p) => ({ ...p, [idx]: { ...p[idx], [field]: val } }));
+
+  const unit = it.unit || "kg";
+  // 계획 총중량(kg) — lb 베이스 + kg 애드온(마이크로 원판) 합산
+  const plannedKg = (s) => {
+    if (typeof s.kg !== "number") return null;
+    const base = unit === "lb" ? s.kg / KG2LB : s.kg;
+    return Math.round((base + (s.add || 0)) * 10) / 10;
+  };
+  // 입력칸 placeholder(표시 단위 기준) — 저장된 값이 있으면 그 값, 없으면 계획값
+  const displayFor = (idx, s, field) => {
+    const saved = savedFor(idx);
+    if (!saved) return field === "w" ? plannedDisplayW(s) : "";
+    if (field === "w") return unit === "lb" ? String(Math.round(saved.w * KG2LB)) : fmt(saved.w);
+    if (field === "reps") return String(saved.reps);
+    if (field === "rpe") return saved.rpe === "" || saved.rpe == null ? "" : String(saved.rpe);
+  };
+  const plannedDisplayW = (s) => {
+    const kg = plannedKg(s);
+    if (kg == null) return unit === "lb" ? "lb" : "kg";
+    return unit === "lb" ? String(Math.round(kg * KG2LB)) : fmt(kg);
+  };
+
+  const logSet = (idx, s) => {
+    const v = inputs[idx] || {};
+    const existing = savedFor(idx);
+    const hasInput = v.w !== undefined && v.w !== "";
+    const wKg = hasInput ? (unit === "lb" ? Math.round((Number(v.w) / KG2LB) * 10) / 10 : Number(v.w)) : existing ? existing.w : plannedKg(s);
+    const reps = v.reps !== undefined && v.reps !== "" ? Number(v.reps) : existing ? existing.reps : null;
+    if (!wKg || !reps) return;
+    const rpe = v.rpe !== undefined ? (v.rpe === "" ? "" : Number(v.rpe)) : existing ? existing.rpe : "";
+    const entry = { id: existing?.id || Date.now() + idx, date: targetDate, cyc: String(cycle), wk: `${week}주`, lift: liftName, w: wKg, reps, rpe, memo: s.pct ? `${s.pct} 세트` : "", setIdx: idx };
+    const nl = existing ? logs.map((l) => (l.id === existing.id ? entry : l)) : [...logs, entry];
+    if (autoSingle && it.single && idx === 0 && S) {
+      const ns = { ...S, singles: { ...(S.singles || {}), [liftName]: String(wKg) } };
+      save(ns, nl);
+    } else {
+      save(null, nl);
+    }
+    setInputs((p) => ({ ...p, [idx]: {} })); // 입력칸 비우기 — 이후 표시는 저장된 값 기준으로
+  };
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+        <div style={{ fontWeight: 700, fontSize: 15.5 }}>{it.name}</div>
+        {it.sets && <div style={{ fontSize: 11.5, color: "#8B909A" }}>{it.sets}</div>}
+      </div>
+      {it.detail.map((s, idx) => {
+        const existing = savedFor(idx);
+        const isDone = !!existing;
+        const v = inputs[idx] || {};
+        return (
+          <div key={idx} style={{ background: "#141519", borderRadius: 10, padding: "9px 10px", marginBottom: idx < it.detail.length - 1 ? 8 : 0, border: isDone ? "1px solid #4CAF7D" : "1px solid #26292F" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <div style={{ fontSize: 11.5, color: "#8B909A" }}>
+                {s.pct ? `${s.pct} · ` : ""}계획 <b style={{ color: "#ECEDEF" }}>{typeof s.kg === "string" ? s.kg : fmt(s.kg)}{typeof s.kg === "number" && it.unit === "lb" ? "lb" : ""}{s.add ? ` +${fmt(s.add)}kg` : ""}</b> × {withCount(s.rep)}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="number" inputMode="decimal" placeholder={displayFor(idx, s, "w")}
+                value={v.w ?? ""} onChange={(e) => setF(idx, "w", e.target.value)} style={{ ...miniInput, flex: 1.1 }} />
+              <span style={{ color: "#4E525C", fontSize: 12 }}>{it.unit === "lb" ? "lb" : "kg"}×</span>
+              <input type="number" inputMode="numeric" placeholder={displayFor(idx, s, "reps") || "렙"} value={v.reps ?? ""} onChange={(e) => setF(idx, "reps", e.target.value)} style={{ ...miniInput, flex: 0.7 }} />
+              <input type="number" inputMode="decimal" placeholder={displayFor(idx, s, "rpe") || "RPE"} value={v.rpe ?? ""} onChange={(e) => setF(idx, "rpe", e.target.value)} style={{ ...miniInput, flex: 0.8 }} />
+              <button onClick={() => logSet(idx, s)}
+                style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, border: "none", background: isDone ? "#4CAF7D" : "#D8A62A", color: "#141519", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                {isDone ? "✓" : "＋"}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </Card>
+  );
+}
+const miniInput = { minWidth: 0, background: "#1B1D22", border: "1px solid #2A2D34", borderRadius: 7, color: "#ECEDEF", padding: "7px 6px", fontSize: 13, fontFamily: "inherit", textAlign: "center" };
+
+/* ───────── 사이클 탭 ───────── */
+function Cycle({ plan, wk, setViewWeek, S, save, single }) {
+  return (
+    <div style={{ padding: "6px 16px" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        {[1, 2, 3, 4].map((w) => (
+          <button key={w} onClick={() => setViewWeek(w)}
+            style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: `1px solid ${wk === w ? PLATE[w].c : "#2A2D34"}`, background: wk === w ? PLATE[w].c + "22" : "transparent", color: wk === w ? "#ECEDEF" : "#6E7480", fontFamily: "inherit", fontSize: 12.5, fontWeight: wk === w ? 700 : 500, cursor: "pointer" }}>
+            {w}주 {PLATE[w].label}
+          </button>
+        ))}
+      </div>
+
+      {wk === 3 && (
+        <Card>
+          <div style={{ fontSize: 12.5, color: "#8B909A", marginBottom: 8 }}>싱글 실측 기입 (비우면 TM×92.5% 자동 · 백오프 연동)</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["스쿼트", "벤치", "데드"].map((k) => (
+              <div key={k} style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>{k}</div>
+                <input type="number" inputMode="decimal" value={S.singles?.[k] ?? ""} placeholder={fmt(single(k))}
+                  onChange={(e) => save({ ...S, singles: { ...S.singles, [k]: e.target.value } })}
+                  style={inputStyle} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {plan.map((d, i) => (
+        <div key={i} style={{ marginBottom: 14 }}>
+          <SectionLabel text={d.day + "요일"} color={pcColor(wk)} />
+          {d.items.map((it, j) => (it.note ? <Card key={j}><div style={{ color: "#8B909A" }}>{it.name}</div></Card> : <ExerciseCard key={j} it={it} />))}
+        </div>
+      ))}
+
+      <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.8, padding: "4px 4px 16px" }}>
+        · 중딥(lb): 1주 탑 → 2주 탑 +2.5kg 상당(≈6lb, 마이크로 원판 조합) 자동 증량 / 백오프=탑의 50% / 실패(RPE9 초과) 시 무게 유지<br />
+        · 중딥·중량 풀업 백오프 증량(마지막 세트 렙 기준): 12렙 → +5kg(딥 +10lb) / 10렙 → +2.5kg(딥 +5lb) / 8렙 → +1.25kg(딥 +2.5lb) / 7렙 이하 → 유지<br />
+        · 중량 풀업(kg) 탑: RPE≤7 → +2.5, RPE8 → +1.25<br />
+        · 벤치: 1~2주 터치앤고(볼륨·바스피드), 3주 이후 Comp(가슴 정지) — 시합 특이성 확보 + 실측 검증<br />
+        · 3주 싱글: RPE 8 이하면 자율 증량, 9 초과면 그날 증량 없음 / 디로드: 전 세트 RPE≤7, 보조 반토막
+      </div>
+    </div>
+  );
+}
+
+/* ───────── 기록 탭 ───────── */
+function LogTab({ logs, save, cycle, week, S }) {
+  const todayStr = toDateStr(new Date());
+  const del = (id) => save(null, logs.filter((l) => l.id !== id));
+  const [showExport, setShowExport] = useState(false);
+  const exportText = () =>
+    logs
+      .map((l) => `${l.date || "-"} · ${l.cyc}사이클 ${l.wk} · ${l.lift} ${fmt(l.w)}kg × ${l.reps}${l.rpe !== "" && l.rpe != null ? ` @${l.rpe}` : ""}${l.memo ? ` (${l.memo})` : ""}`)
+      .join("\n");
+  const copyExport = async () => {
+    const txt = exportText();
+    try {
+      await navigator.clipboard.writeText(txt);
+    } catch (e) {}
+    setShowExport(true);
+  };
+
+  return (
+    <div style={{ padding: "6px 16px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
+        <button onClick={copyExport} style={{ background: "#1B1D22", border: "1px solid #2A2D34", borderRadius: 8, color: "#8B909A", padding: "6px 12px", fontFamily: "inherit", fontSize: 12, cursor: "pointer" }}>
+          전체 기록 복사하기
+        </button>
+      </div>
+      {showExport && (
+        <Card>
+          <div style={{ fontSize: 11.5, color: "#8B909A", marginBottom: 6 }}>클립보드 복사가 안 되면 아래 텍스트를 길게 눌러 직접 복사하세요.</div>
+          <textarea readOnly value={exportText()} onFocus={(e) => e.target.select()}
+            style={{ width: "100%", minHeight: 120, background: "#141519", border: "1px solid #2A2D34", borderRadius: 8, color: "#ECEDEF", padding: "8px", fontSize: 11.5, fontFamily: "monospace", resize: "vertical" }} />
+        </Card>
+      )}
+      <SectionLabel text="기록" color="#D8A62A" />
+      {(() => {
+        const sorted = [...logs].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.id - a.id);
+        const WD = ["일", "월", "화", "수", "목", "금", "토"];
+        const dateLabel = (ds) => {
+          if (!ds) return "날짜 없음";
+          const d = new Date(ds + "T00:00:00");
+          return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})${ds === todayStr ? " · 오늘" : ""}`;
+        };
+        let lastDate = null;
+        return sorted.map((l) => {
+          const showHeader = l.date !== lastDate;
+          lastDate = l.date;
+          return (
+            <React.Fragment key={l.id}>
+              {showHeader && <SectionLabel text={dateLabel(l.date)} color="#6E7480" />}
+              <div style={{ background: "#1B1D22", border: "1px solid #26292F", borderRadius: 10, padding: "10px 12px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 10.5, color: "#6E7480", width: 44, flexShrink: 0, lineHeight: 1.4 }}>{l.cyc}사이클<br />{l.wk}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+                    {l.lift} <span style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>{fmt(l.w)}</span>kg × {l.reps} {l.rpe !== "" && l.rpe != null ? <span style={{ color: "#8B909A" }}>@{l.rpe}</span> : null}
+                  </div>
+                  {l.memo ? <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 2 }}>{l.memo}</div> : null}
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 17, fontWeight: 700, color: "#D8A62A" }}>{fmt(e1rm(l.w, l.reps, l.rpe))}</div>
+                  <div style={{ fontSize: 9.5, color: "#6E7480" }}>e1RM</div>
+                </div>
+                <button onClick={() => del(l.id)} style={{ background: "none", border: "none", color: "#4E525C", fontSize: 16, cursor: "pointer", padding: 4 }}>×</button>
+              </div>
+            </React.Fragment>
+          );
+        });
+      })()}
+    </div>
+  );
+}
+
+/* ───────── 설정 탭 ───────── */
+function Settings({ S, save, TM, cycle, logs }) {
+  const upd = (k, field, val) => save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], [field]: val } } });
+  const [copied, setCopied] = useState(false);
+  const exportText = useMemo(() => {
+    const sorted = [...logs].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.id - a.id);
+    return sorted
+      .slice(0, 30)
+      .map((l) => {
+        const d = l.date ? l.date.slice(5).replace("-", "/") : "—";
+        const rpe = l.rpe !== "" && l.rpe != null ? ` @${l.rpe}` : "";
+        return `${d} ${l.lift} ${fmt(l.w)}kg×${l.reps}${rpe} (${l.cyc}사이클 ${l.wk})`;
+      })
+      .join("\n");
+  }, [logs]);
+  const copyExport = async () => {
+    try {
+      await navigator.clipboard.writeText(exportText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      const ta = document.getElementById("export-ta");
+      if (ta) { ta.focus(); ta.select(); }
+    }
+  };
+
+  return (
+    <div style={{ padding: "6px 16px" }}>
+      <SectionLabel text="기록 내보내기" color="#4CAF7D" />
+      <Card>
+        <div style={{ fontSize: 12, color: "#8B909A", marginBottom: 8 }}>
+          최근 기록 {Math.min(logs.length, 30)}개 — 복사해서 대화에 붙여넣으면 바로 피드백받을 수 있어요
+        </div>
+        <textarea
+          id="export-ta"
+          readOnly
+          value={exportText}
+          onFocus={(e) => e.target.select()}
+          style={{ width: "100%", height: 140, background: "#141519", border: "1px solid #2A2D34", borderRadius: 8, color: "#ECEDEF", padding: 10, fontSize: 11.5, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box" }}
+        />
+        <button
+          onClick={copyExport}
+          style={{ marginTop: 8, width: "100%", background: copied ? "#4CAF7D" : "#D8A62A", color: "#141519", border: "none", borderRadius: 8, padding: "10px 0", fontWeight: 700, fontFamily: "inherit", fontSize: 13.5, cursor: "pointer" }}
+        >
+          {copied ? "복사됨 ✓" : "전체 복사"}
+        </button>
+      </Card>
+
+      <SectionLabel text="TM 설정 — 최근 세트 입력" color="#D8A62A" />
+      {Object.entries(S.lifts).map(([k, v]) => (
+        <Card key={k}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ fontWeight: 700, fontSize: 14.5 }}>{k}</div>
+            <div style={{ fontSize: 12, color: "#8B909A" }}>
+              e1RM <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#ECEDEF", fontSize: 14 }}>{fmt(TM[k].e)}</b>
+              {"  ·  적용 TM "}<b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(TM[k].applied)}</b>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동TM"], ["inc", "인상폭"]].map(([f, l]) => (
+              <div key={f} style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "#6E7480", marginBottom: 3 }}>{l}</div>
+                <input type="number" inputMode="decimal" value={v[f]} placeholder={f === "manual" ? "자동" : ""}
+                  onChange={(e) => upd(k, f, e.target.value)} style={{ ...inputStyle, padding: "8px 6px", fontSize: 13 }} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      ))}
+
+      <Card>
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>1사이클 시작일</div>
+            <input type="date" value={S.startDate} onChange={(e) => save({ ...S, startDate: e.target.value })} style={inputStyle} />
+          </div>
+          <div style={{ flex: 0.6 }}>
+            <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>체중(kg)</div>
+            <input type="number" inputMode="decimal" value={S.bodyweight} onChange={(e) => save({ ...S, bodyweight: e.target.value })} style={inputStyle} />
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>대회일 (예상)</div>
+          <input type="date" value={S.compDate || ""} onChange={(e) => save({ ...S, compDate: e.target.value })} style={inputStyle} />
+        </div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>적용 TM은 사이클마다 인상폭만큼 자동 상승 · AMRAP 부진 시 인상폭 0으로 동결</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중딥·중량 풀업 인상폭은 실측 데이터가 적어 추정값(딥 2.5/풀업 1.25) — 사이클 지날수록 실제 속도로 조정하세요</div>
+      </Card>
+
+      <SectionLabel text="장기 목표" color="#D8A62A" />
+      {Object.entries(GOALS).map(([k, g]) => {
+        const cur = TM[k]?.e;
+        const pct = cur ? Math.min(100, Math.round((cur / g) * 100)) : 0;
+        return (
+          <div key={k} style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 4 }}>
+              <span style={{ fontWeight: 700 }}>{k} <span style={{ color: "#6E7480", fontWeight: 400 }}>목표 {g}</span></span>
+              <span style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontWeight: 700 }}>{fmt(cur)} <span style={{ color: "#8B909A", fontSize: 11, fontWeight: 400 }}>({pct}%)</span></span>
+            </div>
+            <div style={{ height: 7, background: "#22252B", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ width: pct + "%", height: "100%", background: pct >= 90 ? "#4CAF7D" : "#D8A62A", borderRadius: 4, transition: "width .4s" }} />
+            </div>
+            <div style={{ fontSize: 10.5, color: "#4E525C", marginTop: 3 }}>탑 3회 @8 환산: {fmt(r25(g / (1 + 5 / 30)))} kg</div>
+          </div>
+        );
+      })}
+      <div style={{ height: 20 }} />
+    </div>
+  );
+}
+
+/* ───────── 예측 탭 ───────── */
+function Projection({ S, TM, cycle, week }) {
+  const items = [
+    { key: "스쿼트", color: "#C9463D" },
+    { key: "벤치", color: "#3B6FB5" },
+    { key: "데드", color: "#D8A62A" },
+    { key: "중딥", color: "#8B5FBF" },
+    { key: "중량 풀업", color: "#4CAF7D" },
+  ];
+  return (
+    <div style={{ padding: "6px 16px" }}>
+      {S.compDate && <CompPredict S={S} TM={TM} cycle={cycle} />}
+      <SectionLabel text="목표 도달 예측" color="#D8A62A" />
+      {items.map((it) => (
+        <ProjChart
+          key={it.key}
+          label={it.key}
+          color={it.color}
+          applied={TM[it.key]?.e}
+          inc={Number(S.lifts[it.key]?.inc) || 0}
+          goal={GOALS[it.key]}
+          curCycle={cycle}
+          curWeek={week}
+          startDate={S.startDate}
+        />
+      ))}
+      <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.7, padding: "10px 4px 16px" }}>
+        · e1RM 기준 — 설정 탭의 "인상폭"만큼 사이클마다 e1RM이 오른다고 가정한 단순 선형 추정을 4주(1~4주차)로 나눠 표시해요<br />
+        · 실측을 갱신할수록(설정 탭) 예측이 정확해집니다 · 인상폭 0인 종목은 도달 시점 계산 불가
+      </div>
+    </div>
+  );
+}
+
+/* ───────── 경기 예측 (컴프 3대) ───────── */
+function CompPredict({ S, TM, cycle }) {
+  const start = new Date(S.startDate + "T00:00:00");
+  const comp = new Date(S.compDate + "T00:00:00");
+  const now = new Date();
+  const daysToComp = Math.round((comp - now) / 86400000);
+  const compCycle = Math.max(1, Math.floor((comp - start) / 86400000 / 28) + 1);
+  const cyclesLeft = compCycle - cycle;
+
+  const lifts = [
+    { key: "스쿼트", color: "#C9463D" },
+    { key: "벤치", color: "#3B6FB5" },
+    { key: "데드", color: "#D8A62A" },
+  ];
+
+  const rows = lifts.map((l) => {
+    const e = TM[l.key]?.e;
+    const inc = Number(S.lifts[l.key]?.inc) || 0;
+    const pred = e != null ? Math.max(e, e + inc * cyclesLeft) : null;
+    return {
+      ...l,
+      pred,
+      open: pred != null ? r25(pred * 0.91) : null,
+      second: pred != null ? r25(pred * 0.96) : null,
+      third: pred != null ? r25(pred * 1.01) : null,
+    };
+  });
+  const predTotal = rows.every((r) => r.pred != null) ? rows.reduce((s, r) => s + r.pred, 0) : null;
+  const thirdTotal = rows.every((r) => r.third != null) ? rows.reduce((s, r) => s + r.third, 0) : null;
+
+  return (
+    <>
+      <SectionLabel text="경기 예측" color="#4CAF7D" />
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, fontSize: 14.5 }}>{S.compDate} 기준</div>
+          <div style={{ fontSize: 12, color: daysToComp < 0 ? "#6E7480" : "#D8A62A", fontWeight: 700 }}>
+            {daysToComp >= 0 ? `D-${daysToComp}` : "경기 종료"}
+          </div>
+        </div>
+        {rows.map((r) => (
+          <div key={r.key} style={{ marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 4 }}>
+              <span style={{ fontWeight: 700 }}>{r.key}</span>
+              <span style={{ color: "#8B909A" }}>예상 e1RM <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#ECEDEF" }}>{fmt(r.pred)}kg</b></span>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {[["1차", r.open], ["2차", r.second], ["3차", r.third]].map(([lbl, v], i) => (
+                <div key={lbl} style={{ flex: 1, background: "#141519", borderRadius: 8, padding: "7px 4px", textAlign: "center", border: i === 2 ? `1px solid ${r.color}` : "1px solid transparent" }}>
+                  <div style={{ fontSize: 9.5, color: "#6E7480" }}>{lbl}</div>
+                  <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 16, fontWeight: 700, color: "#ECEDEF" }}>{fmt(v)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div style={{ borderTop: "1px solid #26292F", marginTop: 4, paddingTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12.5 }}>
+          <span style={{ color: "#8B909A" }}>예상 총합(e1RM 합) <b style={{ color: "#ECEDEF" }}>{fmt(predTotal)}kg</b></span>
+          <span style={{ color: "#8B909A" }}>3차 목표 합 <b style={{ color: "#4CAF7D" }}>{fmt(thirdTotal)}kg</b></span>
+        </div>
+      </Card>
+      <div style={{ fontSize: 11.5, color: "#6E7480", lineHeight: 1.6, padding: "0 4px 14px" }}>
+        · 예상 e1RM = 현재 e1RM + 인상폭×(경기까지 남은 사이클), 피킹 발현 보너스는 미포함(보수적 추정)<br />
+        · 시기: 1차 91% / 2차 96% / 3차 101% — 참고용, 실제 컨디션 따라 조정
+      </div>
+    </>
+  );
+}
+
+function ProjChart({ label, color, applied, inc, goal, curCycle, curWeek, startDate }) {
+  const W = 300, H = 116, PAD = 26;
+  const svgRef = React.useRef(null);
+  const [hover, setHover] = useState(null);
+  if (applied == null || goal == null) return null;
+  const incW = inc / 4; // 사이클 인상폭을 4주에 걸쳐 균등 분배(주차별 추정)
+  const curAbs = (curCycle - 1) * 4 + curWeek; // 절대 주차(1주=1사이클1주차)
+  const reached = applied >= goal;
+  const wNeeded = reached ? 0 : incW > 0 ? Math.ceil((goal - applied) / incW) : null;
+  const targetAbs = wNeeded == null ? null : curAbs + wNeeded;
+  const horizonAbs = targetAbs != null ? targetAbs + 4 : curAbs + 24; // 6사이클치 기본 범위
+  const span = Math.max(1, horizonAbs - curAbs);
+  const weeksArr = Array.from({ length: span + 1 }, (_, i) => curAbs + i);
+  const vals = weeksArr.map((a) => applied + (a - curAbs) * incW);
+  const yMin = Math.min(...vals, goal) * 0.96;
+  const yMax = Math.max(...vals, goal) * 1.04;
+  const range = yMax - yMin || 1;
+  const x = (a) => PAD + ((a - curAbs) / span) * (W - PAD * 2);
+  const y = (v) => H - PAD + 6 - ((v - yMin) / range) * (H - PAD - 6);
+  const pathD = weeksArr.map((a, i) => `${i === 0 ? "M" : "L"} ${x(a).toFixed(1)} ${y(vals[i]).toFixed(1)}`).join(" ");
+  const goalY = y(goal);
+
+  const absToCW = (a) => ({ c: Math.floor((a - 1) / 4) + 1, w: ((a - 1) % 4) + 1 });
+  const dateOf = (a) => {
+    const d = new Date(startDate + "T00:00:00");
+    d.setDate(d.getDate() + (a - 1) * 7);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  };
+
+  let targetStr = "";
+  if (targetAbs != null) {
+    const { c, w } = absToCW(targetAbs);
+    targetStr = `${dateOf(targetAbs)}경, ${c}사이클 ${w}주차`;
+  }
+
+  const handleMove = (clientX) => {
+    const el = svgRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (!rect.width) return;
+    const svgX = ((clientX - rect.left) / rect.width) * W;
+    const frac = (svgX - PAD) / (W - PAD * 2);
+    let a = Math.round(curAbs + frac * span);
+    a = Math.max(curAbs, Math.min(horizonAbs, a));
+    const val = applied + (a - curAbs) * incW;
+    setHover({ a, x: x(a), y: y(val), val });
+  };
+  const onTouchMove = (e) => { if (e.touches && e.touches[0]) handleMove(e.touches[0].clientX); };
+  const onMouseMove = (e) => handleMove(e.clientX);
+  const clearHover = () => setHover(null);
+
+  // 사이클 경계(주차1) 위치에 세로 구분선 + 주차 눈금
+  const cycleBoundaries = weeksArr.filter((a) => (a - 1) % 4 === 0);
+  const tickStep = Math.max(1, Math.ceil(weeksArr.length / 8));
+  const ticks = weeksArr.filter((_, i) => i % tickStep === 0);
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <div style={{ fontWeight: 700, fontSize: 14.5 }}>{label}</div>
+        <div style={{ fontSize: 12, color: "#8B909A" }}>목표 <b style={{ color: "#ECEDEF" }}>{fmt(goal)}kg</b> · 현재 <b style={{ color: "#ECEDEF" }}>{fmt(applied)}kg</b></div>
+      </div>
+      <svg
+        ref={svgRef}
+        width="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ display: "block", touchAction: "none", cursor: "crosshair" }}
+        onTouchStart={onTouchMove}
+        onTouchMove={onTouchMove}
+        onTouchEnd={clearHover}
+        onMouseMove={onMouseMove}
+        onMouseLeave={clearHover}
+      >
+        <line x1={PAD} y1={goalY} x2={W - PAD} y2={goalY} stroke="#4CAF7D" strokeDasharray="4 3" strokeWidth="1" />
+        {cycleBoundaries.map((a) => (
+          <line key={"cb" + a} x1={x(a)} y1={8} x2={x(a)} y2={H - PAD} stroke="#26292F" strokeWidth="1" />
+        ))}
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" />
+        {weeksArr.map((a, i) => (
+          <circle key={a} cx={x(a)} cy={y(vals[i])} r={a === curAbs ? 3.5 : (a - 1) % 4 === 0 ? 2.3 : 1.3} fill={a === curAbs ? "#ECEDEF" : color} />
+        ))}
+        {targetAbs != null && targetAbs <= horizonAbs && <circle cx={x(targetAbs)} cy={goalY} r={4} fill="#4CAF7D" />}
+        {ticks.map((a) => {
+          const { c, w } = absToCW(a);
+          return (
+            <text key={a} x={x(a)} y={H - 6} fontSize="7.5" fill="#5B5F69" textAnchor="middle">{c}·{w}주</text>
+          );
+        })}
+      </svg>
+      {hover ? (
+        <div style={{ fontSize: 12.5, color: "#ECEDEF", marginTop: 4, background: "#141519", borderRadius: 6, padding: "5px 9px", display: "inline-block" }}>
+          {dateOf(hover.a)} <span style={{ color: "#6E7480" }}>({absToCW(hover.a).c}사이클 {absToCW(hover.a).w}주차)</span> · <b style={{ color }}>{fmt(hover.val)}kg</b>
+        </div>
+      ) : reached ? (
+        <div style={{ fontSize: 12.5, color: "#4CAF7D", fontWeight: 700, marginTop: 4 }}>이미 목표 도달</div>
+      ) : incW > 0 ? (
+        <div style={{ fontSize: 12.5, color: "#8B909A", marginTop: 4 }}>
+          <b style={{ color: "#ECEDEF" }}>{targetStr}</b> 도달 예상 · <span style={{ color: "#5B5F69" }}>그래프를 눌러보세요</span>
+        </div>
+      ) : (
+        <div style={{ fontSize: 12.5, color: "#D8A62A", marginTop: 4 }}>인상폭 미설정 — 설정 탭에서 사이클당 증량 입력 필요</div>
+      )}
+    </Card>
+  );
+}
+
+/* ───────── 공용 컴포넌트 ───────── */
+function Card({ children }) {
+  return <div style={{ background: "#1B1D22", border: "1px solid #26292F", borderRadius: 12, padding: "13px 14px", marginBottom: 10 }}>{children}</div>;
+}
+function SectionLabel({ text, color }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 2px 8px" }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />
+      <div style={{ fontSize: 11.5, letterSpacing: 2, color: "#8B909A", fontWeight: 700 }}>{text}</div>
+    </div>
+  );
+}
+function ExerciseCard({ it, big }) {
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: it.detail ? 8 : 0 }}>
+        <div style={{ fontWeight: 700, fontSize: big ? 15.5 : 14 }}>{it.name}</div>
+        {it.sets && <div style={{ fontSize: 11.5, color: "#8B909A" }}>{it.sets}</div>}
+      </div>
+      {it.detail && (
+        <div style={{ display: "flex", gap: 8 }}>
+          {it.detail.map((s, i) => (
+            <div key={i} style={{ flex: 1, background: "#141519", borderRadius: 8, padding: "8px 6px", textAlign: "center", border: it.pct === "기입" ? "1px solid #D8A62A" : "1px solid transparent" }}>
+              <div style={{ fontSize: 10, color: "#6E7480" }}>{s.pct || "\u00A0"}</div>
+              <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: big ? 22 : 19, fontWeight: 700, color: "#ECEDEF", lineHeight: 1.2 }}>
+                {typeof s.kg === "string" ? s.kg : fmt(s.kg)}
+                {typeof s.kg !== "string" && s.kg != null && it.unit === "lb" && (
+                  <span style={{ fontSize: 11, fontWeight: 500, color: "#8B909A", marginLeft: 2 }}>lb</span>
+                )}
+                {s.add ? <span style={{ fontSize: 11, fontWeight: 700, color: "#D8A62A", marginLeft: 3 }}>+{fmt(s.add)}kg</span> : null}
+              </div>
+              <div style={{ fontSize: 10.5, color: "#8B909A", marginTop: 1 }}>{withCount(s.rep)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+const inputStyle = { width: "100%", background: "#141519", border: "1px solid #2A2D34", borderRadius: 8, color: "#ECEDEF", padding: "9px 10px", fontSize: 13.5, fontFamily: "inherit" };
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
