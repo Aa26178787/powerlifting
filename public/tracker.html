@@ -369,6 +369,8 @@ function Today({ dow, items, week, logs, save, S, cycle, weekPlan }) {
         ))}
       </div>
 
+      <DayExport logs={logsByDate(selDate)} date={selDate} />
+
       {isToday ? (
         <>
           <SectionLabel text={`${dow}요일 세션 — ${PLATE[week].label} 주`} color={pcColor(week)} />
@@ -413,6 +415,46 @@ function Today({ dow, items, week, logs, save, S, cycle, weekPlan }) {
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+/* 선택 날짜 하루치 기록만 내보내기 (AI 채팅 붙여넣기용) */
+function DayExport({ logs, date }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // 무게 없는(맨몸) 보조운동은 기록 자체가 안 남으므로 방어적으로만 거름
+  const withWeight = logs.filter((l) => typeof l.w === "number" && !isNaN(l.w));
+  if (withWeight.length === 0) return null;
+  const text = withWeight
+    .map((l) => `${l.lift} ${fmt(l.w)}kg×${l.reps}${l.rpe !== "" && l.rpe != null ? ` @${l.rpe}` : ""}${l.memo ? ` (${l.memo})` : ""}`)
+    .join("\n");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      setOpen(true);
+    }
+  };
+  return (
+    <div style={{ marginTop: 14 }}>
+      <SectionLabel text={`${date} 기록 내보내기`} color="#4CAF7D" />
+      <Card>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={copy} style={{ flex: 1, background: copied ? "#4CAF7D" : "#D8A62A", color: "#141519", border: "none", borderRadius: 8, padding: "9px 0", fontWeight: 700, fontFamily: "inherit", fontSize: 13, cursor: "pointer" }}>
+            {copied ? "복사됨 ✓" : "이 날 기록 복사"}
+          </button>
+          <button onClick={() => setOpen((v) => !v)} style={{ background: "none", border: "1px solid #2A2D34", borderRadius: 8, color: "#8B909A", padding: "9px 14px", fontFamily: "inherit", fontSize: 12.5, cursor: "pointer" }}>
+            {open ? "숨기기" : "텍스트 보기"}
+          </button>
+        </div>
+        {open && (
+          <textarea readOnly value={text} onFocus={(e) => e.target.select()}
+            style={{ marginTop: 8, width: "100%", height: 100, background: "#141519", border: "1px solid #2A2D34", borderRadius: 8, color: "#ECEDEF", padding: 10, fontSize: 11.5, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box" }} />
+        )}
+      </Card>
     </div>
   );
 }
@@ -644,51 +686,9 @@ function LogTab({ logs, save, cycle, week, S }) {
 /* ───────── 설정 탭 ───────── */
 function Settings({ S, save, TM, cycle, logs }) {
   const upd = (k, field, val) => save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], [field]: val } } });
-  const [copied, setCopied] = useState(false);
-  const exportText = useMemo(() => {
-    const sorted = [...logs].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.id - a.id);
-    return sorted
-      .slice(0, 30)
-      .map((l) => {
-        const d = l.date ? l.date.slice(5).replace("-", "/") : "—";
-        const rpe = l.rpe !== "" && l.rpe != null ? ` @${l.rpe}` : "";
-        return `${d} ${l.lift} ${fmt(l.w)}kg×${l.reps}${rpe} (${l.cyc}사이클 ${l.wk})`;
-      })
-      .join("\n");
-  }, [logs]);
-  const copyExport = async () => {
-    try {
-      await navigator.clipboard.writeText(exportText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (e) {
-      const ta = document.getElementById("export-ta");
-      if (ta) { ta.focus(); ta.select(); }
-    }
-  };
 
   return (
     <div style={{ padding: "6px 16px" }}>
-      <SectionLabel text="기록 내보내기" color="#4CAF7D" />
-      <Card>
-        <div style={{ fontSize: 12, color: "#8B909A", marginBottom: 8 }}>
-          최근 기록 {Math.min(logs.length, 30)}개 — 복사해서 대화에 붙여넣으면 바로 피드백받을 수 있어요
-        </div>
-        <textarea
-          id="export-ta"
-          readOnly
-          value={exportText}
-          onFocus={(e) => e.target.select()}
-          style={{ width: "100%", height: 140, background: "#141519", border: "1px solid #2A2D34", borderRadius: 8, color: "#ECEDEF", padding: 10, fontSize: 11.5, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box" }}
-        />
-        <button
-          onClick={copyExport}
-          style={{ marginTop: 8, width: "100%", background: copied ? "#4CAF7D" : "#D8A62A", color: "#141519", border: "none", borderRadius: 8, padding: "10px 0", fontWeight: 700, fontFamily: "inherit", fontSize: 13.5, cursor: "pointer" }}
-        >
-          {copied ? "복사됨 ✓" : "전체 복사"}
-        </button>
-      </Card>
-
       <SectionLabel text="TM 설정 — 최근 세트 입력" color="#D8A62A" />
       {Object.entries(S.lifts).map(([k, v]) => (
         <Card key={k}>
