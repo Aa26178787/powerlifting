@@ -120,6 +120,18 @@ const signal2Flag = (lift, logs) => {
   }
   return { cyc: maxCyc, flagOn, freeze };
 };
+// 신호2를 발생시킨 실제 세트(싱글/92%) 특정 — RPE 여유가 가장 큰 쪽 우선
+const signal2Trigger = (lift, logs) => {
+  const flag = signal2Flag(lift, logs);
+  if (!flag || !flag.flagOn) return null;
+  const rows = logs.filter((l) => l.lift === lift && l.wk === "3주" && Number(l.cyc) === flag.cyc && (l.setIdx === 0 || l.setIdx === 1) && l.rpe !== "" && l.rpe != null);
+  return rows.reduce((best, l) => {
+    const diff = PRESCRIBED_RPE_W3 - Number(l.rpe);
+    if (diff < 1.5) return best;
+    if (!best) return l;
+    return PRESCRIBED_RPE_W3 - Number(best.rpe) >= diff ? best : l;
+  }, null);
+};
 const PLATE = {
   1: { c: "#C9463D", label: "볼륨" }, // 25kg 빨강
   2: { c: "#3B6FB5", label: "브릿지" }, // 20kg 파랑
@@ -743,6 +755,16 @@ function Settings({ S, save, TM, cycle, logs }) {
     if (field === "manual" && val !== "") patch.baseCycle = cycle; // 수동TM 수정 = 지금부터 재기준 (과거 인상폭 이중 반영 방지)
     save({ ...S, lifts: { ...S.lifts, [k]: patch } });
   };
+  // 신호2 승인: TM 값을 직접 덮어쓰지 않고 무게/렙/RPE 입력 소스를 교체 → e1RM·적용TM은 기존 공식으로 재계산
+  const approveRecalc = (k) => {
+    const trigger = signal2Trigger(k, logs);
+    if (!trigger) return;
+    const newE = e1rm(trigger.w, trigger.reps, trigger.rpe);
+    const newApplied = newE ? Math.round(newE * 0.9 * 10) / 10 : null;
+    const ok = window.confirm(`${k} TM을 새 e1RM 기준값(${fmt(newApplied)}kg)으로 재산정하시겠습니까?\n입력: ${fmt(trigger.w)}kg × ${trigger.reps} @${trigger.rpe}`);
+    if (!ok) return;
+    save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], w: trigger.w, reps: trigger.reps, rpe: trigger.rpe, manual: "", baseCycle: cycle } } });
+  };
 
   return (
     <div style={{ padding: "6px 16px" }}>
@@ -765,8 +787,11 @@ function Settings({ S, save, TM, cycle, logs }) {
                 다음 사이클 인상폭 예상: <b style={{ color: "#ECEDEF" }}>+{fmt(previewInc)}kg</b>
                 {mult == null ? " (AMRAP 기록 없음 · 기본 배율 적용)" : ` (배율 ${mult}×)`}
                 {flag?.flagOn && (
-                  <div style={{ color: "#D8A62A", fontWeight: 700, marginTop: 3 }}>
-                    ⚠ TM 재산정 권장 — {flag.cyc}사이클 3주차 RPE 여유 큼 (수동TM 직접 수정 시 반영)
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                    <div style={{ color: "#D8A62A", fontWeight: 700 }}>⚠ TM 재산정 권장 — {flag.cyc}사이클 3주차 RPE 여유 큼</div>
+                    <button onClick={() => approveRecalc(k)} style={{ background: "#D8A62A", color: "#141519", border: "none", borderRadius: 6, padding: "3px 9px", fontWeight: 700, fontFamily: "inherit", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
+                      재산정 승인
+                    </button>
                   </div>
                 )}
                 {flag && !flag.flagOn && flag.freeze && (
@@ -802,7 +827,7 @@ function Settings({ S, save, TM, cycle, logs }) {
           <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>대회일 (예상)</div>
           <input type="date" value={S.compDate || ""} onChange={(e) => save({ ...S, compDate: e.target.value })} style={inputStyle} />
         </div>
-        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대(스쿼트·벤치·데드): AMRAP 초과렙에 따라 인상폭 배율(0~2×) 자동 반영 · "TM 재산정 권장" 뜨면 수동TM을 직접 눌러 갱신해야 실제 반영(자동 변경 안 됨)</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대(스쿼트·벤치·데드): AMRAP 초과렙에 따라 인상폭 배율(0~2×) 자동 반영 · "TM 재산정 권장" 뜨면 "재산정 승인" 버튼으로 확인 후에만 무게/렙/RPE가 최신 퍼포먼스로 교체됨(자동 변경 안 됨)</div>
         <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중딥·중량 풀업 인상폭은 실측 데이터가 적어 추정값(딥 2.5/풀업 1.25) — 사이클 지날수록 실제 속도로 조정하세요</div>
       </Card>
 
