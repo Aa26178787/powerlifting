@@ -86,6 +86,9 @@ const SEED_LOGS = [
 
 const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
 const MAIN_LIFTS = ["스쿼트", "벤치", "데드"];
+// Firestore는 맵 필드의 저장 순서를 보장하지 않아 저장 직후 실시간 동기화로 되읽으면 순서가 바뀔 수 있음
+// → S.lifts를 Object.entries 순서에 의존하지 않고 이 고정 순서로만 렌더링(카드 위치 재배열 방지)
+const LIFT_ORDER = ["스쿼트", "벤치", "데드", "중딥", "중량 풀업"];
 
 /* ───────── 신호1: AMRAP 초과렙 → 인상폭 배율 (3대 전용, 완전 자동) ───────── */
 const AMRAP_TARGET = {
@@ -800,7 +803,9 @@ function Settings({ S, save, TM, cycle, logs }) {
   return (
     <div style={{ padding: "6px 16px" }}>
       <SectionLabel text="TM 설정 — 최근 세트 입력" color="#D8A62A" />
-      {Object.entries(S.lifts).map(([k, v]) => (
+      {LIFT_ORDER.filter((k) => S.lifts[k]).map((k) => {
+        const v = S.lifts[k];
+        return (
         <Card key={k}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, flexWrap: "nowrap", gap: 8 }}>
             <div style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: "nowrap" }}>{liftLabel(k)}</div>
@@ -872,7 +877,8 @@ function Settings({ S, save, TM, cycle, logs }) {
             })}
           </div>
         </Card>
-      ))}
+        );
+      })}
 
       <Card>
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
