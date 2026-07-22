@@ -548,6 +548,7 @@ function DayExport({ logs, date }) {
 /* 오늘 탭 전용 — 세트별 실제 수행 입력 + 즉시 기록 */
 function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
   const [inputs, setInputs] = useState({});
+  const [entryUnit, setEntryUnit] = useState(it.unit || "kg"); // 입력 단위(kg/lb) — 계획 표시 단위와 별개로 토글 가능
 
   if (!it.detail) {
     return <Card><div style={{ fontWeight: 700, fontSize: 14 }}>{it.name}</div></Card>;
@@ -577,32 +578,32 @@ function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
 
   const setF = (idx, field, val) => setInputs((p) => ({ ...p, [idx]: { ...p[idx], [field]: val } }));
 
-  const unit = it.unit || "kg";
+  const unit = it.unit || "kg"; // 계획(목표) 표시 기준 단위 — 종목 고정값
   // 계획 총중량(kg) — lb 베이스 + kg 애드온(마이크로 원판) 합산
   const plannedKg = (s) => {
     if (typeof s.kg !== "number") return null;
     const base = unit === "lb" ? s.kg / KG2LB : s.kg;
     return Math.round((base + (s.add || 0)) * 10) / 10;
   };
-  // 입력칸 placeholder(표시 단위 기준) — 저장된 값이 있으면 그 값, 없으면 계획값
+  // 입력칸 placeholder(입력 단위 기준 — entryUnit 토글로 kg/lb 교차 입력) — 저장된 값이 있으면 그 값, 없으면 계획값
   const displayFor = (idx, s, field) => {
     const saved = savedFor(idx);
     if (!saved) return field === "w" ? plannedDisplayW(s) : "";
-    if (field === "w") return unit === "lb" ? String(Math.round(saved.w * KG2LB)) : fmt(saved.w);
+    if (field === "w") return entryUnit === "lb" ? String(Math.round(saved.w * KG2LB)) : fmt(saved.w);
     if (field === "reps") return String(saved.reps);
     if (field === "rpe") return saved.rpe === "" || saved.rpe == null ? "" : String(saved.rpe);
   };
   const plannedDisplayW = (s) => {
     const kg = plannedKg(s);
-    if (kg == null) return unit === "lb" ? "lb" : "kg";
-    return unit === "lb" ? String(Math.round(kg * KG2LB)) : fmt(kg);
+    if (kg == null) return entryUnit === "lb" ? "lb" : "kg";
+    return entryUnit === "lb" ? String(Math.round(kg * KG2LB)) : fmt(kg);
   };
 
   const logSet = (idx, s) => {
     const v = inputs[idx] || {};
     const existing = savedFor(idx);
     const hasInput = v.w !== undefined && v.w !== "";
-    const wKg = hasInput ? (unit === "lb" ? Math.round((Number(v.w) / KG2LB) * 10) / 10 : Number(v.w)) : existing ? existing.w : plannedKg(s);
+    const wKg = hasInput ? (entryUnit === "lb" ? Math.round((Number(v.w) / KG2LB) * 10) / 10 : Number(v.w)) : existing ? existing.w : plannedKg(s);
     const reps = v.reps !== undefined && v.reps !== "" ? Number(v.reps) : existing ? existing.reps : null;
     if (!wKg || !reps) return;
     const rpe = v.rpe !== undefined ? (v.rpe === "" ? "" : Number(v.rpe)) : existing ? existing.rpe : "";
@@ -637,7 +638,11 @@ function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input type="number" inputMode="decimal" placeholder={displayFor(idx, s, "w")}
                 value={v.w ?? ""} onChange={(e) => setF(idx, "w", e.target.value)} style={{ ...miniInput, flex: 1.1 }} />
-              <span style={{ color: "#4E525C", fontSize: 12 }}>{it.unit === "lb" ? "lb" : "kg"}×</span>
+              <button type="button" onClick={() => setEntryUnit((u) => (u === "lb" ? "kg" : "lb"))}
+                style={{ background: "#22252B", border: "1px solid #2A2D34", borderRadius: 6, color: "#8B909A", padding: "4px 7px", fontFamily: "inherit", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                {entryUnit}
+              </button>
+              <span style={{ color: "#4E525C", fontSize: 12 }}>×</span>
               <input type="number" inputMode="numeric" placeholder={displayFor(idx, s, "reps") || "렙"} value={v.reps ?? ""} onChange={(e) => setF(idx, "reps", e.target.value)} style={{ ...miniInput, flex: 0.7 }} />
               <input type="number" inputMode="decimal" placeholder={displayFor(idx, s, "rpe") || "RPE"} value={v.rpe ?? ""} onChange={(e) => setF(idx, "rpe", e.target.value)} style={{ ...miniInput, flex: 0.8 }} />
               <button onClick={() => logSet(idx, s)}
@@ -771,6 +776,11 @@ function LogTab({ logs, save, cycle, week, S }) {
 
 /* ───────── 설정 탭 ───────── */
 function Settings({ S, save, TM, cycle, logs }) {
+  // 무게(kg 저장)를 lb로 교차 입력 — 종목별 단위 토글 + 편집 중 임시 원문(draft, 변환 왕복으로 인한 입력값 튐 방지) → blur 시 kg로 환산 저장
+  const [units, setUnits] = useState({});
+  const [draft, setDraft] = useState({});
+  const WEIGHT_FIELDS = ["w", "manual", "inc"];
+  const toggleUnit = (k) => setUnits((u) => ({ ...u, [k]: u[k] === "lb" ? "kg" : "lb" }));
   const upd = (k, field, val) => {
     const patch = { ...S.lifts[k], [field]: val };
     if (field === "manual" && val !== "") patch.baseCycle = cycle; // 수동TM 수정 = 지금부터 재기준 (과거 인상폭 이중 반영 방지)
@@ -792,9 +802,9 @@ function Settings({ S, save, TM, cycle, logs }) {
       <SectionLabel text="TM 설정 — 최근 세트 입력" color="#D8A62A" />
       {Object.entries(S.lifts).map(([k, v]) => (
         <Card key={k}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontWeight: 700, fontSize: 14.5 }}>{liftLabel(k)}</div>
-            <div style={{ fontSize: 12, color: "#8B909A" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, flexWrap: "nowrap", gap: 8 }}>
+            <div style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: "nowrap" }}>{liftLabel(k)}</div>
+            <div style={{ fontSize: 12, color: "#8B909A", whiteSpace: "nowrap", overflowX: "auto" }}>
               e1RM <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#ECEDEF", fontSize: 14 }}>{fmt(TM[k].e)}</b>
               {"  ·  적용 TM "}<b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(TM[k].applied)}</b>
             </div>
@@ -822,13 +832,44 @@ function Settings({ S, save, TM, cycle, logs }) {
             );
           })()}
           <div style={{ display: "flex", gap: 6 }}>
-            {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동TM"], ["inc", "인상폭"]].map(([f, l]) => (
-              <div key={f} style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: "#6E7480", marginBottom: 3 }}>{l}</div>
-                <input type="number" inputMode="decimal" value={v[f]} placeholder={f === "manual" ? "자동" : ""}
-                  onChange={(e) => upd(k, f, e.target.value)} style={{ ...inputStyle, padding: "8px 6px", fontSize: 13 }} />
-              </div>
-            ))}
+            {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동TM"], ["inc", "인상폭"]].map(([f, l]) => {
+              const isWeight = WEIGHT_FIELDS.includes(f);
+              const fieldUnit = units[k] || "kg";
+              const draftKey = `${k}_${f}`;
+              const kgVal = v[f];
+              const displayVal = draft[draftKey] !== undefined
+                ? draft[draftKey]
+                : isWeight && fieldUnit === "lb" && kgVal !== "" && kgVal != null && !isNaN(kgVal)
+                ? String(Math.round(Number(kgVal) * KG2LB * 10) / 10)
+                : kgVal;
+              return (
+                <div key={f} style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: "#6E7480", marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}>
+                    {l}
+                    {isWeight && f === "w" && (
+                      <button type="button" onClick={() => toggleUnit(k)}
+                        style={{ background: "#22252B", border: "1px solid #2A2D34", borderRadius: 4, color: "#8B909A", padding: "1px 4px", fontFamily: "inherit", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>
+                        {fieldUnit}
+                      </button>
+                    )}
+                  </div>
+                  <input type="number" inputMode="decimal" value={displayVal} placeholder={f === "manual" ? "자동" : ""}
+                    onChange={(e) => {
+                      if (isWeight && fieldUnit === "lb") setDraft((p) => ({ ...p, [draftKey]: e.target.value }));
+                      else upd(k, f, e.target.value);
+                    }}
+                    onBlur={() => {
+                      if (!(isWeight && fieldUnit === "lb")) return;
+                      const raw = draft[draftKey];
+                      if (raw !== undefined) {
+                        upd(k, f, raw === "" ? "" : String(Math.round((Number(raw) / KG2LB) * 100) / 100));
+                        setDraft((p) => { const n = { ...p }; delete n[draftKey]; return n; });
+                      }
+                    }}
+                    style={{ ...inputStyle, padding: "8px 6px", fontSize: 13 }} />
+                </div>
+              );
+            })}
           </div>
         </Card>
       ))}
