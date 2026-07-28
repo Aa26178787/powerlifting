@@ -66,10 +66,9 @@ const DEFAULT_SETTINGS = {
     스쿼트: { w: 142.5, reps: 2, rpe: 9, manual: 140, inc: 5 },
     벤치: { w: 80, reps: 12, rpe: 9, manual: 106.5, inc: 2.5 },
     데드: { w: 185, reps: 1, rpe: 9, manual: 175, inc: 5 },
-    중딥: { w: 41, reps: 3, rpe: 8.5, manual: "", inc: 2.5 }, // 사이클당 추정 증량(실측 기반 조정 가능)
-    "중량 풀업": { w: 17.5, reps: 3, rpe: 8, manual: "", inc: 1.25 }, // 사이클당 추정 증량(실측 기반 조정 가능)
+    중딥: { weight: 90, unit: "lb", inc: 2.5 }, // weight=현재 작업무게(lb), inc=예측 탭 전용 추정치
+    "중량 풀업": { weight: 20, unit: "kg", inc: 1.25 }, // weight=현재 작업무게(kg), inc=예측 탭 전용 추정치
   },
-  singles: { 스쿼트: "", 벤치: "", 데드: "" }, // 3주차 싱글 기입 (빈칸=자동)
 };
 
 const SEED_LOGS = [
@@ -86,58 +85,54 @@ const SEED_LOGS = [
 
 const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
 const MAIN_LIFTS = ["스쿼트", "벤치", "데드"];
-// Firestore는 맵 필드의 저장 순서를 보장하지 않아 저장 직후 실시간 동기화로 되읽으면 순서가 바뀔 수 있음
-// → S.lifts를 Object.entries 순서에 의존하지 않고 이 고정 순서로만 렌더링(카드 위치 재배열 방지)
-const LIFT_ORDER = ["스쿼트", "벤치", "데드", "중딥", "중량 풀업"];
 
-/* ───────── 신호1: AMRAP 초과렙 → 인상폭 배율 (3대 전용, 완전 자동) ───────── */
-const AMRAP_TARGET = {
-  "1주": { 스쿼트: 12, 벤치: 12, 데드: 5 },
-  "2주": { 스쿼트: 8, 벤치: 8, 데드: 5 },
-  "3주": { 스쿼트: 5, 벤치: 5, 데드: 5 },
+/* ───────── RPE+렙 이중 웨이브 (2026-07-29 개편, AMRAP·TM 폐지) ───────── */
+// 종목별 렙 상한(작업 세트만) — 초과 시 상한으로 캡하고 같은 RPE로 %e1RM 재계산
+const REP_CAP = { 스쿼트: 8, 벤치: 6, 데드: 4 };
+// e1RM 공식의 역산: 주어진 렙·RPE에서 %e1RM (e1rm = w*(1+(reps+(10-rpe))/30) 의 역함수)
+const pctOfE1rm = (rep, rpe) => 30 / (40 + rep - rpe);
+const capRep = (lift, rep) => Math.min(rep, REP_CAP[lift] ?? rep);
+// 메인(앵커) 웨이브 — 스쿼트·벤치·데드 공통, 렙 상한만 종목별로 캡
+const MAIN_WAVE = { 1: { rpe: 7, rep: 5 }, 2: { rpe: 8, rep: 3 }, 3: { rpe: 9, rep: 1 }, 4: { rpe: 6, rep: 3 } };
+// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 렙 상한만 종목별로 캡
+const VAR_WAVE = { 1: { rpe: 9, rep: 3 }, 2: { rpe: 8, rep: 5 }, 3: { rpe: 6, rep: 8 }, 4: { rpe: 5, rep: 5 } };
+const waveSet = (table, lift, w, e1) => {
+  const { rpe } = table[w];
+  const rep = capRep(lift, table[w].rep);
+  const p = pctOfE1rm(rep, rpe);
+  return { rpe, rep, pctLabel: `${(p * 100).toFixed(1)}%`, kg: e1 != null ? r25(e1 * p) : null };
 };
-const amrapMultiplier = (excess) => {
-  if (excess >= 4) return 2;
-  if (excess >= 2) return 1;
-  if (excess >= 0) return 0.5;
-  return 0;
-};
-// 해당 사이클의 실현 배율 — 3주(86.5%)>2주>1주 순으로 가장 최근 기록된 AMRAP 세트 사용, 기록 없으면 null(판단 불가 → 기본 배율 1 적용)
-const cycleAmrapMultiplier = (lift, cyc, logs) => {
-  for (const wkKey of ["3주", "2주", "1주"]) {
-    const log = logs.find((l) => l.lift === lift && l.cyc === String(cyc) && l.wk === wkKey && l.setIdx === 2);
-    if (log) return amrapMultiplier(log.reps - AMRAP_TARGET[wkKey][lift]);
+const mainSet = (lift, w, e1) => waveSet(MAIN_WAVE, lift, w, e1);
+const varSet = (lift, w, e1) => waveSet(VAR_WAVE, lift, w, e1);
+
+// 3대 e1RM — 3주차 "진짜 싱글" 실측 로그가 사이클 간 기준점 갱신(계획보다 여유 있으면 위로, 딱 맞으면 자연 유지) · manual 입력 시 그 값 우선
+const currentE1rm = (lift, S, logs, cycle) => {
+  const v = S.lifts[lift];
+  if (v.manual !== "" && v.manual != null) return Number(v.manual);
+  for (let c = cycle - 1; c >= 1; c--) {
+    const log = logs.find((l) => l.lift === lift && l.wk === "3주" && String(l.cyc) === String(c) && l.setIdx === 0);
+    if (log) return e1rm(log.w, log.reps, log.rpe);
   }
-  return null;
+  return e1rm(Number(v.w), Number(v.reps), v.rpe === "" ? "" : Number(v.rpe));
 };
 
-/* ───────── 신호2: 3주차 고정렙 세트 RPE 여유 → TM 재산정 권장 플래그 (알림 전용, 자동 미적용) ───────── */
-const PRESCRIBED_RPE_W3 = 8;
-const signal2Flag = (lift, logs) => {
-  const candidates = logs.filter((l) => l.lift === lift && l.wk === "3주" && (l.setIdx === 0 || l.setIdx === 1));
-  if (!candidates.length) return null;
-  const maxCyc = Math.max(...candidates.map((l) => Number(l.cyc)));
-  const rows = candidates.filter((l) => Number(l.cyc) === maxCyc && l.rpe !== "" && l.rpe != null);
-  if (!rows.length) return null;
-  let flagOn = false, freeze = false;
-  for (const l of rows) {
-    const diff = PRESCRIBED_RPE_W3 - Number(l.rpe);
-    if (diff >= 1.5) flagOn = true;
-    if (diff <= 0) freeze = true;
-  }
-  return { cyc: maxCyc, flagOn, freeze };
+// 중딥·중량풀업 4×5 스트레이트 — 마지막(4번째) 세트 RPE로 다음 세션 무게 증량폭 판정
+const progressionInc = (rpe, unit) => {
+  if (rpe === "" || rpe == null) return 0;
+  const r = Number(rpe);
+  if (r <= 6.5) return unit === "lb" ? 10 : 5;
+  if (r <= 7.5) return unit === "lb" ? 5 : 2.5;
+  if (r <= 8) return unit === "lb" ? 2.5 : 1.25;
+  return 0; // 8.5~9 유지 / 9.5+ 유지+재판단(플래그는 UI에서 별도 표시)
 };
-// 신호2를 발생시킨 실제 세트(싱글/92%) 특정 — RPE 여유가 가장 큰 쪽 우선
-const signal2Trigger = (lift, logs) => {
-  const flag = signal2Flag(lift, logs);
-  if (!flag || !flag.flagOn) return null;
-  const rows = logs.filter((l) => l.lift === lift && l.wk === "3주" && Number(l.cyc) === flag.cyc && (l.setIdx === 0 || l.setIdx === 1) && l.rpe !== "" && l.rpe != null);
-  return rows.reduce((best, l) => {
-    const diff = PRESCRIBED_RPE_W3 - Number(l.rpe);
-    if (diff < 1.5) return best;
-    if (!best) return l;
-    return PRESCRIBED_RPE_W3 - Number(best.rpe) >= diff ? best : l;
-  }, null);
+// 저장된 작업무게 없으면 구 TM 체계에서 1회 이관(라이브 사용자 기존 진행치 보존)
+const legacyWorkingWeight = (v, unit) => {
+  if (v.weight != null && v.weight !== "") return Number(v.weight);
+  if (v.w == null) return null;
+  const e = e1rm(Number(v.w), Number(v.reps), v.rpe === "" ? "" : Number(v.rpe));
+  const legacyApplied = v.manual !== "" && v.manual != null ? Number(v.manual) : e ? Math.round(e * 0.9 * 10) / 10 : null;
+  if (legacyApplied == null) return null;
+  return unit === "lb" ? r5(legacyApplied * 0.95 * KG2LB) : r25(legacyApplied * 0.95);
 };
 const PLATE = {
   1: { c: "#C9463D", label: "볼륨" }, // 25kg 빨강
@@ -208,123 +203,63 @@ function App() {
     save({ ...S, startDate: toDateStr(newStart) });
   };
 
-  /* TM 계산 */
-  const TM = useMemo(() => {
+  /* e1RM(3대) — 3주차 진짜 싱글 실측이 사이클 간 기준점 갱신 */
+  const E1 = useMemo(() => {
     const out = {};
-    for (const [k, v] of Object.entries(S.lifts)) {
-      const e = e1rm(Number(v.w), Number(v.reps), v.rpe === "" ? "" : Number(v.rpe));
-      const auto = e ? Math.round(e * 0.9 * 10) / 10 : null;
-      const base = v.manual !== "" && v.manual != null ? Number(v.manual) : auto;
-      let applied = null;
-      if (base != null) {
-        if (MAIN_LIFTS.includes(k)) {
-          // 신호1(AMRAP 초과렙 배율)만 반영 — 사이클마다 실현된 인상폭을 base부터 누적
-          const baseCycle = v.baseCycle || 1;
-          applied = base;
-          for (let c = baseCycle; c < cycle; c++) {
-            const mult = cycleAmrapMultiplier(k, c, logs);
-            applied += Number(v.inc || 0) * (mult == null ? 1 : mult);
-          }
-        } else {
-          applied = base + (cycle - 1) * Number(v.inc || 0); // 중딥·중량풀업은 기존 방식 그대로
-        }
-      }
-      out[k] = { e, auto, applied };
-    }
+    for (const k of MAIN_LIFTS) out[k] = currentE1rm(k, S, logs, cycle);
     return out;
   }, [S, cycle, logs]);
 
-  const tm = (k) => TM[k]?.applied;
+  /* 중딥·중량풀업 현재 작업무게 (구 TM 체계 사용자는 1회 자동 이관) */
+  const dipPullWeight = (key) => legacyWorkingWeight(S.lifts[key], S.lifts[key].unit || "kg");
 
-  /* 중딥/중량 풀업 파생 무게 */
-  const dipTM_lb = tm("중딥") != null ? tm("중딥") * KG2LB : null;
-  const dipBaseLb = dipTM_lb != null ? r5(dipTM_lb * 0.95) : null; // lb 베이스, 사이클 내내 고정
-  const dBoff = (t) => (t != null ? r5(t * 0.5) : null); // 실측 90→45 = 50% 비율
-  const pullTop1 = tm("중량 풀업") ? r25(tm("중량 풀업") * 0.95) : null;
-  const pullTop2 = pullTop1 != null ? pullTop1 + 2.5 : null;
-  const boff = (t) => (t != null ? Math.max(0, r25(t * 0.525)) : null);
+  /* 목표/예측 탭용 kg 환산 통합 맵 (딥=lb→kg 환산, 풀업=kg 그대로) */
+  const E1ALL = useMemo(() => {
+    const out = { ...E1 };
+    const dW = dipPullWeight("중딥");
+    out["중딥"] = dW != null ? Math.round((dW / KG2LB) * 10) / 10 : null;
+    out["중량 풀업"] = dipPullWeight("중량 풀업");
+    return out;
+  }, [E1, S, cycle, logs]);
 
-  /* 3주차 싱글 (기입 없으면 92.5% 자동) */
-  const single = (k) => {
-    const man = S.singles?.[k];
-    if (man !== "" && man != null && !isNaN(Number(man))) return Number(man);
-    return tm(k) ? r25(tm(k) * 0.925) : null;
-  };
-
-  /* 주차별 세션 구성 */
+  /* 주차별 세션 구성 — RPE+렙 이중 웨이브, 월~금 구조는 4주차(디로드)도 동일(웨이브 표만 가벼워짐) */
   const weekPlan = (w) => {
-    const P = { 1: [0.6, 0.7, 0.75], 2: [0.675, 0.75, 0.825] }[w];
-    const R = {
-      1: { 스쿼트: ["8", "8", "12+"], 벤치: ["8", "10", "12+"], 데드: ["5", "5", "5+ 캡7"] },
-      2: { 스쿼트: ["5", "5", "8+"], 벤치: ["5", "6", "8+"], 데드: ["4", "4", "5+ 캡6"] },
-    }[w];
-    const main = (lift) => {
-      const nm = lift === "벤치" ? (w >= 3 ? "벤치 · Comp(정지)" : "벤치 · 터치앤고") : lift;
-      return w <= 2
-        ? { name: nm, logName: lift, sets: "각 1세트", detail: P.map((p, i) => ({ pct: `${p * 100}%`, kg: r25(tm(lift) * p), rep: R[lift][i] })) }
-        : w === 3
-        ? {
-            name: nm, logName: lift, sets: "각 1세트", single: true,
-            detail: [
-              { pct: "기입", kg: single(lift), rep: "1 @RPE8" },
-              { pct: "92%", kg: single(lift) ? r25(single(lift) * 0.92) : null, rep: "3" },
-              { pct: "86.5%", kg: single(lift) ? r25(single(lift) * 0.865) : null, rep: "5+" },
-            ],
-          }
-        : { name: nm, logName: lift, sets: "2세트", detail: [{ pct: "75%", kg: r25(tm(lift) * 0.75), rep: "3 (RPE≤7)" }] };
+    const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
+    const wave = (table, lift, name) => {
+      const s = waveSet(table, lift, w, E1[lift]);
+      const single = table === MAIN_WAVE && w === 3 ? " (진짜 싱글)" : "";
+      return { name, logName: name, sets: "1세트", detail: [{ pct: s.pctLabel, kg: s.kg, rep: `${s.rep}${single} @RPE${s.rpe}` }] };
+    };
+    const main = (lift) => wave(MAIN_WAVE, lift, lift);
+    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name);
+    const straight4x5 = (key) => {
+      const unit = S.lifts[key].unit || "kg";
+      const wgt = dipPullWeight(key);
+      return {
+        name: liftLabel(key), logName: key, acc: true, sets: "4×5 @RPE8", unit,
+        progressKey: w === 4 ? null : key, progressUnit: unit,
+        detail: [0, 1, 2, 3].map(() => ({ pct: "", kg: wgt, rep: "5" })),
+      };
     };
 
-    const dipAdd = w >= 2 ? 2.5 : 0; // 2주차부터 마이크로 원판 +2.5kg 표시
-    const dTop = w === 1 || w === 2 ? { kg: dipBaseLb, add: dipAdd, rep: "3 ≤RPE8" } : null;
-    const pTop = w === 1 ? { kg: pullTop1, rep: "3 ≤RPE8" } : w === 2 ? { kg: pullTop2, rep: "3 ≤RPE8" } : null;
-    const dB = dBoff(dipBaseLb);
-    const pB = boff(w >= 2 ? pullTop2 : pullTop1);
-    const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
-    // logName(식별자)은 기존 기록 매칭을 위해 "중딥"으로 유지, 화면 표시만 "중량딥스"로
-    const accDip = (name, kg, rep, sets, unit, add) => ({ ...acc(name, kg, rep, sets, unit, add), name: liftLabel(name) });
-
-    if (w === 4)
-      return [
-        { day: "월", items: [main("스쿼트")] },
-        { day: "화", items: [main("벤치"), accDip("중딥 백오프", dB, "8~12", "1세트", "lb", dipAdd)] },
-        { day: "수", items: [main("데드"), acc("중량 풀업 백오프", pB, "8~12", "1세트")] },
-        { day: "목", items: [{ name: "변형 전부 반토막 또는 휴무", note: true }] },
-        { day: "금", items: [{ name: "가볍게 또는 휴무", note: true }] },
-      ];
-
     return [
-      { day: "월", items: [main("스쿼트"), acc("스포토 프레스", r25(tm("벤치") * 0.68), "8", "3세트"), acc("Shoulder", null, "10~12", "4세트"), acc("Chest Press", null, "8~10", "3세트"), acc("Chest ISO", null, "12~15", "3세트"), acc("Row", null, "8~12", "4세트"), acc("Core", null, "30~60초", "3세트")] },
+      { day: "월", items: [variation("스쿼트", "볼륨 스쿼트"), variation("벤치", "라슨 벤치"), straight4x5("중딥"), acc("로우", null, "8~12", "4세트"), acc("Core", null, "30~60초", "3세트")] },
+      { day: "화", items: [variation("벤치", "템포 벤치"), variation("데드", "정지 데드"), straight4x5("중량 풀업"), acc("사이드델트", null, "15~20", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
       {
-        day: "화",
+        day: "수",
         items: [
+          { name: "순서 고정: 스쿼트→벤치 · 사이 휴식 5분 이상", note: true },
+          main("스쿼트"),
           main("벤치"),
-          w === 3
-            ? accDip("중딥 백오프", dB, "8~12 (탑 생략)", "3세트", "lb", dipAdd)
-            : { name: "중량딥스", logName: "중딥", acc: true, sets: "탑1+백2", unit: "lb", detail: [{ pct: "95%", kg: dTop.kg, rep: dTop.rep, add: dTop.add }, { pct: "50%", kg: dB, rep: "8~12 ×2", add: dipAdd }] },
-          acc("Triceps", null, "12~15", "4세트"),
-          acc("Side Delt", null, "15~20", "4세트"),
-          acc("Biceps", null, "8~12", "4세트"),
+          acc("Chest ISO", null, "12~15", "3세트"),
         ],
       },
-      { day: "수", items: [main("데드"), acc("중량 풀업 백오프", pB, "8~12", "3세트"), acc("Hip Hinge (Compound)", null, "8~12", "4세트"), acc("Rear Delt", null, "15~20", "4세트"), acc("Biceps (Hammer Grip)", null, "10~12", "4세트")] },
-      { day: "목", items: [acc("정지 스쿼트", r25(tm("스쿼트") * 0.72), "6", "3세트"), acc("클로즈그립 벤치", 65, "8", "3세트"), accDip("중딥 백오프", dB, "8~12", "3세트", "lb", dipAdd), acc("Quad", null, "12~15", "4세트"), acc("Chest Press", null, "8~10", "3세트"), acc("Front Delt", null, "12~15", "4세트"), acc("Rear Delt", null, "15~20", "4세트")] },
-      {
-        day: "금",
-        items: [
-          acc("데피싯 데드 ⇄ RDL", r25(tm("데드") * 0.6), "5 풀ROM (RDL주: 100×8)", "3세트"),
-          w === 3
-            ? acc("중량 풀업 백오프", pB, "8~12 (탑 생략)", "3세트")
-            : { name: "중량 풀업", logName: "중량 풀업", acc: true, sets: "탑1+백2", detail: [{ pct: "95%", kg: pTop.kg, rep: pTop.rep }, { pct: "52.5%", kg: pB, rep: "8~12 ×2" }] },
-          acc("Hamstring", null, "10~12", "4세트"),
-          acc("Lower Back", null, "12~15", "4세트"),
-          acc("Biceps", null, "10~12", "4세트"),
-          acc("Triceps", null, "12~15", "3세트"),
-        ],
-      },
+      { day: "목", items: [acc("슈러그", null, "10~15", "4세트"), acc("리스트컬", null, "15~20", "3세트"), acc("리버스 리스트컬", null, "15~20", "3세트"), acc("트라이셉스", null, "12~15", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
+      { day: "금", items: [main("데드"), variation("벤치", "클로즈그립 벤치"), acc("정지 딥스", null, "6~8", "3세트"), acc("상단 하프 친업", null, "6~10", "3세트"), acc("리어델트", null, "15~20", "4세트")] },
     ];
   };
 
-  const plan = useMemo(() => weekPlan(wk), [wk, S, cycle]);
+  const plan = useMemo(() => weekPlan(wk), [wk, S, cycle, logs]);
   const todayItems = plan.find((d) => d.day === dow);
   const pc = PLATE[wk];
 
@@ -365,10 +300,10 @@ function App() {
       </div>
 
       {tab === "today" && <Today dow={dow} items={todayItems} week={week} logs={logs} save={save} S={S} cycle={cycle} weekPlan={weekPlan} />}
-      {tab === "cycle" && <Cycle plan={plan} wk={wk} setViewWeek={setViewWeek} S={S} save={save} single={single} />}
+      {tab === "cycle" && <Cycle plan={plan} wk={wk} setViewWeek={setViewWeek} />}
       {tab === "log" && <LogTab logs={logs} save={save} cycle={cycle} week={week} S={S} />}
-      {tab === "set" && <Settings S={S} save={save} TM={TM} cycle={cycle} logs={logs} />}
-      {tab === "proj" && <Projection S={S} TM={TM} cycle={cycle} week={week} />}
+      {tab === "set" && <Settings S={S} save={save} E1={E1} E1ALL={E1ALL} dipPullWeight={dipPullWeight} />}
+      {tab === "proj" && <Projection S={S} E1={E1} E1ALL={E1ALL} cycle={cycle} week={week} />}
 
       {/* 하단 탭 */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#1B1D22", borderTop: "1px solid #2A2D34", display: "flex", zIndex: 50 }}>
@@ -470,7 +405,7 @@ function Today({ dow, items, week, logs, save, S, cycle, weekPlan }) {
           )}
           {!rest && (
             <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.7, padding: "10px 4px" }}>
-              · AMRAP은 바 속도가 확연히 느려지는 렙 +1에서 종료 (데드는 캡 우선, 4렙 이후 리셋 호흡)<br />
+              · RPE가 애매하면 항상 높은 쪽으로 기록 (스티킹 구간 속도가 안 끊기면 8, 찰나라도 멈칫하면 8.5)<br />
               · 세트 옆 체크를 누르면 기록 탭에 바로 등록됩니다
             </div>
           )}
@@ -485,7 +420,7 @@ function Today({ dow, items, week, logs, save, S, cycle, weekPlan }) {
           ) : (
             <>
               {selPlanned.cycle !== cycle && (
-                <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>· {selPlanned.cycle}사이클 {selPlanned.week}주차 — 참고: 무게는 현재 TM 기준으로 역산돼 당시와 다를 수 있어요</div>
+                <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>· {selPlanned.cycle}사이클 {selPlanned.week}주차 — 참고: 무게는 현재 e1RM 기준으로 역산돼 당시와 다를 수 있어요</div>
               )}
               {[...selPlanned.items.items].sort((a, b) => (hasWeightInput(b) ? 1 : 0) - (hasWeightInput(a) ? 1 : 0)).map((it, i) => (
                 <TodayCard key={i} it={it} logs={logs} save={save} week={selPlanned.week} cycle={selPlanned.cycle} date={selDate} S={S} autoSingle={selPlanned.cycle === cycle} />
@@ -612,8 +547,12 @@ function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
     const rpe = v.rpe !== undefined ? (v.rpe === "" ? "" : Number(v.rpe)) : existing ? existing.rpe : "";
     const entry = { id: existing?.id || Date.now() + idx, date: targetDate, cyc: String(cycle), wk: `${week}주`, lift: liftName, w: wKg, reps, rpe, memo: s.pct ? `${s.pct} 세트` : "", setIdx: idx };
     const nl = existing ? logs.map((l) => (l.id === existing.id ? entry : l)) : [...logs, entry];
-    if (autoSingle && it.single && idx === 0 && S) {
-      const ns = { ...S, singles: { ...(S.singles || {}), [liftName]: String(wKg) } };
+    if (autoSingle && it.progressKey && idx === it.detail.length - 1 && S) {
+      const inc = progressionInc(rpe, it.progressUnit);
+      const cur = S.lifts[it.progressKey];
+      const curWeight = cur.weight != null && cur.weight !== "" ? Number(cur.weight) : legacyWorkingWeight(cur, it.progressUnit);
+      const base = curWeight != null ? curWeight : it.progressUnit === "lb" ? Math.round(wKg * KG2LB) : wKg;
+      const ns = { ...S, lifts: { ...S.lifts, [it.progressKey]: { ...cur, weight: base + inc } } };
       save(ns, nl);
     } else {
       save(null, nl);
@@ -662,7 +601,7 @@ function TodayCard({ it, logs, save, week, cycle, date, S, autoSingle }) {
 const miniInput = { minWidth: 0, background: "#1B1D22", border: "1px solid #2A2D34", borderRadius: 7, color: "#ECEDEF", padding: "7px 6px", fontSize: 13, fontFamily: "inherit", textAlign: "center" };
 
 /* ───────── 사이클 탭 ───────── */
-function Cycle({ plan, wk, setViewWeek, S, save, single }) {
+function Cycle({ plan, wk, setViewWeek }) {
   return (
     <div style={{ padding: "6px 16px" }}>
       <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
@@ -674,22 +613,6 @@ function Cycle({ plan, wk, setViewWeek, S, save, single }) {
         ))}
       </div>
 
-      {wk === 3 && (
-        <Card>
-          <div style={{ fontSize: 12.5, color: "#8B909A", marginBottom: 8 }}>싱글 실측 기입 (비우면 TM×92.5% 자동 · 백오프 연동)</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["스쿼트", "벤치", "데드"].map((k) => (
-              <div key={k} style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>{k}</div>
-                <input type="number" inputMode="decimal" value={S.singles?.[k] ?? ""} placeholder={fmt(single(k))}
-                  onChange={(e) => save({ ...S, singles: { ...S.singles, [k]: e.target.value } })}
-                  style={inputStyle} />
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
       {plan.map((d, i) => (
         <div key={i} style={{ marginBottom: 14 }}>
           <SectionLabel text={d.day + "요일"} color={pcColor(wk)} />
@@ -698,11 +621,11 @@ function Cycle({ plan, wk, setViewWeek, S, save, single }) {
       ))}
 
       <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.8, padding: "4px 4px 16px" }}>
-        · 중량딥스(lb): 1주 탑 → 2주 탑 +2.5kg 상당(≈6lb, 마이크로 원판 조합) 자동 증량 / 백오프=탑의 50% / 실패(RPE9 초과) 시 무게 유지<br />
-        · 중량딥스·중량 풀업 백오프 증량(마지막 세트 렙 기준): 12렙 → +5kg(딥 +10lb) / 10렙 → +2.5kg(딥 +5lb) / 8렙 → +1.25kg(딥 +2.5lb) / 7렙 이하 → 유지<br />
-        · 중량 풀업(kg) 탑: RPE≤7 → +2.5, RPE8 → +1.25<br />
-        · 벤치: 1~2주 터치앤고(볼륨·바스피드), 3주 이후 Comp(가슴 정지) — 시합 특이성 확보 + 실측 검증<br />
-        · 3주 싱글: RPE 8 이하면 자율 증량, 9 초과면 그날 증량 없음 / 디로드: 전 세트 RPE≤7, 보조 반토막
+        · 렙 상한(작업 세트만): 스쿼트 8 / 벤치 6 / 데드 4 — 웨이브 렙이 상한을 넘으면 상한으로 캡하고 같은 RPE로 %e1RM 재계산(화면 % 그대로 반영됨)<br />
+        · 메인 3주차 = 진짜 싱글. 이 실측(무게×1@RPE)이 다음 사이클 e1RM 기준점 — 처방보다 여유 있었으면 자동으로 위로, 딱 맞았으면 자연히 유지<br />
+        · 중딥·중량풀업 4×5: 4번째(마지막) 세트 RPE로 판정 — ≤6.5 +5kg(딥+10lb) / 7~7.5 +2.5kg(딥+5lb) / 8 +1.25kg(딥+2.5lb) / 8.5~9 유지 / 9.5+ 유지+다음 세션 컨디션 재판단 (4주차 디로드는 증량 판정 없이 수행만)<br />
+        · RPE 애매하면 항상 높은 쪽으로. 8=스티킹에서 느려지되 안 끊김, 8.5=찰나라도 멈칫 후 재가속, 9=명확한 그라인드<br />
+        · 그립: 볼륨용 당기기(로우·중량풀업 백오프성 볼륨)는 스트랩 허용 / 메인 데드·정지 데드는 맨손 유지
       </div>
     </div>
   );
@@ -778,66 +701,32 @@ function LogTab({ logs, save, cycle, week, S }) {
 }
 
 /* ───────── 설정 탭 ───────── */
-function Settings({ S, save, TM, cycle, logs }) {
+function Settings({ S, save, E1, E1ALL, dipPullWeight }) {
   // 무게(kg 저장)를 lb로 교차 입력 — 종목별 단위 토글 + 편집 중 임시 원문(draft, 변환 왕복으로 인한 입력값 튐 방지) → blur 시 kg로 환산 저장
   const [units, setUnits] = useState({});
   const [draft, setDraft] = useState({});
   const WEIGHT_FIELDS = ["w", "manual", "inc"];
   const toggleUnit = (k) => setUnits((u) => ({ ...u, [k]: u[k] === "lb" ? "kg" : "lb" }));
-  const upd = (k, field, val) => {
-    const patch = { ...S.lifts[k], [field]: val };
-    if (field === "manual" && val !== "") patch.baseCycle = cycle; // 수동TM 수정 = 지금부터 재기준 (과거 인상폭 이중 반영 방지)
-    save({ ...S, lifts: { ...S.lifts, [k]: patch } });
-  };
-  // 신호2 승인: TM 값을 직접 덮어쓰지 않고 무게/렙/RPE 입력 소스를 교체 → e1RM·적용TM은 기존 공식으로 재계산
-  const approveRecalc = (k) => {
-    const trigger = signal2Trigger(k, logs);
-    if (!trigger) return;
-    const newE = e1rm(trigger.w, trigger.reps, trigger.rpe);
-    const newApplied = newE ? Math.round(newE * 0.9 * 10) / 10 : null;
-    const ok = window.confirm(`${liftLabel(k)} TM을 새 e1RM 기준값(${fmt(newApplied)}kg)으로 재산정하시겠습니까?\n입력: ${fmt(trigger.w)}kg × ${trigger.reps} @${trigger.rpe}`);
-    if (!ok) return;
-    save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], w: trigger.w, reps: trigger.reps, rpe: trigger.rpe, manual: "", baseCycle: cycle } } });
-  };
+  const upd = (k, field, val) => save({ ...S, lifts: { ...S.lifts, [k]: { ...S.lifts[k], [field]: val } } });
 
   return (
     <div style={{ padding: "6px 16px" }}>
-      <SectionLabel text="TM 설정 — 최근 세트 입력" color="#D8A62A" />
-      {LIFT_ORDER.filter((k) => S.lifts[k]).map((k) => {
+      <SectionLabel text="3대 — e1RM (TM 없음, 직접 % 기준)" color="#D8A62A" />
+      {MAIN_LIFTS.map((k) => {
         const v = S.lifts[k];
         return (
         <Card key={k}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, flexWrap: "nowrap", gap: 8 }}>
-            <div style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: "nowrap" }}>{liftLabel(k)}</div>
-            <div style={{ fontSize: 12, color: "#8B909A", whiteSpace: "nowrap", overflowX: "auto" }}>
-              e1RM <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#ECEDEF", fontSize: 14 }}>{fmt(TM[k].e)}</b>
-              {"  ·  적용 TM "}<b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(TM[k].applied)}</b>
+            <div style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: "nowrap" }}>{k}</div>
+            <div style={{ fontSize: 12, color: "#8B909A", whiteSpace: "nowrap" }}>
+              e1RM <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(E1[k])}</b>
             </div>
           </div>
-          {MAIN_LIFTS.includes(k) && (() => {
-            const mult = cycleAmrapMultiplier(k, cycle, logs);
-            const previewInc = Number(v.inc || 0) * (mult == null ? 1 : mult);
-            const flag = signal2Flag(k, logs);
-            return (
-              <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>
-                다음 사이클 인상폭 예상: <b style={{ color: "#ECEDEF" }}>+{fmt(previewInc)}kg</b>
-                {mult == null ? " (AMRAP 기록 없음 · 기본 배율 적용)" : ` (배율 ${mult}×)`}
-                {flag?.flagOn && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                    <div style={{ color: "#D8A62A", fontWeight: 700 }}>⚠ TM 재산정 권장 — {flag.cyc}사이클 3주차 RPE 여유 큼</div>
-                    <button onClick={() => approveRecalc(k)} style={{ background: "#D8A62A", color: "#141519", border: "none", borderRadius: 6, padding: "3px 9px", fontWeight: 700, fontFamily: "inherit", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
-                      재산정 승인
-                    </button>
-                  </div>
-                )}
-                {flag && !flag.flagOn && flag.freeze && (
-                  <div style={{ color: "#8B909A", marginTop: 3 }}>동결/보수적 검토 대상 ({flag.cyc}사이클 3주차)</div>
-                )}
-              </div>
-            );
-          })()}
+          <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 8 }}>
+            3주차 진짜 싱글 실측 로그가 있으면 그 값(무게×1@RPE)으로 다음 사이클 e1RM 자동 갱신 · 아래 "수동 e1RM"을 채우면 그 값이 항상 우선
+          </div>
           <div style={{ display: "flex", gap: 6 }}>
-            {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동TM"], ["inc", "인상폭"]].map(([f, l]) => {
+            {[["w", "무게"], ["reps", "횟수"], ["rpe", "RPE"], ["manual", "수동 e1RM"], ["inc", "예측 인상폭"]].map(([f, l]) => {
               const isWeight = WEIGHT_FIELDS.includes(f);
               const fieldUnit = units[k] || "kg";
               const draftKey = `${k}_${f}`;
@@ -880,6 +769,34 @@ function Settings({ S, save, TM, cycle, logs }) {
         );
       })}
 
+      <SectionLabel text="중딥·중량풀업 — 4×5 작업무게" color="#D8A62A" />
+      {["중딥", "중량 풀업"].map((k) => {
+        const v = S.lifts[k];
+        const cur = dipPullWeight(k);
+        return (
+          <Card key={k}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 14.5 }}>{liftLabel(k)}</div>
+              <div style={{ fontSize: 12, color: "#8B909A" }}>현재 <b style={{ fontFamily: "system-ui, -apple-system, sans-serif", color: "#D8A62A", fontSize: 14 }}>{fmt(cur)}{v.unit}</b></div>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "#6E7480", marginBottom: 3 }}>작업무게({v.unit})</div>
+                <input type="number" inputMode="decimal" value={v.weight ?? ""} placeholder={fmt(cur)}
+                  onChange={(e) => upd(k, "weight", e.target.value)}
+                  style={{ ...inputStyle, padding: "8px 6px", fontSize: 13 }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "#6E7480", marginBottom: 3 }}>예측 인상폭(kg 환산, 예측 탭 전용)</div>
+                <input type="number" inputMode="decimal" value={v.inc ?? ""}
+                  onChange={(e) => upd(k, "inc", e.target.value)}
+                  style={{ ...inputStyle, padding: "8px 6px", fontSize: 13 }} />
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+
       <Card>
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <div style={{ flex: 1 }}>
@@ -895,13 +812,13 @@ function Settings({ S, save, TM, cycle, logs }) {
           <div style={{ fontSize: 11, color: "#6E7480", marginBottom: 3 }}>대회일 (예상)</div>
           <input type="date" value={S.compDate || ""} onChange={(e) => save({ ...S, compDate: e.target.value })} style={inputStyle} />
         </div>
-        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대(스쿼트·벤치·데드): AMRAP 초과렙에 따라 인상폭 배율(0~2×) 자동 반영 · "TM 재산정 권장" 뜨면 "재산정 승인" 버튼으로 확인 후에만 무게/렙/RPE가 최신 퍼포먼스로 교체됨(자동 변경 안 됨)</div>
-        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중량딥스·중량 풀업 인상폭은 실측 데이터가 적어 추정값(딥 2.5/풀업 1.25) — 사이클 지날수록 실제 속도로 조정하세요</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대: 매주 처방은 e1RM×%로 직접 산출(TM·AMRAP 없음). e1RM은 3주차 진짜 싱글 실측으로 사이클마다 자동 갱신</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중딥·중량풀업: 4×5 마지막 세트 RPE로 매주 자동 증량(디로드 주는 판정 없이 수행만)</div>
       </Card>
 
       <SectionLabel text="장기 목표" color="#D8A62A" />
       {Object.entries(GOALS).map(([k, g]) => {
-        const cur = TM[k]?.e;
+        const cur = E1ALL[k];
         const pct = cur ? Math.min(100, Math.round((cur / g) * 100)) : 0;
         return (
           <div key={k} style={{ marginBottom: 12 }}>
@@ -922,7 +839,7 @@ function Settings({ S, save, TM, cycle, logs }) {
 }
 
 /* ───────── 예측 탭 ───────── */
-function Projection({ S, TM, cycle, week }) {
+function Projection({ S, E1, E1ALL, cycle, week }) {
   const items = [
     { key: "스쿼트", color: "#C9463D" },
     { key: "벤치", color: "#3B6FB5" },
@@ -932,14 +849,14 @@ function Projection({ S, TM, cycle, week }) {
   ];
   return (
     <div style={{ padding: "6px 16px" }}>
-      {S.compDate && <CompPredict S={S} TM={TM} cycle={cycle} />}
+      {S.compDate && <CompPredict S={S} E1={E1} cycle={cycle} />}
       <SectionLabel text="목표 도달 예측" color="#D8A62A" />
       {items.map((it) => (
         <ProjChart
           key={it.key}
           label={liftLabel(it.key)}
           color={it.color}
-          applied={TM[it.key]?.e}
+          applied={E1ALL[it.key]}
           inc={Number(S.lifts[it.key]?.inc) || 0}
           goal={GOALS[it.key]}
           curCycle={cycle}
@@ -956,7 +873,7 @@ function Projection({ S, TM, cycle, week }) {
 }
 
 /* ───────── 경기 예측 (컴프 3대) ───────── */
-function CompPredict({ S, TM, cycle }) {
+function CompPredict({ S, E1, cycle }) {
   const start = new Date(S.startDate + "T00:00:00");
   const comp = new Date(S.compDate + "T00:00:00");
   const now = new Date();
@@ -971,7 +888,7 @@ function CompPredict({ S, TM, cycle }) {
   ];
 
   const rows = lifts.map((l) => {
-    const e = TM[l.key]?.e;
+    const e = E1[l.key];
     const inc = Number(S.lifts[l.key]?.inc) || 0;
     const pred = e != null ? Math.max(e, e + inc * cyclesLeft) : null;
     return {
