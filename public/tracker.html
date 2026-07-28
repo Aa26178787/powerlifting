@@ -86,25 +86,40 @@ const SEED_LOGS = [
 const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
 const MAIN_LIFTS = ["스쿼트", "벤치", "데드"];
 
-/* ───────── RPE+렙 이중 웨이브 (2026-07-29 개편, AMRAP·TM 폐지) ───────── */
+/* ───────── RPE+렙 이중 웨이브 (2026-07-29 개편, AMRAP·TM 폐지 / 실측 RPE 차트 기준으로 재개정) ───────── */
 // 종목별 렙 상한(작업 세트만) — 초과 시 상한으로 캡하고 같은 RPE로 %e1RM 재계산
 const REP_CAP = { 스쿼트: 8, 벤치: 6, 데드: 4 };
-// e1RM 공식의 역산: 주어진 렙·RPE에서 %e1RM (e1rm = w*(1+(reps+(10-rpe))/30) 의 역함수)
-const pctOfE1rm = (rep, rpe) => 30 / (40 + rep - rpe);
+// Tuchscherer 실측 RPE 차트(렙×RPE→%1RM) — src/data/rpeChart.json과 동일 데이터. "3"×RPE5=78.5는 표에 없어 렙3열 델타로 외삽(스펙 제공값과 일치 확인).
+const RPE_CHART = {
+  1: { 10: 100, 9.5: 97.8, 9: 95.5, 8.5: 93.9, 8: 92.2, 7.5: 90.7, 7: 89.2, 6.5: 87.8, 6: 86.3 },
+  2: { 10: 95.5, 9.5: 93.9, 9: 92.2, 8.5: 90.7, 8: 89.2, 7.5: 87.8, 7: 86.3, 6.5: 85.0, 6: 83.7 },
+  3: { 10: 92.2, 9.5: 90.7, 9: 89.2, 8.5: 87.8, 8: 86.3, 7.5: 85.0, 7: 83.7, 6.5: 82.4, 6: 81.1, 5: 78.5 },
+  4: { 10: 89.2, 9.5: 87.8, 9: 86.3, 8.5: 85.0, 8: 83.7, 7.5: 82.4, 7: 81.1, 6.5: 79.9, 6: 78.6 },
+  5: { 10: 86.3, 9.5: 85.0, 9: 83.7, 8.5: 82.4, 8: 81.1, 7.5: 79.9, 7: 78.6, 6.5: 77.4, 6: 76.2 },
+  6: { 10: 83.7, 9.5: 82.4, 9: 81.1, 8.5: 79.9, 8: 78.6, 7.5: 77.4, 7: 76.2, 6.5: 75.1, 6: 73.9 },
+  7: { 10: 81.1, 9.5: 79.9, 9: 78.6, 8.5: 77.4, 8: 76.2, 7.5: 75.1, 7: 73.9, 6.5: 72.8, 6: 71.7 },
+  8: { 10: 78.6, 9.5: 77.4, 9: 76.2, 8.5: 75.1, 8: 73.9, 7.5: 72.8, 7: 71.7, 6.5: 70.7, 6: 69.6 },
+};
 const capRep = (lift, rep) => Math.min(rep, REP_CAP[lift] ?? rep);
-// 메인(앵커) 웨이브 — 스쿼트·벤치·데드 공통, 렙 상한만 종목별로 캡
+const chartPct = (rep, rpe) => (RPE_CHART[rep]?.[rpe] ?? null);
+// 메인(앵커) 톱세트 — 스쿼트·벤치·데드 공통, 렙 상한만 종목별로 캡
 const MAIN_WAVE = { 1: { rpe: 7, rep: 5 }, 2: { rpe: 8, rep: 3 }, 3: { rpe: 9, rep: 1 }, 4: { rpe: 6, rep: 3 } };
-// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 4세트 반복, 렙 상한만 종목별로 캡
-// (2026-07-29 개정: 1주 고렙→3주 저렙으로 렙이 줄어들며 메인과 같은 방향으로 강도 수렴 · 디로드는 RPE5×3)
-const VAR_WAVE = { 1: { rpe: 8, rep: 8 }, 2: { rpe: 7, rep: 6 }, 3: { rpe: 6, rep: 4 }, 4: { rpe: 5, rep: 3 } };
+// 메인 백오프 — 무게=톱세트×88%(반올림), 세트수·렙수는 종목별(스쿼트/벤치/데드), 마지막 세트 RPE8 근처가 목표(무게 자체는 고정)
+const BACKOFF_PCT = 0.88;
+const MAIN_BACKOFF = {
+  1: { sets: 2, rep: { 스쿼트: 7, 벤치: 6, 데드: 4 } },
+  2: { sets: 3, rep: { 스쿼트: 5, 벤치: 5, 데드: 4 } },
+  3: { sets: 3, rep: { 스쿼트: 3, 벤치: 3, 데드: 3 } },
+  4: { sets: 1, rep: { 스쿼트: 3, 벤치: 3, 데드: 3 } },
+};
+// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 4세트 고정 스트레이트(전 세트 동일 무게), 렙 상한만 종목별로 캡
+const VAR_WAVE = { 1: { rpe: 9, rep: 8 }, 2: { rpe: 8, rep: 6 }, 3: { rpe: 6, rep: 4 }, 4: { rpe: 5, rep: 3 } };
 const waveSet = (table, lift, w, e1) => {
   const { rpe } = table[w];
   const rep = capRep(lift, table[w].rep);
-  const p = pctOfE1rm(rep, rpe);
-  return { rpe, rep, pctLabel: `${(p * 100).toFixed(1)}%`, kg: e1 != null ? r25(e1 * p) : null };
+  const pct = chartPct(rep, rpe);
+  return { rpe, rep, pctLabel: pct != null ? `${pct}%` : "—", kg: e1 != null && pct != null ? r25((e1 * pct) / 100) : null };
 };
-const mainSet = (lift, w, e1) => waveSet(MAIN_WAVE, lift, w, e1);
-const varSet = (lift, w, e1) => waveSet(VAR_WAVE, lift, w, e1);
 
 // 3대 e1RM — 3주차 "진짜 싱글" 실측 로그가 사이클 간 기준점 갱신(계획보다 여유 있으면 위로, 딱 맞으면 자연 유지) · manual 입력 시 그 값 우선
 const currentE1rm = (lift, S, logs, cycle) => {
@@ -226,17 +241,25 @@ function App() {
   /* 주차별 세션 구성 — RPE+렙 이중 웨이브, 월~금 구조는 4주차(디로드)도 동일(웨이브 표만 가벼워짐) */
   const weekPlan = (w) => {
     const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
-    const wave = (table, lift, name, setCount) => {
-      const s = waveSet(table, lift, w, E1[lift]);
-      const single = table === MAIN_WAVE && w === 3 ? " (진짜 싱글)" : "";
-      const repStr = `${s.rep}${single} @RPE${s.rpe}`;
-      return {
-        name, logName: name, sets: `${setCount}세트`,
-        detail: Array.from({ length: setCount }, () => ({ pct: s.pctLabel, kg: s.kg, rep: repStr })),
-      };
+    // 메인 앵커 — 톱세트 1개 + 백오프(무게=톱세트×88%, 세트수·렙수 종목별) 한 카드에 표시
+    const main = (lift) => {
+      const top = waveSet(MAIN_WAVE, lift, w, E1[lift]);
+      const single = w === 3 ? " (진짜 싱글)" : "";
+      const bo = MAIN_BACKOFF[w];
+      const boRep = bo.rep[lift];
+      const boKg = top.kg != null ? r25(top.kg * BACKOFF_PCT) : null;
+      const detail = [
+        { pct: top.pctLabel, kg: top.kg, rep: `${top.rep}${single} @RPE${top.rpe}` },
+        ...Array.from({ length: bo.sets }, () => ({ pct: "88%", kg: boKg, rep: `${boRep} @RPE8 목표` })),
+      ];
+      return { name: lift, logName: lift, sets: `탑1+백${bo.sets}세트`, detail };
     };
-    const main = (lift) => wave(MAIN_WAVE, lift, lift, 1); // 메인=진짜 싱글로 수렴하는 탑 1세트
-    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name, 4); // 변형=같은 %·RPE로 4세트 반복(볼륨 담당)
+    // 변형 — 4세트 고정, 전 세트 동일 무게(같은 %·RPE 반복), 마지막 세트에서 목표 RPE 도달
+    const variation = (baseLift, name) => {
+      const s = waveSet(VAR_WAVE, baseLift, w, E1[baseLift]);
+      const repStr = `${s.rep} @RPE${s.rpe}(마지막 세트 목표)`;
+      return { name, logName: name, sets: "4세트", detail: Array.from({ length: 4 }, () => ({ pct: s.pctLabel, kg: s.kg, rep: repStr })) };
+    };
     const straight4x5 = (key) => {
       const unit = S.lifts[key].unit || "kg";
       const wgt = dipPullWeight(key);
@@ -248,8 +271,8 @@ function App() {
     };
 
     return [
-      { day: "월", items: [variation("스쿼트", "볼륨 스쿼트"), variation("벤치", "라슨 벤치"), straight4x5("중딥"), acc("로우", null, "8~12", "4세트"), acc("Core", null, "30~60초", "3세트")] },
-      { day: "화", items: [variation("벤치", "템포 벤치"), variation("데드", "정지 데드"), straight4x5("중량 풀업"), acc("사이드델트", null, "15~20", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
+      { day: "월", items: [variation("스쿼트", "볼륨 스쿼트"), variation("벤치", "라슨 벤치"), straight4x5("중딥"), acc("로우", null, "8~12", "4세트"), acc("Chest ISO", null, "12~15", "3세트"), acc("Core", null, "30~60초", "3세트")] },
+      { day: "화", items: [variation("벤치", "템포 벤치 (3초 하강·2초 정지)"), variation("데드", "정지 데드 (무릎 아래 1초 정지)"), straight4x5("중량 풀업"), acc("사이드델트", null, "15~20", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
       {
         day: "수",
         items: [
@@ -259,8 +282,8 @@ function App() {
           acc("Chest ISO", null, "12~15", "3세트"),
         ],
       },
-      { day: "목", items: [acc("슈러그", null, "10~15", "4세트"), acc("리스트컬", null, "15~20", "3세트"), acc("리버스 리스트컬", null, "15~20", "3세트"), acc("트라이셉스", null, "12~15", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
-      { day: "금", items: [main("데드"), variation("벤치", "클로즈그립 벤치"), acc("정지 딥스", null, "6~8", "3세트"), acc("상단 하프 친업", null, "6~10", "3세트"), acc("리어델트", null, "15~20", "4세트")] },
+      { day: "목", items: [acc("슈러그", null, "12~15", "3세트"), acc("리스트컬", null, "15~20", "3세트"), acc("리버스 리스트컬", null, "15~20", "3세트"), acc("트라이셉스", null, "12~15", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
+      { day: "금", items: [main("데드"), variation("벤치", "클로즈그립 벤치"), acc("정지 딥스", null, "6~8", "3세트"), acc("상단 하프 친업", null, "8~10", "3세트"), acc("리어델트", null, "15~20", "4세트")] },
     ];
   };
 
@@ -626,9 +649,11 @@ function Cycle({ plan, wk, setViewWeek }) {
       ))}
 
       <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.8, padding: "4px 4px 16px" }}>
-        · 렙 상한(작업 세트만): 스쿼트 8 / 벤치 6 / 데드 4 — 웨이브 렙이 상한을 넘으면 상한으로 캡하고 같은 RPE로 %e1RM 재계산(화면 % 그대로 반영됨)<br />
+        · 렙 상한(작업 세트만): 스쿼트 8 / 벤치 6 / 데드 4 — 웨이브 렙이 상한을 넘으면 상한으로 캡하고 같은 RPE로 %e1RM 재계산(화면 % 그대로 반영됨). % 자체는 실측 RPE 차트(Tuchscherer) 기준<br />
+        · 메인 백오프 무게=톱세트×88% 고정 — 마지막 세트가 RPE8 근처면 적정, 세션 중 즉흥 증량 금지(그날은 그대로 종료 → 실측값으로 다음 주 재산정). 너무 쉬우면 그 세트부터 무게 하향<br />
         · 메인 3주차 = 진짜 싱글. 이 실측(무게×1@RPE)이 다음 사이클 e1RM 기준점 — 처방보다 여유 있었으면 자동으로 위로, 딱 맞았으면 자연히 유지<br />
         · 중딥·중량풀업 4×5: 4번째(마지막) 세트 RPE로 판정 — ≤6.5 +5kg(딥+10lb) / 7~7.5 +2.5kg(딥+5lb) / 8 +1.25kg(딥+2.5lb) / 8.5~9 유지 / 9.5+ 유지+다음 세션 컨디션 재판단 (4주차 디로드는 증량 판정 없이 수행만)<br />
+        · 세트 간 휴식: 메인 톱세트 4~5분 / 메인 백오프 2.5~3분 / 변형 4세트 2.5~3분 / 딥·풀업 4×5 3분 / 순수 보조(ISO) 90초<br />
         · RPE 애매하면 항상 높은 쪽으로. 8=스티킹에서 느려지되 안 끊김, 8.5=찰나라도 멈칫 후 재가속, 9=명확한 그라인드<br />
         · 그립: 볼륨용 당기기(로우·중량풀업 백오프성 볼륨)는 스트랩 허용 / 메인 데드·정지 데드는 맨손 유지
       </div>
