@@ -94,8 +94,9 @@ const pctOfE1rm = (rep, rpe) => 30 / (40 + rep - rpe);
 const capRep = (lift, rep) => Math.min(rep, REP_CAP[lift] ?? rep);
 // 메인(앵커) 웨이브 — 스쿼트·벤치·데드 공통, 렙 상한만 종목별로 캡
 const MAIN_WAVE = { 1: { rpe: 7, rep: 5 }, 2: { rpe: 8, rep: 3 }, 3: { rpe: 9, rep: 1 }, 4: { rpe: 6, rep: 3 } };
-// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 렙 상한만 종목별로 캡
-const VAR_WAVE = { 1: { rpe: 9, rep: 3 }, 2: { rpe: 8, rep: 5 }, 3: { rpe: 6, rep: 8 }, 4: { rpe: 5, rep: 5 } };
+// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 4세트 반복, 렙 상한만 종목별로 캡
+// (2026-07-29 개정: 1주 고렙→3주 저렙으로 렙이 줄어들며 메인과 같은 방향으로 강도 수렴 · 디로드는 RPE5×3)
+const VAR_WAVE = { 1: { rpe: 8, rep: 8 }, 2: { rpe: 7, rep: 6 }, 3: { rpe: 6, rep: 4 }, 4: { rpe: 5, rep: 3 } };
 const waveSet = (table, lift, w, e1) => {
   const { rpe } = table[w];
   const rep = capRep(lift, table[w].rep);
@@ -235,7 +236,7 @@ function App() {
       };
     };
     const main = (lift) => wave(MAIN_WAVE, lift, lift, 1); // 메인=진짜 싱글로 수렴하는 탑 1세트
-    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name, 3); // 변형=같은 %·RPE로 3세트 반복(볼륨 담당)
+    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name, 4); // 변형=같은 %·RPE로 4세트 반복(볼륨 담당)
     const straight4x5 = (key) => {
       const unit = S.lifts[key].unit || "kg";
       const wgt = dipPullWeight(key);
