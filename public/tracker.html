@@ -225,13 +225,17 @@ function App() {
   /* 주차별 세션 구성 — RPE+렙 이중 웨이브, 월~금 구조는 4주차(디로드)도 동일(웨이브 표만 가벼워짐) */
   const weekPlan = (w) => {
     const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
-    const wave = (table, lift, name) => {
+    const wave = (table, lift, name, setCount) => {
       const s = waveSet(table, lift, w, E1[lift]);
       const single = table === MAIN_WAVE && w === 3 ? " (진짜 싱글)" : "";
-      return { name, logName: name, sets: "1세트", detail: [{ pct: s.pctLabel, kg: s.kg, rep: `${s.rep}${single} @RPE${s.rpe}` }] };
+      const repStr = `${s.rep}${single} @RPE${s.rpe}`;
+      return {
+        name, logName: name, sets: `${setCount}세트`,
+        detail: Array.from({ length: setCount }, () => ({ pct: s.pctLabel, kg: s.kg, rep: repStr })),
+      };
     };
-    const main = (lift) => wave(MAIN_WAVE, lift, lift);
-    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name);
+    const main = (lift) => wave(MAIN_WAVE, lift, lift, 1); // 메인=진짜 싱글로 수렴하는 탑 1세트
+    const variation = (baseLift, name) => wave(VAR_WAVE, baseLift, name, 3); // 변형=같은 %·RPE로 3세트 반복(볼륨 담당)
     const straight4x5 = (key) => {
       const unit = S.lifts[key].unit || "kg";
       const wgt = dipPullWeight(key);
