@@ -86,9 +86,8 @@ const SEED_LOGS = [
 const GOALS = { 스쿼트: 175, 벤치: 117.5, 데드: 212.5, 중딥: 100, "중량 풀업": 60 };
 const MAIN_LIFTS = ["스쿼트", "벤치", "데드"];
 
-/* ───────── RPE+렙 이중 웨이브 (2026-07-29 개편, AMRAP·TM 폐지 / 실측 RPE 차트 기준으로 재개정) ───────── */
-// 종목별 렙 상한(작업 세트만) — 초과 시 상한으로 캡하고 같은 RPE로 %e1RM 재계산
-const REP_CAP = { 스쿼트: 8, 벤치: 6, 데드: 4 };
+/* ───────── 4주 사이클 + %e1RM 스펙 (2026-07-31 개편: Comp 요일 월·화 재배치, 메인 4×5→4×4→탑싱글+백오프 웨이브,
+   변형(하이바스쿼트·라슨벤치·템포벤치·정지데드) 계수제 도입, 렙 상한 폐지·상향(스펙 명시 렙수 그대로 사용)) ───────── */
 // Tuchscherer 실측 RPE 차트(렙×RPE→%1RM) — src/data/rpeChart.json과 동일 데이터. "3"×RPE5=78.5는 표에 없어 렙3열 델타로 외삽(스펙 제공값과 일치 확인).
 const RPE_CHART = {
   1: { 10: 100, 9.5: 97.8, 9: 95.5, 8.5: 93.9, 8: 92.2, 7.5: 90.7, 7: 89.2, 6.5: 87.8, 6: 86.3 },
@@ -100,25 +99,73 @@ const RPE_CHART = {
   7: { 10: 81.1, 9.5: 79.9, 9: 78.6, 8.5: 77.4, 8: 76.2, 7.5: 75.1, 7: 73.9, 6.5: 72.8, 6: 71.7 },
   8: { 10: 78.6, 9.5: 77.4, 9: 76.2, 8.5: 75.1, 8: 73.9, 7.5: 72.8, 7: 71.7, 6.5: 70.7, 6: 69.6 },
 };
-const capRep = (lift, rep) => Math.min(rep, REP_CAP[lift] ?? rep);
 const chartPct = (rep, rpe) => (RPE_CHART[rep]?.[rpe] ?? null);
-// 메인(앵커) 톱세트 — 스쿼트·벤치·데드 공통, 렙 상한만 종목별로 캡
-const MAIN_WAVE = { 1: { rpe: 7, rep: 5 }, 2: { rpe: 8, rep: 3 }, 3: { rpe: 9, rep: 1 }, 4: { rpe: 6, rep: 3 } };
-// 메인 백오프 — 무게=톱세트×88%(반올림), 세트수·렙수는 종목별(스쿼트/벤치/데드), 마지막 세트 RPE8 근처가 목표(무게 자체는 고정)
-const BACKOFF_PCT = 0.88;
-const MAIN_BACKOFF = {
-  1: { sets: 2, rep: { 스쿼트: 7, 벤치: 6, 데드: 4 } },
-  2: { sets: 3, rep: { 스쿼트: 5, 벤치: 5, 데드: 4 } },
-  3: { sets: 3, rep: { 스쿼트: 3, 벤치: 3, 데드: 3 } },
-  4: { sets: 1, rep: { 스쿼트: 3, 벤치: 3, 데드: 3 } },
+
+// 변형 계수(시합 종목 e1RM 대비) — 하이바 스쿼트 92% / 라슨 벤치 88% / 템포 벤치 82% / 정지 데드 88%. 실측치가 다르면 추후 실측 e1RM로 전환 예정.
+const VARIATION_COEF = { "하이바 스쿼트": 0.92, "라슨 벤치": 0.88, "템포 벤치": 0.82, "정지 데드": 0.88 };
+
+// 메인(Comp 스쿼트·벤치·데드) 주차별 웨이브 — 1주 4×5 / 2주 4×4 / 3주 탑싱글+백오프 / 4주 디로드
+const MAIN_PLAN = {
+  스쿼트: {
+    1: { sets: 4, rep: 5, rpe: 7.5, rpeDisp: "7.5" },
+    2: { sets: 4, rep: 4, rpe: 8, rpeDisp: "8" },
+    3: { top: { rep: 1, rpe: 9, rpeDisp: "8.5~9" }, backoff: { sets: 3, rep: 3, rpe: 7, rpeDisp: "7" } },
+    4: { sets: 3, rep: 3, rpe: 6, rpeDisp: "6" },
+  },
+  벤치: {
+    1: { sets: 4, rep: 5, rpe: 7.5, rpeDisp: "7.5" },
+    2: { sets: 4, rep: 4, rpe: 8, rpeDisp: "8" },
+    3: { top: { rep: 1, rpe: 8.5, rpeDisp: "8~8.5" }, backoff: { sets: 3, rep: 3, rpe: 8, rpeDisp: "8" } },
+    4: { sets: 3, rep: 3, rpe: 6, rpeDisp: "6" },
+  },
+  데드: {
+    1: { sets: 4, rep: 5, rpe: 7.5, rpeDisp: "7~7.5" },
+    2: { sets: 4, rep: 4, rpe: 8, rpeDisp: "7.5~8" },
+    3: { top: { rep: 1, rpe: 8.5, rpeDisp: "8.5" }, backoff: { sets: 3, rep: 3, rpe: 7, rpeDisp: "7" } },
+    4: { sets: 3, rep: 2, rpe: 6, rpeDisp: "6" },
+  },
 };
-// 변형 웨이브 — 볼륨스쿼트·라슨벤치·템포벤치·정지데드·클로즈그립벤치 공통, 4세트 고정 스트레이트(전 세트 동일 무게), 렙 상한만 종목별로 캡
-const VAR_WAVE = { 1: { rpe: 9, rep: 8 }, 2: { rpe: 8, rep: 6 }, 3: { rpe: 6, rep: 4 }, 4: { rpe: 5, rep: 3 } };
-const waveSet = (table, lift, w, e1) => {
-  const { rpe } = table[w];
-  const rep = capRep(lift, table[w].rep);
-  const pct = chartPct(rep, rpe);
-  return { rpe, rep, pctLabel: pct != null ? `${pct}%` : "—", kg: e1 != null && pct != null ? r25((e1 * pct) / 100) : null };
+
+// 변형(하이바스쿼트/라슨벤치/템포벤치/정지데드) 주차별 웨이브 — 계수 적용 전 %는 comp 종목과 동일 RPE 차트 기준
+const VARIATION_PLAN = {
+  "하이바 스쿼트": {
+    base: "스쿼트",
+    1: { sets: 4, rep: 8, rpe: 8, rpeDisp: "7.5~8" },
+    2: { sets: 3, rep: 6, rpe: 8, rpeDisp: "7.5~8" },
+    3: { sets: 3, rep: 5, rpe: 8, rpeDisp: "8" },
+    4: { sets: 2, rep: 5, rpe: 6, rpeDisp: "6" },
+  },
+  "라슨 벤치": {
+    base: "벤치",
+    1: { sets: 4, rep: 6, rpe: 7.5, rpeDisp: "7.5" },
+    2: { sets: 4, rep: 5, rpe: 7.5, rpeDisp: "7.5" },
+    3: { sets: 4, rep: 4, rpe: 8, rpeDisp: "8" },
+    4: { sets: 2, rep: 4, rpe: 6, rpeDisp: "6" },
+  },
+  "템포 벤치": {
+    base: "벤치",
+    1: { sets: 3, rep: 6, rpe: 7.5, rpeDisp: "7.5" },
+    2: { sets: 3, rep: 5, rpe: 7.5, rpeDisp: "7.5" },
+    3: { sets: 3, rep: 3, rpe: 8, rpeDisp: "8" },
+    4: { sets: 2, rep: 3, rpe: 6, rpeDisp: "6" },
+  },
+  "정지 데드": {
+    base: "데드",
+    1: { sets: 3, rep: 5, rpe: 7, rpeDisp: "7" },
+    2: { sets: 3, rep: 4, rpe: 7.5, rpeDisp: "7.5" },
+    3: { sets: 3, rep: 3, rpe: 7.5, rpeDisp: "7.5" },
+    4: { sets: 2, rep: 3, rpe: 6, rpeDisp: "6" },
+  },
+};
+
+// 중량 딥스(화)·중량 풀업(목) — 스펙의 "자체 e1RM %" 산정 대신 기존 방식(직접 무게 입력 + 마지막 세트 RPE로 다음 세션 증량폭 판정) 유지. 세트·렙수만 웨이브 반영.
+const DIP_PLAN = { 1: { sets: 4, rep: 5, rpeDisp: "7.5~8" }, 2: { sets: 4, rep: 4, rpeDisp: "7.5~8" }, 3: { sets: 3, rep: 3, rpeDisp: "8" }, 4: { sets: 3, rep: 3, rpeDisp: "6.5" } };
+const PULLUP_PLAN = { 1: { sets: 4, rep: 5, rpeDisp: "7.5~8" }, 2: { sets: 4, rep: 4, rpeDisp: "7.5~8" }, 3: { sets: 3, rep: 3, rpeDisp: "8" }, 4: { sets: 2, rep: 3, rpeDisp: "6" } };
+
+// 금요일 중량 딥스(하단 더블 바운스)·중량 하프 친업 — 가동범위·반동이 달라 %e1RM 환산 무의미, RPE만 보고 자체 무게 결정
+const FREE_ACC_PLAN = {
+  "중량 딥스 (하단 더블 바운스)": { 1: { sets: 3, rep: 8, rpeDisp: "7" }, 2: { sets: 3, rep: 7, rpeDisp: "7.5" }, 3: { sets: 3, rep: 5, rpeDisp: "7.5" }, 4: { sets: 2, rep: 5, rpeDisp: "7" } },
+  "중량 하프 친업": { 1: { sets: 3, rep: 7, rpeDisp: "7.5" }, 2: { sets: 3, rep: 7, rpeDisp: "7.5" }, 3: { sets: 3, rep: 5, rpeDisp: "7.5" }, 4: { sets: 2, rep: 5, rpeDisp: "7" } },
 };
 
 // 3대 e1RM — 3주차 "진짜 싱글" 실측 로그가 사이클 간 기준점 갱신(계획보다 여유 있으면 위로, 딱 맞으면 자연 유지) · manual 입력 시 그 값 우선
@@ -151,9 +198,9 @@ const legacyWorkingWeight = (v, unit) => {
   return unit === "lb" ? r5(legacyApplied * 0.95 * KG2LB) : r25(legacyApplied * 0.95);
 };
 const PLATE = {
-  1: { c: "#C9463D", label: "볼륨" }, // 25kg 빨강
-  2: { c: "#3B6FB5", label: "브릿지" }, // 20kg 파랑
-  3: { c: "#D8A62A", label: "고강도" }, // 15kg 노랑
+  1: { c: "#C9463D", label: "베이스" }, // 25kg 빨강 — 메인 4×5
+  2: { c: "#3B6FB5", label: "강도" }, // 20kg 파랑 — 메인 4×4
+  3: { c: "#D8A62A", label: "피크" }, // 15kg 노랑 — 탑싱글+백오프
   4: { c: "#6E7480", label: "디로드" }, // 회색
 };
 
@@ -238,52 +285,65 @@ function App() {
     return out;
   }, [E1, S, cycle, logs]);
 
-  /* 주차별 세션 구성 — RPE+렙 이중 웨이브, 월~금 구조는 4주차(디로드)도 동일(웨이브 표만 가벼워짐) */
+  /* 주차별 세션 구성 — Comp(월·화) + 변형(목·금) + 보조(수), 1~3주 베이스→강도→피크 웨이브 / 4주 디로드 */
   const weekPlan = (w) => {
+    const weekAcc = w === 4 ? "2세트" : "3세트"; // 수요일 보조만 디로드 주 1세트 감량
     const acc = (name, kg, rep, sets, unit, add) => ({ name, logName: name, acc: true, sets, unit: unit || "kg", detail: [{ pct: "", kg, rep, add: add || 0 }] });
-    // 메인 앵커 — 톱세트 1개 + 백오프(무게=톱세트×88%, 세트수·렙수 종목별) 한 카드에 표시
+    // Comp 메인 — 1·2·4주는 스트레이트, 3주는 탑싱글(진짜 싱글)+백오프 한 카드
     const main = (lift) => {
-      const top = waveSet(MAIN_WAVE, lift, w, E1[lift]);
-      const single = w === 3 ? " (진짜 싱글)" : "";
-      const bo = MAIN_BACKOFF[w];
-      const boRep = bo.rep[lift];
-      const boKg = top.kg != null ? r25(top.kg * BACKOFF_PCT) : null;
-      const detail = [
-        { pct: top.pctLabel, kg: top.kg, rep: `${top.rep}${single} @RPE${top.rpe}` },
-        ...Array.from({ length: bo.sets }, () => ({ pct: "88%", kg: boKg, rep: `${boRep} @RPE8 목표` })),
-      ];
-      return { name: lift, logName: lift, sets: `탑1+백${bo.sets}세트`, detail };
+      const e1 = E1[lift];
+      const p = MAIN_PLAN[lift][w];
+      if (w === 3) {
+        const { top, backoff: bo } = p;
+        const topPct = chartPct(top.rep, top.rpe);
+        const boPct = chartPct(bo.rep, bo.rpe);
+        const topKg = e1 != null && topPct != null ? r25((e1 * topPct) / 100) : null;
+        const boKg = e1 != null && boPct != null ? r25((e1 * boPct) / 100) : null;
+        const detail = [
+          { pct: topPct != null ? `${topPct}%` : "—", kg: topKg, rep: `${top.rep} @RPE${top.rpeDisp} (진짜 싱글)` },
+          ...Array.from({ length: bo.sets }, () => ({ pct: boPct != null ? `${boPct}%` : "—", kg: boKg, rep: `${bo.rep} @RPE${bo.rpeDisp}` })),
+        ];
+        return { name: lift, logName: lift, sets: `탑1+백${bo.sets}세트`, detail };
+      }
+      const pct = chartPct(p.rep, p.rpe);
+      const kg = e1 != null && pct != null ? r25((e1 * pct) / 100) : null;
+      const detail = Array.from({ length: p.sets }, () => ({ pct: pct != null ? `${pct}%` : "—", kg, rep: `${p.rep} @RPE${p.rpeDisp}` }));
+      return { name: lift, logName: lift, sets: `${p.sets}세트`, detail };
     };
-    // 변형 — 4세트 고정, 전 세트 동일 무게(같은 %·RPE 반복), 마지막 세트에서 목표 RPE 도달
-    const variation = (baseLift, name) => {
-      const s = waveSet(VAR_WAVE, baseLift, w, E1[baseLift]);
-      const repStr = `${s.rep} @RPE${s.rpe}(마지막 세트 목표)`;
-      return { name, logName: name, sets: "4세트", detail: Array.from({ length: 4 }, () => ({ pct: s.pctLabel, kg: s.kg, rep: repStr })) };
+    // 변형(하이바스쿼트·라슨벤치·템포벤치·정지데드) — comp 종목 e1RM × 계수, 전 세트 동일 무게
+    const variation = (name) => {
+      const vp = VARIATION_PLAN[name];
+      const p = vp[w];
+      const e1 = E1[vp.base];
+      const rawPct = chartPct(p.rep, p.rpe);
+      const pct = rawPct != null ? Math.round(rawPct * VARIATION_COEF[name] * 10) / 10 : null;
+      const kg = e1 != null && pct != null ? r25((e1 * pct) / 100) : null;
+      const repStr = `${p.rep} @RPE${p.rpeDisp}`;
+      return { name, logName: name, sets: `${p.sets}세트`, detail: Array.from({ length: p.sets }, () => ({ pct: pct != null ? `${pct}%` : "—", kg, rep: repStr })) };
     };
-    const straight4x5 = (key) => {
+    // 중량 딥스·중량 풀업 — 직접 무게 입력 + 마지막 세트 RPE로 다음 세션 증량폭 판정(기존 방식 유지), 세트·렙수만 웨이브 반영
+    const workingSet = (key, plan) => {
+      const p = plan[w];
       const unit = S.lifts[key].unit || "kg";
       const wgt = dipPullWeight(key);
       return {
-        name: liftLabel(key), logName: key, acc: true, sets: "4×5 @RPE8", unit,
+        name: liftLabel(key), logName: key, acc: true, sets: `${p.sets}×${p.rep} @RPE${p.rpeDisp}`, unit,
         progressKey: w === 4 ? null : key, progressUnit: unit,
-        detail: [0, 1, 2, 3].map(() => ({ pct: "", kg: wgt, rep: "5" })),
+        detail: Array.from({ length: p.sets }, () => ({ pct: "", kg: wgt, rep: String(p.rep) })),
       };
+    };
+    // 금요일 중량 딥스(더블바운스)·중량 하프 친업 — RPE만 보고 자체 무게 결정(계수 없음)
+    const freeAcc = (name) => {
+      const p = FREE_ACC_PLAN[name][w];
+      return acc(name, null, `${p.rep} @RPE${p.rpeDisp}`, `${p.sets}세트`);
     };
 
     return [
-      { day: "월", items: [variation("스쿼트", "볼륨 스쿼트"), variation("벤치", "라슨 벤치"), straight4x5("중딥"), acc("로우", null, "8~12", "4세트"), acc("Chest ISO", null, "12~15", "3세트"), acc("Core", null, "30~60초", "3세트")] },
-      { day: "화", items: [variation("벤치", "템포 벤치 (3초 하강·2초 정지)"), variation("데드", "정지 데드 (무릎 아래 1초 정지)"), straight4x5("중량 풀업"), acc("사이드델트", null, "15~20", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
-      {
-        day: "수",
-        items: [
-          { name: "순서 고정: 스쿼트→벤치 · 사이 휴식 5분 이상", note: true },
-          main("스쿼트"),
-          main("벤치"),
-          acc("Chest ISO", null, "12~15", "3세트"),
-        ],
-      },
-      { day: "목", items: [acc("슈러그", null, "12~15", "3세트"), acc("리스트컬", null, "15~20", "3세트"), acc("리버스 리스트컬", null, "15~20", "3세트"), acc("트라이셉스", null, "12~15", "4세트"), acc("바이셉스", null, "8~12", "4세트")] },
-      { day: "금", items: [main("데드"), variation("벤치", "클로즈그립 벤치"), acc("정지 딥스", null, "6~8", "3세트"), acc("상단 하프 친업", null, "8~10", "3세트"), acc("리어델트", null, "15~20", "4세트")] },
+      { day: "월", items: [main("스쿼트"), main("벤치"), acc("불가리안 스플릿 스쿼트", null, "12", "3세트"), acc("인클라인 덤벨 프레스", null, "8~10", "3세트"), acc("케이블 오버헤드 익스텐션", null, "15", "3세트"), acc("케이블 푸시다운", null, "15", "3세트")] },
+      { day: "화", items: [main("데드"), workingSet("중딥", DIP_PLAN), acc("RDL", null, "8", "3세트"), acc("딥 푸시업", null, "20", "3세트"), acc("인클라인 해머컬", null, "12", "3세트"), acc("바벨컬", null, "20", "3세트")] },
+      { day: "수", items: [acc("체스트 서포티드 로우", null, "8", weekAcc), acc("하이 로우", null, "12", weekAcc), acc("슈러그", null, "20", weekAcc), acc("페이스 풀", null, "25", weekAcc), acc("행잉 레그 레이즈", null, "15", weekAcc), acc("리스트컬", null, "20", weekAcc), acc("AB롤아웃", null, "12", weekAcc), acc("팔로프 프레스", null, "12~15", weekAcc)] },
+      { day: "목", items: [variation("하이바 스쿼트"), variation("라슨 벤치"), workingSet("중량 풀업", PULLUP_PLAN), acc("고블릿 스쿼트", null, "15", "3세트"), acc("페이스 풀", null, "25", "3세트"), acc("사이드 레터럴 레이즈", null, "20", "3세트")] },
+      { day: "금", items: [variation("정지 데드"), variation("템포 벤치"), freeAcc("중량 딥스 (하단 더블 바운스)"), freeAcc("중량 하프 친업"), acc("AB롤아웃", null, "12", "3세트"), acc("팔로프 프레스", null, "12~15", "3세트")] },
     ];
   };
 
@@ -649,13 +709,13 @@ function Cycle({ plan, wk, setViewWeek }) {
       ))}
 
       <div style={{ fontSize: 12, color: "#6E7480", lineHeight: 1.8, padding: "4px 4px 16px" }}>
-        · 렙 상한(작업 세트만): 스쿼트 8 / 벤치 6 / 데드 4 — 웨이브 렙이 상한을 넘으면 상한으로 캡하고 같은 RPE로 %e1RM 재계산(화면 % 그대로 반영됨). % 자체는 실측 RPE 차트(Tuchscherer) 기준<br />
-        · 메인 백오프 무게=톱세트×88% 고정 — 마지막 세트가 RPE8 근처면 적정, 세션 중 즉흥 증량 금지(그날은 그대로 종료 → 실측값으로 다음 주 재산정). 너무 쉬우면 그 세트부터 무게 하향<br />
+        · % 자체는 실측 RPE 차트(Tuchscherer) 기준 — 렙 상한 폐지(스펙 명시 렙수 그대로 처방, 데드 5렙 포함)<br />
+        · 변형 계수(comp e1RM 대비): 하이바 스쿼트 92% / 라슨 벤치 88% / 템포 벤치 82% / 정지 데드 88% — 추정치. 실측 마지막 세트 RPE가 목표와 계속 다르면 해당 종목 e1RM을 따로 잡을 것<br />
         · 메인 3주차 = 진짜 싱글. 이 실측(무게×1@RPE)이 다음 사이클 e1RM 기준점 — 처방보다 여유 있었으면 자동으로 위로, 딱 맞았으면 자연히 유지<br />
-        · 중딥·중량풀업 4×5: 4번째(마지막) 세트 RPE로 판정 — ≤6.5 +5kg(딥+10lb) / 7~7.5 +2.5kg(딥+5lb) / 8 +1.25kg(딥+2.5lb) / 8.5~9 유지 / 9.5+ 유지+다음 세션 컨디션 재판단 (4주차 디로드는 증량 판정 없이 수행만)<br />
-        · 세트 간 휴식: 메인 톱세트 4~5분 / 메인 백오프 2.5~3분 / 변형 4세트 2.5~3분 / 딥·풀업 4×5 3분 / 순수 보조(ISO) 90초<br />
+        · 중량딥스·중량풀업: 마지막 세트 RPE로 판정 — ≤6.5 +5kg(딥+10lb) / 7~7.5 +2.5kg(딥+5lb) / 8 +1.25kg(딥+2.5lb) / 8.5~9 유지 / 9.5+ 유지+다음 세션 컨디션 재판단 (4주차 디로드는 증량 판정 없이 수행만)<br />
+        · 세트 간 휴식: Comp 메인 4~5분 / 변형 2.5~3분 / 딥·풀업 3분 / 순수 보조(ISO) 90초<br />
         · RPE 애매하면 항상 높은 쪽으로. 8=스티킹에서 느려지되 안 끊김, 8.5=찰나라도 멈칫 후 재가속, 9=명확한 그라인드<br />
-        · 그립: 볼륨용 당기기(로우·중량풀업 백오프성 볼륨)는 스트랩 허용 / 메인 데드·정지 데드는 맨손 유지
+        · 그립: 볼륨용 당기기는 스트랩 허용 / 메인 데드·정지 데드는 맨손 유지
       </div>
     </div>
   );
@@ -799,7 +859,7 @@ function Settings({ S, save, E1, E1ALL, dipPullWeight }) {
         );
       })}
 
-      <SectionLabel text="중딥·중량풀업 — 4×5 작업무게" color="#D8A62A" />
+      <SectionLabel text="중량딥스·중량풀업 — 작업무게" color="#D8A62A" />
       {["중딥", "중량 풀업"].map((k) => {
         const v = S.lifts[k];
         const cur = dipPullWeight(k);
@@ -843,7 +903,7 @@ function Settings({ S, save, E1, E1ALL, dipPullWeight }) {
           <input type="date" value={S.compDate || ""} onChange={(e) => save({ ...S, compDate: e.target.value })} style={inputStyle} />
         </div>
         <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 8 }}>3대: 매주 처방은 e1RM×%로 직접 산출(TM·AMRAP 없음). e1RM은 3주차 진짜 싱글 실측으로 사이클마다 자동 갱신</div>
-        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중딥·중량풀업: 4×5 마지막 세트 RPE로 매주 자동 증량(디로드 주는 판정 없이 수행만)</div>
+        <div style={{ fontSize: 11.5, color: "#6E7480", marginTop: 4 }}>중량딥스·중량풀업: 마지막 세트 RPE로 매주 자동 증량(세트·렙수는 웨이브별 변동, 디로드 주는 판정 없이 수행만)</div>
       </Card>
 
       <SectionLabel text="장기 목표" color="#D8A62A" />
